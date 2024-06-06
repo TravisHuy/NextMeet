@@ -52,14 +52,17 @@ class LoginActivity : AppCompatActivity() {
         if(password.length<6){
             binding.edLoginPass.error=getString(R.string.error_password)
         }
+       if(phone.length!=10){
+           binding.edLoginPhone.error=getString(R.string.error_phone);
+        }
         userViewModel.login(phone, password).observe(this, Observer {
             user->
             if(user!=null){
                 startActivity(Intent(this,MainActivity::class.java))
-                Toast.makeText(this,"Login Successfully",Toast.LENGTH_LONG).show()
+                Toast.makeText(this,getString(R.string.login_successfully),Toast.LENGTH_LONG).show()
             }
             else{
-                Toast.makeText(this,"Login failed. invalid phone or password",Toast.LENGTH_LONG).show()
+                Toast.makeText(this,getString(R.string.login_failed),Toast.LENGTH_LONG).show()
             }
         })
     }
@@ -82,7 +85,13 @@ class LoginActivity : AppCompatActivity() {
             val password=ed_password.text.toString()
 
             if(name.isEmpty()||phone.isEmpty()||email.isEmpty()||password.isEmpty()){
-                Toast.makeText(this,"All fields are required",Toast.LENGTH_LONG).show()
+                Toast.makeText(this,getString(R.string.all_fields_are_required),Toast.LENGTH_LONG).show()
+            }
+            else if(phone.length!=10){
+                ed_phone.error=getString(R.string.error_phone);
+            }
+            else if(name.length>25){
+                ed_name.error=getString(R.string.error_name)
             }
             else if(password.length<6){
                 ed_password.error=getString(R.string.error_password)
@@ -91,7 +100,8 @@ class LoginActivity : AppCompatActivity() {
                 val user=User(name=name, phone = phone, email = email, password = password)
                 userViewModel.register(user)
                 dialog.dismiss()
-                Toast.makeText(this,"Register Successfull",Toast.LENGTH_LONG).show()
+                startActivity(Intent(this,MainActivity::class.java))
+                Toast.makeText(this,getString(R.string.register_successfull),Toast.LENGTH_LONG).show()
             }
         }
 
