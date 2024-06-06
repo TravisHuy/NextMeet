@@ -1,5 +1,6 @@
 package com.nhathuy.customermanagementapp.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -10,4 +11,5 @@ data class User(
     val email:String,
     val phone:String,
     val password:String,
+    var isLoggedIn:Int=-1
 )

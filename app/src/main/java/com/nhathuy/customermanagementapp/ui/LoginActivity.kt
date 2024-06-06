@@ -58,6 +58,8 @@ class LoginActivity : AppCompatActivity() {
         userViewModel.login(phone, password).observe(this, Observer {
             user->
             if(user!=null){
+                user.isLoggedIn=1
+                userViewModel.updateUser(user)
                 startActivity(Intent(this,MainActivity::class.java))
                 Toast.makeText(this,getString(R.string.login_successfully),Toast.LENGTH_LONG).show()
             }
@@ -100,7 +102,6 @@ class LoginActivity : AppCompatActivity() {
                 val user=User(name=name, phone = phone, email = email, password = password)
                 userViewModel.register(user)
                 dialog.dismiss()
-                startActivity(Intent(this,MainActivity::class.java))
                 Toast.makeText(this,getString(R.string.register_successfull),Toast.LENGTH_LONG).show()
             }
         }

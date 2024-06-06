@@ -8,4 +8,6 @@
     <string name="all_fields_are_required">All fields are required</string>
     <string name="error_phone">The phone number must have 10 digits</string>
     <string name="error_name">Name must not exceed 25 characters</string>
+    <string name="notification">Notification</string>
+    <string name="search">Search</string>
 </resources>

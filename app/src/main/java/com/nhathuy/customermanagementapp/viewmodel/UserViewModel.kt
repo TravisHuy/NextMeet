@@ -29,4 +29,10 @@ class UserViewModel(application: Application):AndroidViewModel(application) {
         }
         return result
     }
+    fun updateUser(user: User)=viewModelScope.launch {
+        repository.updateUser(user)
+    }
+    fun getCurrentUser():LiveData<User?>{
+        return repository.getCurrentUser()
+    }
 }
