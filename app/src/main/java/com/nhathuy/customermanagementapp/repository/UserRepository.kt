@@ -1,0 +1,14 @@
+package com.nhathuy.customermanagementapp.repository
+
+import com.nhathuy.customermanagementapp.dao.UserDao
+import com.nhathuy.customermanagementapp.model.User
+
+class UserRepository(private val userDao: UserDao) {
+
+    suspend fun register(user:User){
+        userDao.register(user);
+    }
+    suspend fun login(phone:String,password:String):User?{
+        return userDao.login(phone,password)
+    }
+}
