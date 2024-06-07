@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/home"
+        android:icon="@drawable/ic_home"
+        android:title="@string/home"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <item
+        android:id="@+id/transaction"
+        android:icon="@drawable/ic_transation"
+        android:title="@string/transaction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <item
+        android:id="@+id/add"
+        android:icon="@drawable/ic_plus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <item
+        android:id="@+id/alarm"
+        android:icon="@drawable/ic_alarm"
+        android:title="@string/alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <item
+        android:id="@+id/about"
+        android:icon="@drawable/ic_about"
+        android:title="@string/about"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+</menu>

@@ -10,4 +10,8 @@
     <string name="error_name">Name must not exceed 25 characters</string>
     <string name="notification">Notification</string>
     <string name="search">Search</string>
+    <string name="home">Home</string>
+    <string name="transaction">Transaction</string>
+    <string name="alarm">Alarm</string>
+    <string name="about">About</string>
 </resources>
