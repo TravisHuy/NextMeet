@@ -1,37 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/home"
+        android:id="@+id/customerFragment"
         android:icon="@drawable/ic_home"
-        android:title="@string/home"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
+        android:title="@string/home" />
     <item
-        android:id="@+id/transaction"
+        android:id="@+id/transactionFragment"
         android:icon="@drawable/ic_transation"
-        android:title="@string/transaction"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
+        android:title="@string/transaction" />
     <item
         android:id="@+id/add"
         android:icon="@drawable/ic_plus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
+        android:title="" />
     <item
-        android:id="@+id/alarm"
+        android:id="@+id/appointmentFragment"
         android:icon="@drawable/ic_alarm"
-        android:title="@string/alarm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
+        android:title="@string/alarm" />
     <item
-        android:id="@+id/about"
+        android:id="@+id/aboutFragment"
         android:icon="@drawable/ic_about"
-        android:title="@string/about"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
+        android:title="@string/about" />
 </menu>

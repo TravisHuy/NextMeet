@@ -2,8 +2,6 @@ package com.nhathuy.customermanagementapp.ui
 
 import android.app.Dialog
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
@@ -14,7 +12,6 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputEditText
-import com.nhathuy.customermanagementapp.MainActivity
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.ActivityLoginBinding
 import com.nhathuy.customermanagementapp.model.User
@@ -60,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
             if(user!=null){
                 user.isLoggedIn=1
                 userViewModel.updateUser(user)
-                startActivity(Intent(this,MainActivity::class.java))
+                startActivity(Intent(this, MainActivity::class.java))
                 Toast.makeText(this,getString(R.string.login_successfully),Toast.LENGTH_LONG).show()
             }
             else{

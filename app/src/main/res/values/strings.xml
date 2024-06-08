@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CustomerManagementApp</string>
+    <string name="app_name">TravisHuy</string>
     <string name="error">Error</string>
     <string name="error_password">Password must greater than 5 character</string>
     <string name="register_successfull">Register Successfull</string>
@@ -14,4 +14,6 @@
     <string name="transaction">Transaction</string>
     <string name="alarm">Alarm</string>
     <string name="about">About</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

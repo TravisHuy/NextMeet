@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_gragh"
+    app:startDestination="@id/customerFragment">
+
+    <fragment
+        android:id="@+id/customerFragment"
+        android:name="com.nhathuy.customermanagementapp.fragment.CustomerFragment"
+        tools:layout="@layout/fragment_customer" >
+        <action
+            android:id="@+id/action_customerFragment_to_transactionFragment"
+            app:destination="@id/transactionFragment" />
+        <action
+            android:id="@+id/action_customerFragment_to_appointmentFragment"
+            app:destination="@id/appointmentFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/transactionFragment"
+        android:name="com.nhathuy.customermanagementapp.fragment.TransactionFragment"
+        tools:layout="@layout/fragment_transaction" />
+    <fragment
+        android:id="@+id/appointmentFragment"
+        android:name="com.nhathuy.customermanagementapp.fragment.AppointmentFragment"
+        tools:layout="@layout/fragment_appointment" />
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="com.nhathuy.customermanagementapp.fragment.AboutFragment"
+        tools:layout="@layout/fragment_about" />
+</navigation>

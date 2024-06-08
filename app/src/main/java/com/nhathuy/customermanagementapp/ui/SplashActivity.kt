@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.nhathuy.customermanagementapp.MainActivity
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.ActivitySplashBinding
 import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
@@ -34,7 +33,7 @@ class SplashActivity : AppCompatActivity() {
     }
     fun switchMain(){
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent=Intent(this,MainActivity::class.java)
+            val intent=Intent(this, MainActivity::class.java)
             startActivity(intent)
             overridePendingTransition(R.anim.slide_in_right,R.anim.side_out_left)
             finish()
