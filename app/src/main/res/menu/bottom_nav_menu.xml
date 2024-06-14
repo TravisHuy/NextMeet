@@ -11,7 +11,7 @@
     <item
         android:id="@+id/add"
         android:icon="@drawable/ic_plus"
-        android:title="" />
+        android:title="AddCustomer" />
     <item
         android:id="@+id/appointmentFragment"
         android:icon="@drawable/ic_alarm"
