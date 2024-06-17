@@ -1,14 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.AboutFragment">
+    tools:context=".fragment.AboutFragment"
+    android:orientation="vertical">
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
+        android:layout_marginTop="50dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:fontFamily="@font/aldrich"
+        android:text="About" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Author:"
+            android:textSize="18sp"
+            android:fontFamily="@font/almendra_italic"
+            android:layout_marginEnd="10dp"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hồ Nhật Huy"
+            android:fontFamily="monospace"
+            android:textSize="18sp"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Form:"
+            android:textSize="18sp"
+            android:fontFamily="@font/almendra_italic"
+            android:layout_marginEnd="10dp"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Việt Nam"
+            android:fontFamily="monospace"
+            android:textSize="18sp"
+            />
+    </LinearLayout>
 
-</FrameLayout>
+    <androidx.viewpager2.widget.ViewPager2
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        app:barrierDirection="top"
+        android:background="#000"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="10dp"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Contact with me:"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/mulish_light"
+            android:layout_marginEnd="10dp"
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="Facebook:"
+            android:textSize="18sp"
+            android:fontFamily="@font/almendra_italic"
+            android:layout_marginEnd="10dp"
+            />
+        <ImageView
+            android:id="@+id/facebook"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/facebook"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="Github:"
+            android:textSize="18sp"
+            android:fontFamily="@font/almendra_italic"
+            android:layout_marginEnd="10dp"
+            />
+        <ImageView
+            android:id="@+id/github"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/github"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="LinkedIn:"
+            android:textSize="18sp"
+            android:fontFamily="@font/almendra_italic"
+            android:layout_marginEnd="10dp"
+            />
+        <ImageView
+            android:id="@+id/linkedin"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/linkedin"
+            />
+    </LinearLayout>
+
+</LinearLayout>
