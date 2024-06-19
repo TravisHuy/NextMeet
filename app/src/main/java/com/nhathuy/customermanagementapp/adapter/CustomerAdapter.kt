@@ -1,28 +1,47 @@
 package com.nhathuy.customermanagementapp.adapter
 
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.contentValuesOf
 import androidx.recyclerview.widget.RecyclerView
+import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.model.Customer
 
-class CustomerAdapter(private val listCustomer:List<Customer>):
+
+class CustomerAdapter(private val context:Context, private var listCustomer:List<Customer>):
     RecyclerView.Adapter<CustomerAdapter.CustomerViewHolder>() {
-
-
     class CustomerViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
+        private val name:TextView=itemView.findViewById(R.id.name)
+        private val email:TextView=itemView.findViewById(R.id.email)
+        private val phone:TextView=itemView.findViewById(R.id.phone)
+
+        fun bind(customer: Customer) {
+            name.text=customer.name
+            email.text=customer.email
+            phone.text=customer.phone
+        }
 
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomerViewHolder {
-        TODO("Not yet implemented")
+        val itemView=LayoutInflater.from(context).inflate(R.layout.customer_item,parent,false)
+        return CustomerViewHolder(itemView)
     }
 
     override fun getItemCount(): Int {
-        TODO("Not yet implemented")
+        return listCustomer.size
     }
 
     override fun onBindViewHolder(holder: CustomerViewHolder, position: Int) {
-        TODO("Not yet implemented")
+       val customer=listCustomer[position]
+        holder.bind(customer)
     }
-
+    fun setData(customers: List<Customer>) {
+        listCustomer = customers
+        notifyDataSetChanged()
+    }
 }

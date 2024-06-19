@@ -2,6 +2,7 @@ package com.nhathuy.customermanagementapp.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.customermanagementapp.database.AppDatabase
 import com.nhathuy.customermanagementapp.model.Customer
@@ -24,8 +25,8 @@ class CustomerViewModel(application: Application):AndroidViewModel(application) 
         customerRepository.register(customer)
     }
 
-    fun getAllCustomer() = viewModelScope.launch {
-        customerRepository.getAllCustomer()
+    fun getAllCustomers(): LiveData<List<Customer>> {
+        return customerRepository.getAllCustomers()
     }
 
 }

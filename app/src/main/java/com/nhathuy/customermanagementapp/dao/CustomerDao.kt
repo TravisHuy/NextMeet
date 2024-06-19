@@ -1,5 +1,6 @@
 package com.nhathuy.customermanagementapp.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -13,5 +14,5 @@ interface CustomerDao {
     suspend fun register(customer: Customer)
 
     @Query("select * from customers")
-    suspend fun  getAllCustomer():List<Customer>
+    fun  getAllCustomer():LiveData<List<Customer>>
 }
