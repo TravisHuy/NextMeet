@@ -1,6 +1,7 @@
 package com.nhathuy.customermanagementapp.ui
 
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -57,6 +58,14 @@ class LoginActivity : AppCompatActivity() {
             if(user!=null){
                 user.isLoggedIn=1
                 userViewModel.updateUser(user)
+
+
+                //save userId to SharedPreferences
+                val sharedPreferences=getSharedPreferences("user_id",Context.MODE_PRIVATE)
+                sharedPreferences.edit().putInt("user_id",user.id).apply()
+
+
+
                 startActivity(Intent(this, MainActivity::class.java))
                 Toast.makeText(this,getString(R.string.login_successfully),Toast.LENGTH_LONG).show()
             }

@@ -4,12 +4,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.nhathuy.customermanagementapp.dao.CustomerDao
 import com.nhathuy.customermanagementapp.dao.UserDao
+import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.model.User
 
-@Database(entities = [User::class], version = 1, exportSchema = false)
+@Database(entities = [User::class,Customer::class], version = 1, exportSchema = false)
 abstract class AppDatabase:RoomDatabase(){
     abstract fun userDao():UserDao
+    abstract fun customerDao():CustomerDao
 
     companion object{
         @Volatile
