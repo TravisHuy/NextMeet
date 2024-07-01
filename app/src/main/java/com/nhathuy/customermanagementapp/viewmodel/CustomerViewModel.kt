@@ -29,4 +29,7 @@ class CustomerViewModel(application: Application):AndroidViewModel(application) 
         return customerRepository.getAllCustomers()
     }
 
+    fun editCustomer(customer: Customer) = viewModelScope.launch {
+        customerRepository.editCustomer(customer)
+    }
 }

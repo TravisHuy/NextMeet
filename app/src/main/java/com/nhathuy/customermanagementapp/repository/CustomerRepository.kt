@@ -15,4 +15,7 @@ class CustomerRepository(private val customerDao: CustomerDao) {
     fun getAllCustomers(): LiveData<List<Customer>> {
         return customerDao.getAllCustomer()
     }
+    suspend fun editCustomer(customer: Customer){
+        customerDao.editCustomer(customer)
+    }
 }

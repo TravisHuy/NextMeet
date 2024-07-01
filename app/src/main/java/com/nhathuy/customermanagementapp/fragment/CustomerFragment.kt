@@ -1,5 +1,6 @@
 package com.nhathuy.customermanagementapp.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.adapter.CustomerAdapter
 import com.nhathuy.customermanagementapp.databinding.FragmentCustomerBinding
+import com.nhathuy.customermanagementapp.ui.CustomerDetailActivity
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 
 class CustomerFragment : Fragment() {
@@ -31,6 +33,8 @@ class CustomerFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentCustomerBinding.inflate(inflater, container, false)
+
+
         return binding.root
     }
 

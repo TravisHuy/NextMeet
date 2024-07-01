@@ -27,6 +27,7 @@ class CustomerAdapter(private val context:Context, private var listCustomer:List
             name.text=customer.name
             email.text=customer.email
             phone.text=customer.phone
+            val userId=customer.userId
 
             itemView.setOnClickListener {
                 val intent = Intent(context,CustomerDetailActivity::class.java).apply {
