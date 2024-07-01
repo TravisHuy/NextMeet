@@ -35,7 +35,7 @@ class SplashActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             val intent=Intent(this, MainActivity::class.java)
             startActivity(intent)
-            overridePendingTransition(R.anim.slide_in_right,R.anim.side_out_left)
+            overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
             finish()
         },1500)
     }
@@ -43,7 +43,7 @@ class SplashActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             val intent=Intent(this,LoginActivity::class.java)
             startActivity(intent)
-            overridePendingTransition(R.anim.slide_in_right,R.anim.side_out_left)
+            overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
             finish()
         },1500)
     }

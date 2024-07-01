@@ -1,15 +1,19 @@
 package com.nhathuy.customermanagementapp.adapter
 
+import android.app.ActivityOptions
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.contentValuesOf
 import androidx.recyclerview.widget.RecyclerView
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.model.Customer
+import com.nhathuy.customermanagementapp.ui.CustomerDetailActivity
 
 
 class CustomerAdapter(private val context:Context, private var listCustomer:List<Customer>):
@@ -19,11 +23,20 @@ class CustomerAdapter(private val context:Context, private var listCustomer:List
         private val email:TextView=itemView.findViewById(R.id.email)
         private val phone:TextView=itemView.findViewById(R.id.phone)
 
-        fun bind(customer: Customer) {
+        fun bind(customer: Customer,context:Context) {
             name.text=customer.name
             email.text=customer.email
             phone.text=customer.phone
+
+            itemView.setOnClickListener {
+                val intent = Intent(context,CustomerDetailActivity::class.java).apply {
+                    putExtra("Customer_extra",customer)
+
+                }
+                context.startActivity(intent)
+            }
         }
+
 
     }
 
@@ -38,7 +51,7 @@ class CustomerAdapter(private val context:Context, private var listCustomer:List
 
     override fun onBindViewHolder(holder: CustomerViewHolder, position: Int) {
        val customer=listCustomer[position]
-        holder.bind(customer)
+        holder.bind(customer,context)
     }
     fun setData(customers: List<Customer>) {
         listCustomer = customers
