@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.FragmentAboutBinding
 
@@ -32,6 +33,7 @@ class AboutFragment : Fragment() {
         binding.linkedin.setOnClickListener{
             openUrl("https://www.linkedin.com/in/honhathuy/")
         }
+        (activity as AppCompatActivity).supportActionBar?.hide()
         return binding.root
     }
 
@@ -41,4 +43,8 @@ class AboutFragment : Fragment() {
         startActivity(intent)
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        (activity as AppCompatActivity).supportActionBar?.show()
+    }
 }

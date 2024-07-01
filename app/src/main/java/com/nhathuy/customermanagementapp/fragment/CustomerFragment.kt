@@ -41,7 +41,6 @@ class CustomerFragment : Fragment() {
 
         setupRecylerView()
         observerViewModel()
-        setHasOptionsMenu(true);
     }
 
     private fun observerViewModel() {
@@ -60,14 +59,7 @@ class CustomerFragment : Fragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.topbar_menu,menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return super.onOptionsItemSelected(item)
-    }
     override fun onDestroyView() {
         super.onDestroyView()
     }

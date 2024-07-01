@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.FragmentAddCustomerBinding
@@ -30,6 +31,8 @@ class AddCustomerFragment : Fragment() {
         binding.btnSubmit.setOnClickListener {
             onAddCustomer()
         }
+
+        (activity as AppCompatActivity).supportActionBar?.hide()
 
         return binding.root
     }
@@ -80,5 +83,8 @@ class AddCustomerFragment : Fragment() {
         binding.edAddCustomerNotes.text?.clear()
     }
 
-
+    override fun onDestroyView() {
+        super.onDestroyView()
+        (activity as AppCompatActivity).supportActionBar?.show()
+    }
 }

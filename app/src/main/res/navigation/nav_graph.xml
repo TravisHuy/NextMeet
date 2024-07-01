@@ -31,6 +31,5 @@
     <fragment
         android:id="@+id/add"
         android:name="com.nhathuy.customermanagementapp.fragment.AddCustomerFragment"
-        android:label="fragment_add_customer"
         tools:layout="@layout/fragment_add_customer" />
 </navigation>
