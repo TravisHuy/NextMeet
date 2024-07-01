@@ -63,7 +63,10 @@ class CustomerFragment : Fragment() {
         }
     }
 
-
+    override fun onResume() {
+        super.onResume()
+        customerViewModel.getAllCustomers()
+    }
     override fun onDestroyView() {
         super.onDestroyView()
     }

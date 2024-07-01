@@ -2,6 +2,7 @@ package com.nhathuy.customermanagementapp.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -19,4 +20,7 @@ interface CustomerDao {
 
     @Update
     suspend fun editCustomer(customer: Customer)
+
+    @Delete
+    suspend fun deleteCustomer(customer: Customer)
 }

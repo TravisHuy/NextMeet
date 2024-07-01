@@ -8,6 +8,7 @@ import com.nhathuy.customermanagementapp.database.AppDatabase
 import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.repository.CustomerRepository
 import com.nhathuy.customermanagementapp.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CustomerViewModel(application: Application):AndroidViewModel(application) {
@@ -31,5 +32,11 @@ class CustomerViewModel(application: Application):AndroidViewModel(application) 
 
     fun editCustomer(customer: Customer) = viewModelScope.launch {
         customerRepository.editCustomer(customer)
+    }
+
+    fun deleteCustomer(customer: Customer) {
+        viewModelScope.launch(Dispatchers.IO) {
+            customerRepository.deleteCustomer(customer)
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.nhathuy.customermanagementapp.ui
 
+import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputEditText
 import com.nhathuy.customermanagementapp.R
@@ -23,6 +25,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     private lateinit var viewModel:CustomerViewModel
     private lateinit var userViewModel: UserViewModel
     private var currentUserId: Int =-1
+    private var currentCustomer: Customer? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding=ActivityCustomerDetailBinding.inflate(layoutInflater)
@@ -36,8 +39,8 @@ class CustomerDetailActivity : AppCompatActivity() {
             currentUserId= user?.id?:-1
         }
 
-        val customer: Customer? = intent.getParcelableExtra("Customer_extra")
-        customer?.let {
+        currentCustomer = intent.getParcelableExtra("Customer_extra")
+        currentCustomer?.let {
             displayCustomerDetail(it)
         }
 
@@ -48,7 +51,12 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.edit.setOnClickListener {
             showEditDialog()
         }
+        binding.remove.setOnClickListener {
+            showDeleteDialog()
+        }
     }
+
+
 
     private fun showEditDialog() {
         val dialog= Dialog(this)
@@ -105,6 +113,25 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.editAddress.text=customer.address
         binding.editGroup.text=customer.group
         binding.editNotes.text=customer.notes
+    }
+
+    private fun showDeleteDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Customer")
+            .setMessage("Are you sure you want to delete this customer?")
+            .setPositiveButton("Yes"){
+                _,_ -> deleteCustomer()
+            }
+            .setNegativeButton("No",null)
+            .show()
+    }
+
+    private fun deleteCustomer() {
+        currentCustomer?.let {
+            customer ->  viewModel.deleteCustomer(customer)
+            Toast.makeText(this,"Customer deleted",Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 
     override fun onBackPressed() {
