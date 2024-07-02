@@ -7,14 +7,24 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.android.material.textfield.TextInputEditText
 import com.nhathuy.customermanagementapp.R
+import com.nhathuy.customermanagementapp.adapter.ViewPageAdapter
 import com.nhathuy.customermanagementapp.databinding.ActivityCustomerDetailBinding
+import com.nhathuy.customermanagementapp.fragment.PlaceFragment
+import com.nhathuy.customermanagementapp.fragment.TimeFragment
 import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
@@ -54,8 +64,39 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.remove.setOnClickListener {
             showDeleteDialog()
         }
+
+        binding.icTransaction.setOnClickListener {
+
+        }
+        binding.icAlaram.setOnClickListener {
+            showAlarmDialog()
+        }
     }
 
+    //show Alarm Dialog
+    private fun showAlarmDialog() {
+        val frameLayout =findViewById<FrameLayout>(R.id.alarmFrameLayout)
+        frameLayout.visibility=View.VISIBLE
+
+        val viewPager = frameLayout.findViewById<ViewPager2>(R.id.viewpager)
+        val tabLayout = frameLayout.findViewById<TabLayout>(R.id.tablayout)
+
+        val cancel = frameLayout.findViewById<Button>(R.id.cancel)
+
+
+        cancel.setOnClickListener {
+            frameLayout.visibility=View.GONE
+        }
+        val adapter = ViewPageAdapter(supportFragmentManager, lifecycle)
+        adapter.addFragment(TimeFragment(), getString(R.string.pick_date_amp_time))
+        adapter.addFragment(PlaceFragment(), getString(R.string.pick_place))
+
+        viewPager.adapter = adapter
+
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = adapter.getPageTitle(position)
+        }.attach()
+    }
 
 
     private fun showEditDialog() {
