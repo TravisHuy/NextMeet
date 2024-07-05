@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,8 +16,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CustomerManagementApp"
         tools:targetApi="31">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBijspjZdF_8odY_Z5MZBiUzRD_RI4jzHY" />
+
         <activity
             android:name=".ui.CustomerDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.GoogleMapActivity"
             android:exported="false" />
         <activity
             android:name=".ui.SplashActivity"
@@ -29,7 +41,7 @@
             android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
 
         <meta-data
             android:name="preloaded_fonts"

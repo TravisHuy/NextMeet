@@ -75,18 +75,48 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     //show Alarm Dialog
     private fun showAlarmDialog() {
-        val frameLayout =findViewById<FrameLayout>(R.id.alarmFrameLayout)
-        frameLayout.visibility=View.VISIBLE
+//        val frameLayout =findViewById<FrameLayout>(R.id.alarmFrameLayout)
+//        frameLayout.visibility=View.VISIBLE
+//
+//        val viewPager = frameLayout.findViewById<ViewPager2>(R.id.viewpager)
+//        val tabLayout = frameLayout.findViewById<TabLayout>(R.id.tablayout)
+//
+//        val cancel = frameLayout.findViewById<Button>(R.id.cancel)
+//
+//
+//        cancel.setOnClickListener {
+//            frameLayout.visibility=View.GONE
+//        }
+//        val adapter = ViewPageAdapter(supportFragmentManager, lifecycle)
+//        adapter.addFragment(TimeFragment(), getString(R.string.pick_date_amp_time))
+//        adapter.addFragment(PlaceFragment(), getString(R.string.pick_place))
+//
+//        viewPager.adapter = adapter
+//
+//        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+//            tab.text = adapter.getPageTitle(position)
+//        }.attach()
 
-        val viewPager = frameLayout.findViewById<ViewPager2>(R.id.viewpager)
-        val tabLayout = frameLayout.findViewById<TabLayout>(R.id.tablayout)
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.add_alram)
 
-        val cancel = frameLayout.findViewById<Button>(R.id.cancel)
+
+        val window = dialog.window
+        window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        window?.setGravity(Gravity.CENTER)
 
 
-        cancel.setOnClickListener {
-            frameLayout.visibility=View.GONE
-        }
+        // Thiết lập các view và xử lý sự kiện trong dialog
+        val tabLayout = dialog.findViewById<TabLayout>(R.id.tablayout)
+        val viewPager = dialog.findViewById<ViewPager2>(R.id.viewpager)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancel)
+        val saveButton = dialog.findViewById<Button>(R.id.alram_save)
+
+
+
+
+        // Thiết lập TabLayout và ViewPager2
         val adapter = ViewPageAdapter(supportFragmentManager, lifecycle)
         adapter.addFragment(TimeFragment(), getString(R.string.pick_date_amp_time))
         adapter.addFragment(PlaceFragment(), getString(R.string.pick_place))
@@ -96,6 +126,18 @@ class CustomerDetailActivity : AppCompatActivity() {
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = adapter.getPageTitle(position)
         }.attach()
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        saveButton.setOnClickListener {
+            // Xử lý lưu reminder
+            dialog.dismiss()
+        }
+
+        dialog.show()
+
     }
 
 

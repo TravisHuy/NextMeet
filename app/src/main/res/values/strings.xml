@@ -44,5 +44,6 @@
         <item>Custom...</item>
     </string-array>
 
+    <string name="google_map_api_key">AIzaSyBijspjZdF_8odY_Z5MZBiUzRD_RI4jzHY</string>
 
 </resources>
