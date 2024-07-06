@@ -3,4 +3,25 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#DC0505</color>
+
+    <!-- Màu sắc cho chế độ sáng -->
+    <color name="light_background">#FFFFFF</color>
+    <color name="light_surface">#F5F7FA</color>
+    <color name="light_primary">#3498DB</color>
+    <color name="light_secondary">#34495E</color>
+    <color name="light_on_primary">#FFFFFF</color>
+    <color name="light_on_secondary">#FFFFFF</color>
+    <color name="light_text_primary">#2C3E50</color>
+    <color name="light_text_secondary">#7F8C8D</color>
+
+    <!-- Màu sắc cho chế độ tối -->
+    <color name="dark_background">#1A1A1A</color>
+    <color name="dark_surface">#2C3E50</color>
+    <color name="dark_primary">#3498DB</color>
+    <color name="dark_secondary">#ECF0F1</color>
+    <color name="dark_on_primary">#FFFFFF</color>
+    <color name="dark_on_secondary">#2C3E50</color>
+    <color name="dark_text_primary">#ECF0F1</color>
+    <color name="dark_text_secondary">#BDC3C7</color>
+
 </resources>

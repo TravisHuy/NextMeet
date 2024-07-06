@@ -1,8 +1,10 @@
 package com.nhathuy.customermanagementapp.ui
 
+import android.content.Intent
 import android.location.Geocoder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
 import android.widget.Toast
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -24,20 +26,41 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var searchView: SearchView
     private lateinit var geocoder: Geocoder
     private var currentMarker: Marker? = null
+    private lateinit var saveButton: Button
+    private var currentAddress: String? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_google_map)
 
+
         searchBar = findViewById(R.id.searchBar)
         searchView = findViewById(R.id.searchView)
+        saveButton = findViewById(R.id.saveButton)
         geocoder = Geocoder(this, Locale.getDefault())
+
+
 
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.mapFragmentContainer) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         setupSearchView()
+        setupSaveButton()
+    }
+
+    private fun setupSaveButton() {
+        saveButton.setOnClickListener {
+            currentAddress?.let { address ->
+                val intent = Intent()
+                intent.putExtra("address", address)
+                setResult(RESULT_OK, intent)
+                finish()
+            } ?: run {
+                Toast.makeText(this, "Please choose an address before saving", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupSearchView() {
@@ -72,6 +95,8 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
         currentMarker = mMap.addMarker(MarkerOptions().position(latLng).title(title))
 
         searchBar.text = title
+
+        currentAddress = title
     }
 
     override fun onMapReady(googleMap: GoogleMap) {

@@ -19,12 +19,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         />
-
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/mapFragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/searchBar"
         android:name="com.google.android.gms.maps.SupportMapFragment" />
-
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"/>
 </RelativeLayout>
