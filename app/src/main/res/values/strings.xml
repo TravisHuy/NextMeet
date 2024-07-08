@@ -14,7 +14,9 @@
     <string name="transaction">Transaction</string>
     <string name="alarm">Alarm</string>
     <string name="about">About</string>
-    <!-- TODO: Remove or change this placeholder text -->
+
+
+
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="pick_date_amp_time"><![CDATA[Pick date & time]]></string>
     <string name="pick_place">Pick Place</string>
@@ -36,11 +38,11 @@
     </string-array>
 
     <string-array name="repeat_options">
-        <item>No Repeat</item>
-        <item>Daily</item>
-        <item>Weekly</item>
-        <item>Monthly</item>
-        <item>Yearly</item>
+        <item>Do not repeat</item>
+        <item>Repeat daily</item>
+        <item>Repeat weekly</item>
+        <item>Repeat monthly</item>
+        <item>Repeat yearly</item>
         <item>Custom...</item>
     </string-array>
 

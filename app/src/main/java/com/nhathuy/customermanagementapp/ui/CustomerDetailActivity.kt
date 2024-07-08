@@ -75,27 +75,6 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     //show Alarm Dialog
     private fun showAlarmDialog() {
-//        val frameLayout =findViewById<FrameLayout>(R.id.alarmFrameLayout)
-//        frameLayout.visibility=View.VISIBLE
-//
-//        val viewPager = frameLayout.findViewById<ViewPager2>(R.id.viewpager)
-//        val tabLayout = frameLayout.findViewById<TabLayout>(R.id.tablayout)
-//
-//        val cancel = frameLayout.findViewById<Button>(R.id.cancel)
-//
-//
-//        cancel.setOnClickListener {
-//            frameLayout.visibility=View.GONE
-//        }
-//        val adapter = ViewPageAdapter(supportFragmentManager, lifecycle)
-//        adapter.addFragment(TimeFragment(), getString(R.string.pick_date_amp_time))
-//        adapter.addFragment(PlaceFragment(), getString(R.string.pick_place))
-//
-//        viewPager.adapter = adapter
-//
-//        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-//            tab.text = adapter.getPageTitle(position)
-//        }.attach()
 
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -124,7 +103,11 @@ class CustomerDetailActivity : AppCompatActivity() {
         viewPager.adapter = adapter
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = adapter.getPageTitle(position)
+            tab.text = when(position){
+                0 -> getString(R.string.pick_date_amp_time)
+                1 -> getString(R.string.pick_place)
+                else -> null
+            }
         }.attach()
 
         cancelButton.setOnClickListener {

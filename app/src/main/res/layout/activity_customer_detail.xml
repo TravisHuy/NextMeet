@@ -40,9 +40,7 @@
                     android:layout_marginEnd="40dp"
                     android:layout_toStartOf="@+id/ic_alaram"
                     android:src="@drawable/ic_globe"
-
                     />
-
                 <ImageView
                     android:id="@+id/ic_alaram"
                     android:layout_width="24dp"
