@@ -21,7 +21,7 @@ import java.util.Locale
 class TimeFragment : Fragment() {
 
     private var _binding: FragmentTimeBinding ?= null
-    private val binding get() = _binding!!
+    val binding get() = _binding!!
 
 
     private val calendar = Calendar.getInstance()
@@ -84,28 +84,23 @@ class TimeFragment : Fragment() {
         binding.spinnerDay.onItemSelectedListener= object :AdapterView.OnItemSelectedListener{
             override fun onItemSelected(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
                 when(position){
-                    0-> selectedTime= Calendar.getInstance()
+                    0-> {
+                        selectedTime= Calendar.getInstance()
+                        updateHourOptionsForToday()
+                    }
                     1-> {
                         selectedTime =Calendar.getInstance().apply {
                             add(Calendar.DAY_OF_YEAR,1)
                         }
+                        resetHourOptions()
                     }
                     2 -> {
                         selectedTime =Calendar.getInstance().apply {
                             add(Calendar.DAY_OF_YEAR,7)
                         }
+                        resetHourOptions()
                     }
-                    3 -> {
-                        DatePickerDialog(
-                            requireContext(), { _, year, month, dayOfMonth ->
-                                selectedTime.set(year, month, dayOfMonth)
-                                updateSpinnerWithCustomDate()
-                            },
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    }
+                    3 ->  showDatePickerDialog()
                 }
             }
 
@@ -115,22 +110,20 @@ class TimeFragment : Fragment() {
         }
         binding.spinnerHour.onItemSelectedListener= object :AdapterView.OnItemSelectedListener{
             override fun onItemSelected(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
-                when(position){
-                    0 -> selectedTime.set(Calendar.HOUR_OF_DAY,8)
-                    1-> selectedTime.set(Calendar.HOUR_OF_DAY,13)
-                    2-> selectedTime.set(Calendar.HOUR_OF_DAY,18)
-                    3-> selectedTime.set(Calendar.HOUR_OF_DAY,20)
-                    4->
-                        TimePickerDialog(requireContext(),{
-                            _,hourOfDay, minute ->
-                            selectedTime.set(Calendar.HOUR_OF_DAY,hourOfDay)
-                            selectedTime.set(Calendar.MINUTE,minute)
-                            updateSpinnerWithCustomTime()
-                        },
-                         calendar.get(Calendar.HOUR_OF_DAY),
-                        calendar.get(Calendar.MINUTE),
-                        true
-                        ).show()
+                when{
+                    hourOptions[position] == "Morning (8:00)" -> selectedTime.set(Calendar.HOUR_OF_DAY, 8)
+                    hourOptions[position] == "Afternoon (13:00)" -> selectedTime.set(Calendar.HOUR_OF_DAY, 13)
+                    hourOptions[position] == "Evening (18:00)" -> selectedTime.set(Calendar.HOUR_OF_DAY, 18)
+                    hourOptions[position] == "Night (20:00)" -> selectedTime.set(Calendar.HOUR_OF_DAY, 20)
+                    hourOptions[position] == "Pick an Hour..." -> showTimePickerDialog()
+                    else ->{
+                        val customTime= hourOptions[position]
+                        val timeParts= customTime.split(":")
+                        if(timeParts.size==2){
+                            selectedTime.set(Calendar.HOUR_OF_DAY,timeParts[0].toInt())
+                            selectedTime.set(Calendar.MINUTE,timeParts[1].toInt())
+                        }
+                    }
                 }
             }
 
@@ -178,6 +171,58 @@ class TimeFragment : Fragment() {
         }
     }
 
+    private fun showDatePickerDialog() {
+        DatePickerDialog(
+            requireContext(), { _, year, month, dayOfMonth ->
+                selectedTime.set(year, month, dayOfMonth)
+                updateSpinnerWithCustomDate()
+                resetHourOptions()
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+    private fun showTimePickerDialog() {
+        TimePickerDialog(requireContext(),{
+                _,hourOfDay, minute ->
+            selectedTime.set(Calendar.HOUR_OF_DAY,hourOfDay)
+            selectedTime.set(Calendar.MINUTE,minute)
+            updateSpinnerWithCustomTime()
+        },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        ).show()
+    }
+
+    private fun updateHourOptionsForToday() {
+        val currentTime = Calendar.getInstance()
+        hourOptions.clear()
+
+        if (currentTime.get(Calendar.HOUR_OF_DAY) < 8) {
+            hourOptions.add("Morning (8:00)")
+        }
+        if (currentTime.get(Calendar.HOUR_OF_DAY) < 13) {
+            hourOptions.add("Afternoon (13:00)")
+        }
+        if (currentTime.get(Calendar.HOUR_OF_DAY) < 18) {
+            hourOptions.add("Evening (18:00)")
+        }
+        if (currentTime.get(Calendar.HOUR_OF_DAY) < 20) {
+            hourOptions.add("Night (20:00)")
+        }
+        hourOptions.add("Pick an Hour...")
+
+        hourAdapter.notifyDataSetChanged()
+        binding.spinnerHour.setSelection(0)
+    }
+    private fun resetHourOptions() {
+        hourOptions.clear()
+        hourOptions.addAll(resources.getStringArray(R.array.hour_options))
+        hourAdapter.notifyDataSetChanged()
+    }
 
     //Show repeat dialog
     private fun showCustomerRepeatDialog() {
@@ -220,12 +265,10 @@ class TimeFragment : Fragment() {
         val formattedTime = timeFormat.format(selectedTime.time)
         val customTimeString = "$formattedTime"
 
-        if (hourOptions.size > 5) {
-            hourOptions.removeAt(5)
-        }
-        hourOptions.add(customTimeString)
+        hourOptions.removeAll{ it.contains(":") && it != "Pick an Hour..."}
+        hourOptions.add(hourOptions.size-1,customTimeString)
         hourAdapter.notifyDataSetChanged()
-        binding.spinnerHour.setSelection(5)
+        binding.spinnerHour.setSelection(hourOptions.indexOf(customTimeString))
     }
    // Logic processing when clicking custom date
     private fun updateSpinnerWithCustomDate() {

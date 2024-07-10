@@ -12,31 +12,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         >
-
-        <CheckBox
-            android:id="@+id/checkBox"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="5dp"
-            android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <TextView
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:layout_marginStart="50dp"
+            android:layout_marginStart="40dp"
             android:fontFamily="@font/almendra_italic"
-            android:text="Name: "
+            android:text="Customer Name: "
             android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/name"
+            android:id="@+id/customer_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Hồ Nhật Huy"
@@ -51,7 +40,7 @@
             android:id="@id/tv_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Email: "
+            android:text="Date: "
             android:textSize="16sp"
             android:fontFamily="@font/almendra_italic"
             android:layout_marginTop="10dp"
@@ -71,28 +60,79 @@
             app:layout_constraintTop_toTopOf="@+id/tv_date" />
 
         <TextView
-            android:id="@+id/tv_phone"
+            android:id="@+id/tv_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="10dp"
             android:fontFamily="@font/almendra_italic"
-            android:text="Phone: "
+            android:text="Time: "
             android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="@+id/tv_date"
             app:layout_constraintTop_toBottomOf="@+id/tv_date" />
 
         <TextView
-            android:id="@+id/phone"
+            android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/mulish_medium"
             android:text="0349929162"
             android:textSize="16sp"
             android:layout_marginStart="10dp"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_phone"
-            app:layout_constraintStart_toEndOf="@+id/tv_phone"
-            app:layout_constraintTop_toTopOf="@+id/tv_phone" />
+            app:layout_constraintBottom_toBottomOf="@+id/tv_time"
+            app:layout_constraintStart_toEndOf="@+id/tv_time"
+            app:layout_constraintTop_toTopOf="@+id/tv_time" />
+
+
+        <TextView
+            android:id="@+id/tv_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="@font/almendra_italic"
+            android:text="Address: "
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="@+id/tv_time"
+            app:layout_constraintTop_toBottomOf="@+id/tv_time" />
+
+        <TextView
+            android:id="@+id/address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/mulish_medium"
+            android:text="Ho Chi Minh"
+            android:textSize="16sp"
+            android:layout_marginStart="10dp"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_address"
+            app:layout_constraintStart_toEndOf="@+id/tv_address"
+            app:layout_constraintTop_toTopOf="@+id/tv_address" />
+
+
+        <TextView
+            android:id="@+id/tv_notes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="@font/almendra_italic"
+            android:text="Notes: "
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/tv_address"
+            app:layout_constraintTop_toBottomOf="@+id/tv_address" />
+
+        <TextView
+            android:id="@+id/notes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/mulish_medium"
+            android:text="Ho Chi Minh"
+            android:textSize="16sp"
+            android:layout_marginStart="10dp"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_notes"
+            app:layout_constraintStart_toEndOf="@+id/tv_notes"
+            app:layout_constraintTop_toTopOf="@+id/tv_notes" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
