@@ -5,12 +5,26 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.nhathuy.customermanagementapp.R
+import com.nhathuy.customermanagementapp.adapter.AppointmentAdapter
+import com.nhathuy.customermanagementapp.adapter.CustomerAdapter
+import com.nhathuy.customermanagementapp.databinding.FragmentAppointmentBinding
+import com.nhathuy.customermanagementapp.databinding.FragmentCustomerBinding
+import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
+import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 
 
 class AppointmentFragment : Fragment() {
 
-    private lateinit var binding:Fragment
+    private var _binding: FragmentAppointmentBinding? = null
+    private val binding get() = _binding!!
+
+
+    private lateinit var appointmentViewModel: AppointmentViewModel
+    private lateinit var appointmentAdapter: AppointmentAdapter
+    private lateinit var customerViewModel: CustomerViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -19,8 +33,38 @@ class AppointmentFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_appointment, container, false)
+        _binding = FragmentAppointmentBinding.inflate(inflater, container, false)
+
+
+        return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        appointmentViewModel= ViewModelProvider(this).get(AppointmentViewModel::class.java)
+        customerViewModel=ViewModelProvider(this).get(CustomerViewModel::class.java)
+        setupRecylerView()
+        observerViewModel()
+    }
+    private fun observerViewModel() {
+        appointmentViewModel.getAllAppointment().observe(viewLifecycleOwner,{
+                appointments -> appointments?.let {
+            appointmentAdapter.setData(it)
+            }
+        })
+    }
+
+    private fun setupRecylerView() {
+        appointmentAdapter= AppointmentAdapter(requireContext(), emptyList(),customerViewModel)
+        binding.recAppointment.apply {
+            layoutManager= LinearLayoutManager(requireContext())
+            adapter=appointmentAdapter
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        appointmentViewModel.getAllAppointment()
+    }
 }

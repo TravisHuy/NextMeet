@@ -39,4 +39,9 @@ class CustomerViewModel(application: Application):AndroidViewModel(application) 
             customerRepository.deleteCustomer(customer)
         }
     }
+
+    //getCustomerById
+    fun getCustomerById(customerId:Int) :LiveData<Customer?>{
+        return customerRepository.getCustomerById(customerId)
+    }
 }

@@ -25,7 +25,9 @@ import com.nhathuy.customermanagementapp.adapter.ViewPageAdapter
 import com.nhathuy.customermanagementapp.databinding.ActivityCustomerDetailBinding
 import com.nhathuy.customermanagementapp.fragment.PlaceFragment
 import com.nhathuy.customermanagementapp.fragment.TimeFragment
+import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.model.Customer
+import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
 
@@ -34,6 +36,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCustomerDetailBinding
     private lateinit var viewModel:CustomerViewModel
     private lateinit var userViewModel: UserViewModel
+    private lateinit var appointmentViewModel :  AppointmentViewModel
     private var currentUserId: Int =-1
     private var currentCustomer: Customer? = null
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +46,7 @@ class CustomerDetailActivity : AppCompatActivity() {
 
         userViewModel= ViewModelProvider(this).get(UserViewModel::class.java)
         viewModel=ViewModelProvider(this).get(CustomerViewModel::class.java)
+        appointmentViewModel= ViewModelProvider(this).get(AppointmentViewModel::class.java)
 
         userViewModel.getCurrentUser().observe(this){
             user ->
@@ -97,10 +101,16 @@ class CustomerDetailActivity : AppCompatActivity() {
 
         // Thiết lập TabLayout và ViewPager2
         val adapter = ViewPageAdapter(supportFragmentManager, lifecycle)
-        adapter.addFragment(TimeFragment(), getString(R.string.pick_date_amp_time))
-        adapter.addFragment(PlaceFragment(), getString(R.string.pick_place))
+
+        val timeFragment = TimeFragment()
+        val placeFragment = PlaceFragment()
+
+        adapter.addFragment(timeFragment, getString(R.string.pick_date_amp_time))
+        adapter.addFragment(placeFragment, getString(R.string.pick_place))
 
         viewPager.adapter = adapter
+
+
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = when(position){
@@ -115,8 +125,26 @@ class CustomerDetailActivity : AppCompatActivity() {
         }
 
         saveButton.setOnClickListener {
-            // Xử lý lưu reminder
-            dialog.dismiss()
+           val (date,time) = timeFragment.getSelectDateTime()
+           val address = placeFragment.getSelectAddress()
+           val (repeatInterval, repeatUnit) = timeFragment.getRepeatInfo()
+
+            currentCustomer?.let {
+                customer ->
+                val appointment = Appointment(
+                    customerId = customer.id,
+                    date = date,
+                    time = time,
+                    address = address,
+                    notes = "Repeat: $repeatInterval $repeatUnit\t ${customer.notes}")
+
+                appointmentViewModel.register(appointment)
+                Toast.makeText(this, "Appointment saved", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } ?: run {
+                Toast.makeText(this, "Error: Customer not found", Toast.LENGTH_SHORT).show()
+            }
+
         }
 
         dialog.show()

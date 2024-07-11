@@ -51,6 +51,12 @@ class PlaceFragment : Fragment() {
         }
     }
 
+    //selectAddress
+    fun getSelectAddress():String{
+        return binding.addressTextView.text.toString()
+    }
+
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

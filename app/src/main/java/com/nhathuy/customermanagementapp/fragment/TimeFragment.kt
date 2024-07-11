@@ -3,6 +3,7 @@ package com.nhathuy.customermanagementapp.fragment
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.graphics.Paint
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -53,6 +54,16 @@ class TimeFragment : Fragment() {
         return view
     }
 
+
+    // get selectdatetime
+    fun getSelectDateTime() : Pair<String ,String>{
+        return Pair(dateFormat.format(selectedTime.time),
+                timeFormat.format(selectedTime.time))
+    }
+    // getRepeateInfo
+    fun getRepeatInfo():Pair<Int,String>{
+        return Pair(repeatInterval,repeatUnit)
+    }
     private fun setupSpinners() {
         setupDaySpinner()
         setupHourSpinner()
