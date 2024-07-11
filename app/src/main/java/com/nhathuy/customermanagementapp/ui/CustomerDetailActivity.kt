@@ -70,12 +70,14 @@ class CustomerDetailActivity : AppCompatActivity() {
         }
 
         binding.icTransaction.setOnClickListener {
-
+            showTransactionDialog()
         }
         binding.icAlaram.setOnClickListener {
             showAlarmDialog()
         }
     }
+
+
 
     //show Alarm Dialog
     private fun showAlarmDialog() {
@@ -199,7 +201,24 @@ class CustomerDetailActivity : AppCompatActivity() {
         dialog.window?.setGravity(Gravity.BOTTOM)
 
     }
+    //Show transaction dialog
+    private fun showTransactionDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.add_transaction)
 
+        val productService =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_product_name)
+        val quantity =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_quantity)
+        val price =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_price)
+        val date =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_date)
+
+        
+
+        dialog.show()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.window?.attributes?.windowAnimations=R.style.DialogAnimation;
+        dialog.window?.setGravity(Gravity.BOTTOM)
+    }
     private fun displayCustomerDetail(customer: Customer) {
         binding.editName.text=customer.name
         binding.editPhone.text=customer.phone
