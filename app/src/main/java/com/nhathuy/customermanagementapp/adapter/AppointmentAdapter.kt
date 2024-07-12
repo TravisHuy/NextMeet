@@ -9,7 +9,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.model.Appointment
-import com.nhathuy.customermanagementapp.model.Customer
+import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 
 class AppointmentAdapter(private val context:Context,

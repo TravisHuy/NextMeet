@@ -7,11 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.adapter.AppointmentAdapter
-import com.nhathuy.customermanagementapp.adapter.CustomerAdapter
 import com.nhathuy.customermanagementapp.databinding.FragmentAppointmentBinding
-import com.nhathuy.customermanagementapp.databinding.FragmentCustomerBinding
 import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 

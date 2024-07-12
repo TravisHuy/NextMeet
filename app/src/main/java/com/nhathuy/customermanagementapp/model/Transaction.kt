@@ -12,7 +12,7 @@ data class Transaction(
     val userId:Int,
     val customerId:Int,
     val productOrService:String,
-    val quantity:Int,
+    val quantity: Int,
     val price:Double,
     val date:String,
 )

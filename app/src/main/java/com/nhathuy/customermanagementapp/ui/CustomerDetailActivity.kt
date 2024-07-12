@@ -1,25 +1,21 @@
 package com.nhathuy.customermanagementapp.ui
 
 import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.app.Dialog
-import android.content.Context
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.adapter.ViewPageAdapter
 import com.nhathuy.customermanagementapp.databinding.ActivityCustomerDetailBinding
@@ -27,9 +23,14 @@ import com.nhathuy.customermanagementapp.fragment.PlaceFragment
 import com.nhathuy.customermanagementapp.fragment.TimeFragment
 import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.model.Customer
+import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
+import com.nhathuy.customermanagementapp.viewmodel.TransactionViewModel
 import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class CustomerDetailActivity : AppCompatActivity() {
 
@@ -37,6 +38,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     private lateinit var viewModel:CustomerViewModel
     private lateinit var userViewModel: UserViewModel
     private lateinit var appointmentViewModel :  AppointmentViewModel
+    private lateinit var transactionViewModel: TransactionViewModel
     private var currentUserId: Int =-1
     private var currentCustomer: Customer? = null
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +49,8 @@ class CustomerDetailActivity : AppCompatActivity() {
         userViewModel= ViewModelProvider(this).get(UserViewModel::class.java)
         viewModel=ViewModelProvider(this).get(CustomerViewModel::class.java)
         appointmentViewModel= ViewModelProvider(this).get(AppointmentViewModel::class.java)
+        transactionViewModel= ViewModelProvider(this).get(TransactionViewModel::class.java)
+
 
         userViewModel.getCurrentUser().observe(this){
             user ->
@@ -210,9 +214,53 @@ class CustomerDetailActivity : AppCompatActivity() {
         val productService =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_product_name)
         val quantity =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_quantity)
         val price =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_price)
-        val date =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_date)
+        val dateEditText =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_date)
+        val dateLayout = dialog.findViewById<TextInputLayout>(R.id.add_transaction_date_layout)
+        val submit = dialog.findViewById<Button>(R.id.btn_transaction)
 
-        
+        val calendar =Calendar.getInstance()
+        val datePickerDialog = DatePickerDialog(this,{
+            _,year,month,dayOfMonth ->
+            calendar.set(Calendar.YEAR,year)
+            calendar.set(Calendar.MONTH,month)
+            calendar.set(Calendar.DAY_OF_MONTH,dayOfMonth)
+            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            dateEditText.setText(dateFormat.format(calendar.time))
+        },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+
+        dateLayout.setEndIconOnClickListener {
+            datePickerDialog.show()
+        }
+
+        dateEditText.setOnClickListener {
+            datePickerDialog.show()
+        }
+
+        submit.setOnClickListener {
+
+            currentCustomer?.let {
+                customer ->
+                val transaction = Transaction(
+                    userId =  currentUserId,
+                    customerId = customer.id,
+                    productOrService = productService.text.toString(),
+                    quantity = quantity.text.toString().toInt(),
+                    price = price.text.toString().toDouble(),
+                    date = dateEditText.text.toString()
+                )
+
+                transactionViewModel.addTransaction(transaction)
+                Toast.makeText(this, "Transaction added successfully", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } ?: run {
+                Toast.makeText(this, "Transaction added failed", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         dialog.show()
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
