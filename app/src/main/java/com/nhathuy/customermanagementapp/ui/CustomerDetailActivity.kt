@@ -1,10 +1,16 @@
 package com.nhathuy.customermanagementapp.ui
 
+import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.Window
@@ -18,6 +24,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.adapter.ViewPageAdapter
+import com.nhathuy.customermanagementapp.alarm.AlarmReceiver
 import com.nhathuy.customermanagementapp.databinding.ActivityCustomerDetailBinding
 import com.nhathuy.customermanagementapp.fragment.PlaceFragment
 import com.nhathuy.customermanagementapp.fragment.TimeFragment
@@ -145,6 +152,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                     notes = "Repeat: $repeatInterval $repeatUnit\t ${customer.notes}")
 
                 appointmentViewModel.register(appointment)
+                //schedule the alarm
+                scheduleAlarm(appointment)
                 Toast.makeText(this, "Appointment saved", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             } ?: run {
@@ -156,6 +165,44 @@ class CustomerDetailActivity : AppCompatActivity() {
         dialog.show()
 
     }
+    //schedule the alarm
+    private fun scheduleAlarm(appointment: Appointment) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent= Intent(this,AlarmReceiver::class.java).apply {
+            putExtra("customer_id",appointment.customerId)
+            putExtra("date",appointment.date)
+            putExtra("time",appointment.time)
+            putExtra("address",appointment.address)
+            putExtra("notes",appointment.notes)
+        }
+
+        val pendingIntent =  PendingIntent.getBroadcast(this,appointment.id,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+        //parse date and time
+        val dateTimeString= "${appointment.date} ${appointment.time}"
+        val sdf= SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val calendar=Calendar.getInstance()
+        calendar.time=sdf.parse(dateTimeString) ?: return
+
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent)
+
+        }
+        else{
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent)
+        }
+
+
+        // Log for debugging
+        Log.d("AlarmScheduling", "Alarm scheduled for ${sdf.format(calendar.time)}")
+    }
+
 
 
     private fun showEditDialog() {

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.nhathuy.customermanagementapp.database.AppDatabase
 import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.repository.AppointmentRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AppointmentViewModel(application: Application):AndroidViewModel(application) {
@@ -24,5 +25,19 @@ class AppointmentViewModel(application: Application):AndroidViewModel(applicatio
 
     fun getAllAppointment(): LiveData<List<Appointment>>{
         return appointmentRepository.getAllAppointment()
+    }
+
+    fun editAppointment(appointment: Appointment) = viewModelScope.launch {
+        appointmentRepository.editAppointment(appointment)
+    }
+
+    fun deleteAppointment(appointment: Appointment){
+        viewModelScope.launch(Dispatchers.IO) {
+            appointmentRepository.deleteAppointment(appointment)
+        }
+    }
+
+    fun deleteAllAppointments() = viewModelScope.launch {
+        appointmentRepository.deleteAllTransactions()
     }
 }

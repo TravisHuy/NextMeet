@@ -26,7 +26,6 @@ class TransactionFragment : Fragment() {
     private lateinit var transactionViewModel: TransactionViewModel
     private lateinit var transactionAdapter: TransactionAdapter
     private lateinit var customerViewModel: CustomerViewModel
-    private var actionMode: ActionMode? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

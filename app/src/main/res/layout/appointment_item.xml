@@ -12,6 +12,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         >
+
+
+        <CheckBox
+            android:id="@+id/checkBox_appointment"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/three_dot_menu_appointment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/three_dots_vertical"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
@@ -98,13 +123,17 @@
 
         <TextView
             android:id="@+id/address"
-            android:layout_width="wrap_content"
+            android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/mulish_medium"
-            android:text="Ho Chi Minh"
-            android:textSize="16sp"
             android:layout_marginStart="10dp"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_address"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="@font/mulish_medium"
+            android:maxLines="3"
+            android:text="Ho Chi Minh dfdfsssssffffffddđff"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/notes"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/tv_address"
             app:layout_constraintTop_toTopOf="@+id/tv_address" />
 
@@ -120,7 +149,7 @@
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="@+id/tv_address"
-            app:layout_constraintTop_toBottomOf="@+id/tv_address" />
+           />
 
         <TextView
             android:id="@+id/notes"

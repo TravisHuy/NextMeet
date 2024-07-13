@@ -53,7 +53,14 @@ class AppointmentFragment : Fragment() {
     }
 
     private fun setupRecylerView() {
-        appointmentAdapter= AppointmentAdapter(requireContext(), emptyList(),customerViewModel)
+        appointmentAdapter= AppointmentAdapter(
+            requireContext(),
+            emptyList(),
+            customerViewModel,
+            appointmentViewModel,
+            onSelectionChanged = { isInSelectionMode ->
+
+            })
         binding.recAppointment.apply {
             layoutManager= LinearLayoutManager(requireContext())
             adapter=appointmentAdapter
