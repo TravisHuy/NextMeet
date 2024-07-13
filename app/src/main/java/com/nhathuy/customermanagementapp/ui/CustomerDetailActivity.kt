@@ -24,7 +24,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.adapter.ViewPageAdapter
-import com.nhathuy.customermanagementapp.alarm.AlarmReceiver
+import com.nhathuy.customermanagementapp.AlarmReceiver
 import com.nhathuy.customermanagementapp.databinding.ActivityCustomerDetailBinding
 import com.nhathuy.customermanagementapp.fragment.PlaceFragment
 import com.nhathuy.customermanagementapp.fragment.TimeFragment
@@ -169,7 +169,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     private fun scheduleAlarm(appointment: Appointment) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        val intent= Intent(this,AlarmReceiver::class.java).apply {
+        val intent= Intent(this, AlarmReceiver::class.java).apply {
             putExtra("customer_id",appointment.customerId)
             putExtra("date",appointment.date)
             putExtra("time",appointment.time)

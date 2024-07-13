@@ -12,6 +12,9 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.FragmentTimeBinding
 import java.text.SimpleDateFormat
@@ -183,29 +186,42 @@ class TimeFragment : Fragment() {
     }
 
     private fun showDatePickerDialog() {
-        DatePickerDialog(
-            requireContext(), { _, year, month, dayOfMonth ->
-                selectedTime.set(year, month, dayOfMonth)
-                updateSpinnerWithCustomDate()
-                resetHourOptions()
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Select date")
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .build()
+
+        datePicker.addOnPositiveButtonClickListener { selection ->
+            val selectedDate = Calendar.getInstance()
+            selectedDate.timeInMillis = selection
+            selectedTime.set(
+                selectedDate.get(Calendar.YEAR),
+                selectedDate.get(Calendar.MONTH),
+                selectedDate.get(Calendar.DAY_OF_MONTH)
+            )
+            updateSpinnerWithCustomDate()
+            resetHourOptions()
+        }
+
+        datePicker.show(parentFragmentManager, "DATE_PICKER")
     }
 
     private fun showTimePickerDialog() {
-        TimePickerDialog(requireContext(),{
-                _,hourOfDay, minute ->
-            selectedTime.set(Calendar.HOUR_OF_DAY,hourOfDay)
-            selectedTime.set(Calendar.MINUTE,minute)
+        val timePicker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_12H)
+            .setHour(12)
+            .setMinute(0)
+            .setTitleText("Select time")
+            .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
+            .build()
+
+        timePicker.addOnPositiveButtonClickListener {
+            selectedTime.set(Calendar.HOUR_OF_DAY, timePicker.hour)
+            selectedTime.set(Calendar.MINUTE, timePicker.minute)
             updateSpinnerWithCustomTime()
-        },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            true
-        ).show()
+        }
+
+        timePicker.show(parentFragmentManager, "TIME_PICKER")
     }
 
     private fun updateHourOptionsForToday() {
