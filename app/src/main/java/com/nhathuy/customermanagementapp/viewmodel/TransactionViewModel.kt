@@ -28,7 +28,7 @@ class TransactionViewModel(application: Application):AndroidViewModel(applicatio
         return transactionRepository.getAllTransactions()
     }
 
-    fun editCustomer(transaction: Transaction) = viewModelScope.launch {
+    fun editTransaction(transaction: Transaction) = viewModelScope.launch {
         transactionRepository.editTransaction(transaction)
     }
 
