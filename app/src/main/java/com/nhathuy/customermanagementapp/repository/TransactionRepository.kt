@@ -14,4 +14,18 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
     fun getAllTransactions(): LiveData<List<Transaction>> {
         return transactionDao.getAllTransactions()
     }
+
+
+    suspend fun editTransaction(transaction: Transaction){
+        transactionDao.editTransaction(transaction)
+    }
+
+    suspend fun deleteTransaction(transaction: Transaction){
+        transactionDao.deleteTransaction(transaction)
+    }
+
+
+    suspend fun deleteAllTransactions(){
+        transactionDao.deleteAllTransactions()
+    }
 }

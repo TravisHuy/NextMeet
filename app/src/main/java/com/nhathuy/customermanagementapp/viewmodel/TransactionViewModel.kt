@@ -8,6 +8,7 @@ import com.nhathuy.customermanagementapp.database.AppDatabase
 import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.repository.TransactionRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class TransactionViewModel(application: Application):AndroidViewModel(application) {
@@ -25,5 +26,19 @@ class TransactionViewModel(application: Application):AndroidViewModel(applicatio
 
     fun getAllTransactions(): LiveData<List<Transaction>> {
         return transactionRepository.getAllTransactions()
+    }
+
+    fun editCustomer(transaction: Transaction) = viewModelScope.launch {
+        transactionRepository.editTransaction(transaction)
+    }
+
+    fun deleteTransaction(transaction: Transaction){
+        viewModelScope.launch(Dispatchers.IO) {
+            transactionRepository.deleteTransaction(transaction)
+        }
+    }
+
+    fun  deleteAllTransactions() = viewModelScope.launch{
+        transactionRepository.deleteAllTransactions()
     }
 }
