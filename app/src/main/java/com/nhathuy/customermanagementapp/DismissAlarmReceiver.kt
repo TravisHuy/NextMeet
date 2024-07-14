@@ -15,7 +15,6 @@ class DismissAlarmReceiver: BroadcastReceiver() {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(notificationId)
 
-
             Log.d("DismissAlarmReceiver", "Notification $notificationId dismissed by swipe")
         }
     }

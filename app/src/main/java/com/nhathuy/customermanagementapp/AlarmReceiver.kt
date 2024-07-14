@@ -105,6 +105,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setOngoing(true)
             .setVibrate(longArrayOf(0,1000,500,1000))
             .setSound(alarmSound)
+            .setDeleteIntent(dismissPendingIntent)
             .setFullScreenIntent(alarmScreenPendingIntent,true)
             .build()
 

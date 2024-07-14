@@ -3,6 +3,7 @@ package com.nhathuy.customermanagementapp
 import android.app.KeyguardManager
 import android.app.NotificationManager
 import android.content.Context
+import android.media.Image
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
@@ -11,9 +12,13 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import java.lang.Math.abs
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,6 +28,13 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
     private lateinit var timeTextView: TextView
     private lateinit var mediaPlayer: MediaPlayer
     private lateinit var vibrator: Vibrator
+
+    private lateinit var alarmIcon : ImageView
+    private lateinit var snoozeIcon: ImageView
+    private lateinit var dismissIcon: ImageView
+
+    private var screenWidth: Int = 0
+    private var iconInitialX: Float = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +58,14 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
 
         gestureDetector = GestureDetector(this, this)
         timeTextView = findViewById(R.id.timeTextView)
+
+        alarmIcon = findViewById(R.id.alarmIcon)
+        snoozeIcon = findViewById(R.id.snoozeIcon)
+        dismissIcon = findViewById(R.id.dismissIcon)
+
+        screenWidth = resources.displayMetrics.widthPixels
+        iconInitialX = alarmIcon.x
+
 
         updateTime()
         startAlarmSound()
@@ -83,18 +103,67 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         val diffX = e2.x - e1.x
         val diffY = e2.y - e1.y
 
-        if (Math.abs(diffX) > Math.abs(diffY)) {
-            if (diffX > 0) {
+        if (abs(diffX) > abs(diffY)) {
+            if (diffX > 0 && diffX > screenWidth/3) {
                 // Swipe right - dismiss
                 dismissAlarm()
-            } else {
+            } else if(diffX<0 && abs(diffX) > screenWidth/3) {
                 // Swipe left - snooze
                 snoozeAlarm()
+            }
+            else{
+                resetIconAlarm()
             }
         }
         return true
     }
 
+    private fun resetIconAlarm() {
+        alarmIcon.animate().translationX(0f).setDuration(100).start()
+        alarmIcon.setImageDrawable(ContextCompat.getDrawable(this,R.drawable.ic_alarm))
+        snoozeIcon.alpha=0.3f
+        dismissIcon.alpha=0.3f
+    }
+
+    override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+        val scrollX = e2.x - e1.x
+        val maxScroll = screenWidth / 2f
+
+        // Calculate the percentage of the swipe
+        val scrollPercentage = (scrollX / maxScroll).coerceIn(-1f, 1f)
+
+        // Move the alarm icon
+//        alarmIcon.translationX = scrollPercentage * maxScroll
+
+        alarmIcon.translationX= scrollX
+
+        when{
+            scrollPercentage <= -0.5 -> {
+                alarmIcon.setImageDrawable(ContextCompat.getDrawable(this,R.drawable.zzz))
+                snoozeIcon.alpha = 1f
+                dismissIcon.alpha =0.3f
+                alarmIcon.visibility = View.INVISIBLE
+            }
+            scrollPercentage >= 0.5 ->{
+                alarmIcon.setImageDrawable(ContextCompat.getDrawable(this,R.drawable.alarm_off))
+                snoozeIcon.alpha = 0.3f
+                dismissIcon.alpha = 1f
+                alarmIcon.visibility = View.INVISIBLE
+            }
+            else -> {
+                alarmIcon.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_alarm))
+                snoozeIcon.alpha = 0.3f + (abs(scrollPercentage) * 0.7f)
+                dismissIcon.alpha = 0.3f + (abs(scrollPercentage) * 0.7f)
+            }
+        }
+
+
+//        // Update visibility of snooze and dismiss icons
+//        snoozeIcon.alpha = abs(scrollPercentage.coerceAtMost(0f))
+//        dismissIcon.alpha = scrollPercentage.coerceAtLeast(0f)
+
+        return true
+    }
     private fun dismissAlarm() {
         stopAlarmAndVibration()
         // Cancel the notification
@@ -133,6 +202,6 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
     override fun onDown(e: MotionEvent): Boolean = true
     override fun onShowPress(e: MotionEvent) {}
     override fun onSingleTapUp(e: MotionEvent): Boolean = false
-    override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean = false
+
     override fun onLongPress(e: MotionEvent) {}
 }
