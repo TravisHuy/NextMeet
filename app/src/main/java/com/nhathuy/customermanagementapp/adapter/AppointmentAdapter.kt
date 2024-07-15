@@ -55,7 +55,7 @@ class AppointmentAdapter(private val context:Context,
 
         private fun toggleSelectionMode(adapterPosition: Int) {
             isSelectionMode =!isSelectionMode
-            toggleSelection(position)
+            toggleSelection(adapterPosition)
             onSelectionChanged(isSelectionMode)
             notifyDataSetChanged()
         }

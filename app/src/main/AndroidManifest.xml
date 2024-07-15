@@ -34,7 +34,16 @@
             android:taskAffinity=""
             android:screenOrientation="portrait"/>
 
-        <receiver android:name=".AlarmReceiver" />
+        <receiver android:name=".AlarmReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="com.nhathuy.customermanagementapp.ACTION_SNOOZE"/>
+                <action android:name="com.nhathuy.customermanagementapp.ACTION_DISMISS"/>
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".SnoozeAlarmReceiver"
+            android:exported="false" />
         <receiver
             android:name=".DismissAlarmReceiver"
             android:exported="false" />

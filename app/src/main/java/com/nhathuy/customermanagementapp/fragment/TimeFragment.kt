@@ -61,7 +61,7 @@ class TimeFragment : Fragment() {
     // get selectdatetime
     fun getSelectDateTime() : Pair<String ,String>{
         return Pair(dateFormat.format(selectedTime.time),
-                timeFormat.format(selectedTime.time))
+            timeFormat.format(selectedTime.time))
     }
     // getRepeateInfo
     fun getRepeatInfo():Pair<Int,String>{
@@ -270,7 +270,7 @@ class TimeFragment : Fragment() {
         builder.setView(dialogView)
             .setPositiveButton("Ok")
             {
-                _,_ ->
+                    _,_ ->
                 val interval = ed_interval.text.toString().toIntOrNull() ?: 1
                 val selectUnit =spinnerUnit.selectedItem.toString()
 
@@ -280,7 +280,7 @@ class TimeFragment : Fragment() {
                 updateRepeatSpinnerWithNextDate()
             }
             .setNegativeButton("Cancel"){
-                dialog,_ ->
+                    dialog,_ ->
                 dialog.cancel()
                 binding.spinnerAgain.setSelection(0)
             }
@@ -297,7 +297,7 @@ class TimeFragment : Fragment() {
         hourAdapter.notifyDataSetChanged()
         binding.spinnerHour.setSelection(hourOptions.indexOf(customTimeString))
     }
-   // Logic processing when clicking custom date
+    // Logic processing when clicking custom date
     private fun updateSpinnerWithCustomDate() {
         val formattedDate = dateFormat.format(selectedTime.time)
         val customDateString = "$formattedDate"

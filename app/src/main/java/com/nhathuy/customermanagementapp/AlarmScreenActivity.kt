@@ -1,9 +1,11 @@
 package com.nhathuy.customermanagementapp
 
+import android.app.AlarmManager
 import android.app.KeyguardManager
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
-import android.media.Image
+import android.content.Intent
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
@@ -16,6 +18,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import java.lang.Math.abs
@@ -170,6 +173,17 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val customerId = intent.getIntExtra("customer_id", -1)
         notificationManager.cancel(customerId)
+
+
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pendingIntent = PendingIntent.getBroadcast(this,
+                            customerId,
+                            Intent(this, AlarmReceiver::class.java),
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+        alarmManager.cancel(pendingIntent)
+        Toast.makeText(this, "Alarm dismissed", Toast.LENGTH_SHORT).show()
+
         finish()
     }
 
@@ -179,6 +193,24 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         // For example, reschedule the alarm for 10 minutes later
         // You might want to use AlarmManager to schedule a new alarm
         // For now, we'll just finish the activity
+        val customerId= intent.getIntExtra("customer_id",-1)
+        val date = intent.getStringExtra("date")
+        val time = intent.getStringExtra("time")
+        val address = intent.getStringExtra("address")
+        val notes = intent.getStringExtra("notes")
+
+        val snoozeIntent= Intent(this,SnoozeAlarmReceiver::class.java).apply {
+            putExtra("customer_id",customerId)
+            putExtra("date",date)
+            putExtra("time",time)
+            putExtra("address",address)
+            putExtra("notes",notes)
+        }
+        sendBroadcast(snoozeIntent)
+
+        // Show a toast to inform the user
+        Toast.makeText(this, "Alarm snoozed for 5 minutes", Toast.LENGTH_SHORT).show()
+
         finish()
     }
 

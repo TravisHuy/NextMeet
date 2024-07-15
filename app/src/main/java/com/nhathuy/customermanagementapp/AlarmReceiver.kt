@@ -1,5 +1,6 @@
 package com.nhathuy.customermanagementapp
 
+import android.app.AlarmManager
 import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -19,6 +20,7 @@ import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.
 import com.nhathuy.customermanagementapp.R
 
 class AlarmReceiver : BroadcastReceiver() {
+
     override fun onReceive(context: Context, intent: Intent) {
         val customerId = intent.getIntExtra("customer_id", -1)
         val date = intent.getStringExtra("date")
@@ -33,15 +35,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val powerManager= context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = powerManager.newWakeLock(
             PowerManager.FULL_WAKE_LOCK or
-                PowerManager.ACQUIRE_CAUSES_WAKEUP or
-                PowerManager.ON_AFTER_RELEASE, "TravisHuy:AlarmWakeLock")
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                    PowerManager.ON_AFTER_RELEASE, "TravisHuy:AlarmWakeLock")
         wakeLock.acquire(10*60*1000L)
 
-        //dismiss keyguard
-//        if(Build.VERSION.SDK_INT >=Build.VERSION_CODES.O){
-//            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-//            keyguardManager.requestDismissKeyguard(null,null)
-//        }
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -58,9 +55,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0,1000,500,1000)
                 setSound(alarmSound,
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -90,7 +87,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val dismissIntent= Intent(context,DismissAlarmReceiver::class.java).apply {
             putExtra("notification_id",customerId)
         }
-        val dismissPendingIntent = PendingIntent.getBroadcast(context, customerId, dismissIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val dismissPendingIntent = PendingIntent.getBroadcast(context,
+            customerId,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(context, "appointment_channel")
             .setSmallIcon(R.drawable.ic_notification)
@@ -105,7 +105,6 @@ class AlarmReceiver : BroadcastReceiver() {
             .setOngoing(true)
             .setVibrate(longArrayOf(0,1000,500,1000))
             .setSound(alarmSound)
-            .setDeleteIntent(dismissPendingIntent)
             .setFullScreenIntent(alarmScreenPendingIntent,true)
             .build()
 
@@ -118,4 +117,5 @@ class AlarmReceiver : BroadcastReceiver() {
 
         context.startActivity(alarmScreenIntent)
     }
+
 }
