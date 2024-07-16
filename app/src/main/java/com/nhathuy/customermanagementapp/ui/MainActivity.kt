@@ -18,7 +18,9 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.ActivityMainBinding
+import com.nhathuy.customermanagementapp.fragment.AppointmentFragment
 import com.nhathuy.customermanagementapp.fragment.CustomerFragment
+import com.nhathuy.customermanagementapp.fragment.TransactionFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -42,6 +44,10 @@ class MainActivity : AppCompatActivity() {
         ))
         setupActionBarWithNavController(navController, appBarConfiguration)
         binding.bottomNavItem.setupWithNavController(navController)
+
+        navController.addOnDestinationChangedListener { _, _, _ ->
+            invalidateOptionsMenu()
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -65,6 +71,8 @@ class MainActivity : AppCompatActivity() {
         val searchClose = searchView.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView
         searchClose.setColorFilter(ContextCompat.getColor(this, android.R.color.black))
 
+        // Set the hint text based on the current fragment
+        setSearchHint(searchView)
 
         searchView.setOnQueryTextListener(object :SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -93,9 +101,23 @@ class MainActivity : AppCompatActivity() {
         val currentFragment = navHostFragment.childFragmentManager.fragments[0]
 
         // If the current fragment is CustomerFragment, perform the search
-        if (currentFragment is CustomerFragment) {
-            currentFragment.searchCustomers(query)
+        when (currentFragment) {
+            is CustomerFragment -> currentFragment.searchCustomers(query)
+            is TransactionFragment -> currentFragment.searchTransactions(query)
+            is AppointmentFragment -> currentFragment.searchAppointment(query)
         }
     }
+    private fun setSearchHint(searchView: SearchView) {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val currentFragment = navHostFragment.childFragmentManager.fragments[0]
 
+        val hint = when (currentFragment) {
+            is CustomerFragment -> "Enter customer name"
+            is TransactionFragment -> "Enter product or service"
+            is AppointmentFragment -> "Enter appointment date"
+            else -> "Search"
+        }
+
+        searchView.queryHint = hint
+    }
 }

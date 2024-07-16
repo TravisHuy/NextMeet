@@ -27,6 +27,7 @@ class TransactionFragment : Fragment() {
     private lateinit var transactionAdapter: TransactionAdapter
     private lateinit var customerViewModel: CustomerViewModel
 
+    private var allTransactions:List<Transaction> = emptyList()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -49,6 +50,7 @@ class TransactionFragment : Fragment() {
         transactionViewModel.getAllTransactions().observe(viewLifecycleOwner) { transactions ->
             transactions?.let {
                 transactionAdapter.setData(it)
+                allTransactions=it
             }
         }
     }
@@ -73,5 +75,21 @@ class TransactionFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    fun searchTransactions(query: String?) {
+        if(query.isNullOrBlank()){
+            transactionAdapter.setData(allTransactions)
+        }
+        else{
+            val filteredList=allTransactions.filter {
+                    transaction ->
+                transaction.productOrService.contains(query,ignoreCase = false)
+                transaction.productOrService.split(" ").any{
+                    it.contains(query,ignoreCase = true)
+                }
+            }
+            transactionAdapter.setData(filteredList)
+        }
     }
 }

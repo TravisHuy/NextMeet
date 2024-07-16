@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.nhathuy.customermanagementapp.adapter.AppointmentAdapter
 import com.nhathuy.customermanagementapp.databinding.FragmentAppointmentBinding
+import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 
@@ -22,6 +23,8 @@ class AppointmentFragment : Fragment() {
     private lateinit var appointmentViewModel: AppointmentViewModel
     private lateinit var appointmentAdapter: AppointmentAdapter
     private lateinit var customerViewModel: CustomerViewModel
+
+    private var listAppointments:List<Appointment> = emptyList()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -47,7 +50,8 @@ class AppointmentFragment : Fragment() {
     private fun observerViewModel() {
         appointmentViewModel.getAllAppointment().observe(viewLifecycleOwner,{
                 appointments -> appointments?.let {
-            appointmentAdapter.setData(it)
+                listAppointments=it
+                appointmentAdapter.setData(it)
             }
         })
     }
@@ -70,5 +74,21 @@ class AppointmentFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         appointmentViewModel.getAllAppointment()
+    }
+
+    fun searchAppointment(query: String?) {
+        if(query.isNullOrBlank()){
+            appointmentAdapter.setData(listAppointments)
+        }
+        else{
+            val filteredList=listAppointments.filter {
+                    appointment ->
+                appointment.date.contains(query,ignoreCase = false)
+                appointment.date.split(" ").any{
+                    it.contains(query,ignoreCase = true)
+                }
+            }
+            appointmentAdapter.setData(filteredList)
+        }
     }
 }
