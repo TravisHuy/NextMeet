@@ -11,7 +11,7 @@
         <item name="colorSurface">@color/light_surface</item>
         <item name="android:textColor">@color/light_text_primary</item>
         <item name="android:textColorSecondary">@color/light_text_secondary</item>
-
+        <item name="android:textColorHint">@color/black</item>
         <!-- Các thuộc tính khác -->
         <item name="android:statusBarColor">@color/light_primary</item>
         <item name="android:navigationBarColor">@color/light_surface</item>
@@ -21,5 +21,8 @@
         <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
         <item name="android:windowExitAnimation">@anim/slide_out_bottom</item>
     </style>
-
+    <style name="CustomSearchViewStyle" parent="Widget.AppCompat.SearchView">
+        <item name="queryBackground">@android:color/white</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
 </resources>

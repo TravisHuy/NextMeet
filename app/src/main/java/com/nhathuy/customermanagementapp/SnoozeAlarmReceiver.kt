@@ -65,6 +65,7 @@ class SnoozeAlarmReceiver : BroadcastReceiver() {
         notificationManager.notify(customerId,snoozeNotification)
 
         Log.d("SnoozeAlarmReceiver", "Alarm snoozed for customer $customerId. Will ring again in 5 minutes.")
+
     }
 
 }

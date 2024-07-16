@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.adapter.CustomerAdapter
 import com.nhathuy.customermanagementapp.databinding.FragmentCustomerBinding
+import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.ui.CustomerDetailActivity
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 
@@ -27,7 +28,7 @@ class CustomerFragment : Fragment() {
 
     private lateinit var customerViewModel: CustomerViewModel
     private lateinit var customerAdapter: CustomerAdapter
-
+    private var allCustomers: List<Customer> = emptyList()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -50,6 +51,7 @@ class CustomerFragment : Fragment() {
     private fun observerViewModel() {
         customerViewModel.getAllCustomers().observe(viewLifecycleOwner,{
             customers -> customers?.let {
+                allCustomers=it
                 customerAdapter.setData(it)
          }
         })
@@ -70,5 +72,22 @@ class CustomerFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
     }
+
+    fun searchCustomers(query: String?) {
+        if(query.isNullOrBlank()){
+            customerAdapter.setData(allCustomers)
+        }
+        else{
+            val filteredList=allCustomers.filter {
+                customer ->
+                customer.name.contains(query,ignoreCase = false)
+                customer.name.split(" ").any{
+                    it.contains(query,ignoreCase = true)
+                }
+            }
+            customerAdapter.setData(filteredList)
+        }
+    }
+
 
 }
