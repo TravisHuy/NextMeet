@@ -1,5 +1,6 @@
 package com.nhathuy.customermanagementapp.ui
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
@@ -16,6 +17,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.nhathuy.customermanagementapp.AlarmHistoryActivity
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.ActivityMainBinding
 import com.nhathuy.customermanagementapp.fragment.AppointmentFragment
@@ -87,8 +89,15 @@ class MainActivity : AppCompatActivity() {
 
         })
 
+        // Set up notification icon click listener
+        val notificationItem = menu.findItem(R.id.notification)
+        notificationItem.setOnMenuItemClickListener {
+            openAlarmHistoryActivity()
+            true
+        }
         return true
     }
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when(item.itemId){
@@ -119,5 +128,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         searchView.queryHint = hint
+    }
+
+
+    private fun openAlarmHistoryActivity() {
+        startActivity(Intent(this,AlarmHistoryActivity::class.java))
     }
 }

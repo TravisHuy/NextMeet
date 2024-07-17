@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.customermanagementapp.database.AppDatabase
-import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.repository.TransactionRepository
 import kotlinx.coroutines.Dispatchers

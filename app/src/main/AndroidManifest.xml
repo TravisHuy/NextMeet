@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
@@ -24,21 +23,25 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CustomerManagementApp"
         tools:targetApi="31">
-
+        <activity
+            android:name=".AlarmHistoryActivity"
+            android:exported="false" />
         <activity
             android:name=".AlarmScreenActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:showOnLockScreen="true"
-            android:launchMode="singleInstance"
             android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:showOnLockScreen="true"
             android:taskAffinity=""
-            android:screenOrientation="portrait"/>
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
-        <receiver android:name=".AlarmReceiver" android:exported="false">
+        <receiver
+            android:name=".AlarmReceiver"
+            android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="com.nhathuy.customermanagementapp.ACTION_SNOOZE"/>
-                <action android:name="com.nhathuy.customermanagementapp.ACTION_DISMISS"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.nhathuy.customermanagementapp.ACTION_SNOOZE" />
+                <action android:name="com.nhathuy.customermanagementapp.ACTION_DISMISS" />
             </intent-filter>
         </receiver>
         <receiver

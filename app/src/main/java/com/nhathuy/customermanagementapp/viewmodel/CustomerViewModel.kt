@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.nhathuy.customermanagementapp.database.AppDatabase
 import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.repository.CustomerRepository
-import com.nhathuy.customermanagementapp.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

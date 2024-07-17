@@ -11,10 +11,8 @@ import android.view.Window
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageView
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -24,7 +22,6 @@ import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 import com.nhathuy.customermanagementapp.viewmodel.TransactionViewModel
-import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale

@@ -1,6 +1,7 @@
 package com.nhathuy.customermanagementapp
 
 import android.app.AlarmManager
+import android.app.Application
 import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -16,8 +17,14 @@ import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DismissEvent
 import com.nhathuy.customermanagementapp.R
+import com.nhathuy.customermanagementapp.model.AlarmHistory
+import com.nhathuy.customermanagementapp.viewmodel.AlarmHistoryViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -27,6 +34,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val time = intent.getStringExtra("time")
         val address = intent.getStringExtra("address")
         val notes = intent.getStringExtra("notes")
+
+        val title = "Appointment Reminder"
+        val content = "You have an appointment at $time on $date"
+        val bigText = "You have an appointment at $time on $date\nAddress: $address\nNotes: $notes"
 
         Log.d("AlarmReceiver", "Received alarm for customer $customerId at $time on $date")
 
@@ -82,6 +93,15 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Log the alarm history
+        val alarmHistoryIntent = Intent(context, AlarmHistoryActivity::class.java).apply {
+            putExtra("customer_id", customerId)
+            putExtra("date", date)
+            putExtra("time", time)
+            putExtra("notes", notes)
+        }
+
+
 
         //create an intent for the swipe action
         val dismissIntent= Intent(context,DismissAlarmReceiver::class.java).apply {
@@ -94,10 +114,10 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, "appointment_channel")
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Appointment Reminder")
-            .setContentText("You have an appointment at $time on $date")
+            .setContentTitle(title)
+            .setContentText(content)
             .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("You have an appointment at $time on $date \nAddress: $address\nNotes: $notes"))
+                .bigText(bigText))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -115,6 +135,7 @@ class AlarmReceiver : BroadcastReceiver() {
         Log.d("AlarmReceiver", "Notification sent for customer $customerId")
 
 
+        context.startActivity(alarmHistoryIntent)
         context.startActivity(alarmScreenIntent)
     }
 
