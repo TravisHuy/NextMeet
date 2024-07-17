@@ -1,16 +1,28 @@
 package com.nhathuy.customermanagementapp.adapter
 
+import android.app.Dialog
 import android.content.Context
+import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.nhathuy.customermanagementapp.R
+import com.nhathuy.customermanagementapp.fragment.PlaceFragment
+import com.nhathuy.customermanagementapp.fragment.TimeFragment
 import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
@@ -20,9 +32,10 @@ class AppointmentAdapter(private val context:Context,
                          private var listAppointment: List<Appointment>,
                          private val customerViewModel: CustomerViewModel,
                          private val appointmentViewModel: AppointmentViewModel,
-                         private val onSelectionChanged: (Boolean) -> Unit)
-    :RecyclerView.Adapter<AppointmentAdapter.AppointmentViewHolder>() {
-
+                         private val onSelectionChanged: (Boolean) -> Unit,
+                         private val fragmentManager: FragmentManager,
+                         private val lifecycleOwner: LifecycleOwner
+                         ):RecyclerView.Adapter<AppointmentAdapter.AppointmentViewHolder>() {
 
     private var selectItems= mutableSetOf<Appointment>()
     var isSelectionMode= false
@@ -126,7 +139,68 @@ class AppointmentAdapter(private val context:Context,
     }
 
     private fun onEditClick(appointment: Appointment) {
+        val dialog = Dialog(context)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.add_alram)
 
+        val window = dialog.window
+        window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        window?.setGravity(Gravity.CENTER)
+
+        val tabLayout = dialog.findViewById<TabLayout>(R.id.tablayout)
+        val viewPager = dialog.findViewById<ViewPager2>(R.id.viewpager)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancel)
+        val saveButton = dialog.findViewById<Button>(R.id.alram_save)
+
+        val adapter = ViewPageAdapter(fragmentManager, lifecycleOwner.lifecycle)
+
+        val timeFragment = TimeFragment().apply {
+            arguments = Bundle().apply {
+                putString("date", appointment.date)
+                putString("time", appointment.time)
+            }
+        }
+        val placeFragment = PlaceFragment().apply {
+            arguments = Bundle().apply {
+                putString("address", appointment.address)
+            }
+        }
+
+        adapter.addFragment(timeFragment, context.getString(R.string.pick_date_amp_time))
+        adapter.addFragment(placeFragment, context.getString(R.string.pick_place))
+
+        viewPager.adapter = adapter
+
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = when(position) {
+                0 -> context.getString(R.string.pick_date_amp_time)
+                1 -> context.getString(R.string.pick_place)
+                else -> null
+            }
+        }.attach()
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        saveButton.setOnClickListener {
+            val (date, time) = timeFragment.getSelectDateTime()
+            val address = placeFragment.getSelectAddress()
+            val (repeatInterval, repeatUnit) = timeFragment.getRepeatInfo()
+
+            val updatedAppointment = appointment.copy(
+                date = date,
+                time = time,
+                address = address,
+                notes = "Repeat: $repeatInterval $repeatUnit\t ${appointment.notes}"
+            )
+
+            appointmentViewModel.editAppointment(updatedAppointment)
+            Toast.makeText(context, "Appointment updated", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
    //delete transaction

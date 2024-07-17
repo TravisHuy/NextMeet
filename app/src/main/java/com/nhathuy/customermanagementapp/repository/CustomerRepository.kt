@@ -26,4 +26,7 @@ class CustomerRepository(private val customerDao: CustomerDao) {
     fun getCustomerById(customerId:Int) :LiveData<Customer?>{
         return customerDao.getCustomerById(customerId)
     }
+    suspend fun deleteAllCustomers(){
+        customerDao.deleteAllCustomer()
+    }
 }

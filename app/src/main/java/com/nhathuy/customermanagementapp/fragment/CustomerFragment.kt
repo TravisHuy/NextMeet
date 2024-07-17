@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.adapter.CustomerAdapter
 import com.nhathuy.customermanagementapp.databinding.FragmentCustomerBinding
@@ -58,11 +59,24 @@ class CustomerFragment : Fragment() {
     }
 
     private fun setupRecylerView() {
-        customerAdapter= CustomerAdapter(requireContext(), emptyList())
+        customerAdapter = CustomerAdapter(requireContext(), emptyList()) { customer ->
+            showDeleteConfirmationDialog(customer)
+        }
         binding.recyclerView.apply {
             layoutManager=LinearLayoutManager(requireContext())
             adapter=customerAdapter
         }
+    }
+
+    private fun showDeleteConfirmationDialog(customer: Customer) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Delete Customer")
+            .setMessage("Are you sure you want to delete all customer?")
+            .setPositiveButton("Delete") { dialog, which ->
+                customerViewModel.deleteAllCustomers()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onResume() {

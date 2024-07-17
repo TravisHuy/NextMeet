@@ -64,7 +64,10 @@ class AppointmentFragment : Fragment() {
             appointmentViewModel,
             onSelectionChanged = { isInSelectionMode ->
 
-            })
+            },
+            childFragmentManager,
+            viewLifecycleOwner)
+
         binding.recAppointment.apply {
             layoutManager= LinearLayoutManager(requireContext())
             adapter=appointmentAdapter

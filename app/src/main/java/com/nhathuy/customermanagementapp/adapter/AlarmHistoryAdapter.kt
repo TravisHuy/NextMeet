@@ -30,7 +30,7 @@ class AlarmHistoryAdapter(private val context: Context, private val customerView
 
 
         init {
-            itemView.setOnLongClickListener{
+            itemView.setOnClickListener{
                 val alarmHistory= alarmHistoryList[adapterPosition]
                 onDelete(alarmHistory)
                 true

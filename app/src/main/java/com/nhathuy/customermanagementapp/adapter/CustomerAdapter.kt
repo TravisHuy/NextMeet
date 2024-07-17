@@ -12,14 +12,14 @@ import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.ui.CustomerDetailActivity
 
 
-class CustomerAdapter(private val context:Context, private var listCustomer:List<Customer>):
+class CustomerAdapter(private val context:Context, private var listCustomer:List<Customer>,private val onDelete : (Customer) -> Unit):
     RecyclerView.Adapter<CustomerAdapter.CustomerViewHolder>() {
     class CustomerViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
         private val name:TextView=itemView.findViewById(R.id.name)
         private val email:TextView=itemView.findViewById(R.id.date)
         private val phone:TextView=itemView.findViewById(R.id.phone)
 
-        fun bind(customer: Customer,context:Context) {
+        fun bind(customer: Customer,context:Context,onDelete: (Customer) -> Unit) {
             name.text=customer.name
             email.text=customer.email
             phone.text=customer.phone
@@ -32,8 +32,12 @@ class CustomerAdapter(private val context:Context, private var listCustomer:List
                 }
                 context.startActivity(intent)
             }
-        }
 
+            itemView.setOnLongClickListener {
+                onDelete(customer)
+                true
+            }
+        }
 
     }
 
@@ -48,7 +52,7 @@ class CustomerAdapter(private val context:Context, private var listCustomer:List
 
     override fun onBindViewHolder(holder: CustomerViewHolder, position: Int) {
        val customer=listCustomer[position]
-        holder.bind(customer,context)
+        holder.bind(customer,context,onDelete)
     }
     fun setData(customers: List<Customer>) {
         listCustomer = customers

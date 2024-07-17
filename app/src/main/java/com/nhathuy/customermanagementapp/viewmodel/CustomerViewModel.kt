@@ -43,4 +43,8 @@ class CustomerViewModel(application: Application):AndroidViewModel(application) 
     fun getCustomerById(customerId:Int) :LiveData<Customer?>{
         return customerRepository.getCustomerById(customerId)
     }
+
+    fun deleteAllCustomers() = viewModelScope.launch {
+        customerRepository.deleteAllCustomers()
+    }
 }
