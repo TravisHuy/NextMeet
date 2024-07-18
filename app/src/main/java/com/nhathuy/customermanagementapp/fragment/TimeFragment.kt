@@ -12,6 +12,8 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -124,6 +126,7 @@ class TimeFragment : Fragment() {
         }
         binding.spinnerHour.onItemSelectedListener= object :AdapterView.OnItemSelectedListener{
             override fun onItemSelected(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
+                binding.errorTime.visibility = View.GONE
                 when{
                     hourOptions[position] == "Morning (8:00)" -> selectedTime.set(Calendar.HOUR_OF_DAY, 8)
                     hourOptions[position] == "Afternoon (13:00)" -> selectedTime.set(Calendar.HOUR_OF_DAY, 13)
@@ -139,6 +142,7 @@ class TimeFragment : Fragment() {
                         }
                     }
                 }
+                checkIfSelectedTimeHasPassed()
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {
@@ -185,10 +189,26 @@ class TimeFragment : Fragment() {
         }
     }
 
+    private fun checkIfSelectedTimeHasPassed() {
+        val currentTime = Calendar.getInstance()
+        if (selectedTime.before(currentTime)) {
+            binding.errorTime.visibility = View.VISIBLE
+        } else {
+            binding.errorTime.visibility = View.GONE
+        }
+    }
+
     private fun showDatePickerDialog() {
+        val today = MaterialDatePicker.todayInUtcMilliseconds()
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Select date")
-            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setSelection(today)
+            .setCalendarConstraints(
+                CalendarConstraints.Builder()
+                    .setStart(today)
+                    .setValidator(DateValidatorPointForward.from(today))
+                    .build()
+            )
             .build()
 
         datePicker.addOnPositiveButtonClickListener { selection ->

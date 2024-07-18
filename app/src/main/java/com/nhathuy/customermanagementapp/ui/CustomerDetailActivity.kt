@@ -136,30 +136,42 @@ class CustomerDetailActivity : AppCompatActivity() {
         cancelButton.setOnClickListener {
             dialog.dismiss()
         }
-
         saveButton.setOnClickListener {
            val (date,time) = timeFragment.getSelectDateTime()
            val address = placeFragment.getSelectAddress()
            val (repeatInterval, repeatUnit) = timeFragment.getRepeatInfo()
 
-            currentCustomer?.let {
-                customer ->
-                val appointment = Appointment(
-                    customerId = customer.id,
-                    date = date,
-                    time = time,
-                    address = address,
-                    notes = "Repeat: $repeatInterval $repeatUnit\t ${customer.notes}")
+            // parse date and time
+            val dateTimeString = "$date $time"
+            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            val selectedDate = sdf.parse(dateTimeString)
+            val currentDate = Calendar.getInstance().time
 
-                appointmentViewModel.register(appointment)
-                //schedule the alarm
-                scheduleAlarm(appointment)
-                Toast.makeText(this, "Appointment saved", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            } ?: run {
-                Toast.makeText(this, "Error: Customer not found", Toast.LENGTH_SHORT).show()
+            if (selectedDate != null && selectedDate.before(currentDate)) {
+                Toast.makeText(this, "Cannot select a past date and time", Toast.LENGTH_SHORT).show()
             }
+            else if (address==null){
+                Toast.makeText(this, "Select address", Toast.LENGTH_SHORT).show()
+            }
+            else {
+                currentCustomer?.let { customer ->
+                    val appointment = Appointment(
+                        customerId = customer.id,
+                        date = date,
+                        time = time,
+                        address = address,
+                        notes = "Repeat: $repeatInterval $repeatUnit\t ${customer.notes}"
+                    )
 
+                    appointmentViewModel.register(appointment)
+                    //schedule the alarm
+                    scheduleAlarm(appointment)
+                    Toast.makeText(this, "Appointment saved", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                } ?: run {
+                    Toast.makeText(this, "Error: Customer not found", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         dialog.show()
