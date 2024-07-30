@@ -51,8 +51,16 @@ class LoginActivity : AppCompatActivity() {
             binding.edLoginPass.error=getString(R.string.error_password)
         }
        if(phone.length!=10){
-           binding.edLoginPhone.error=getString(R.string.error_phone);
+           binding.edLoginPhone.error=getString(R.string.error_phone)
         }
+
+
+       if(!isValidateInput(phone,password)){
+           return
+       }
+
+
+
         userViewModel.login(phone, password).observe(this, Observer {
             user->
             if(user!=null){
@@ -74,6 +82,34 @@ class LoginActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun isValidateInput(phone: String, password: String): Boolean {
+        var isValidate=true
+
+        if(phone.isEmpty()){
+            binding.loginPhoneLayout.error=getString(R.string.enter_phone)
+            isValidate=false
+        }else if(phone.length!=10){
+            binding.loginPhoneLayout.error=getString(R.string.error_phone)
+            isValidate=false
+        }else {
+            binding.loginPhoneLayout.error = null
+        }
+
+        if(password.isEmpty()){
+            binding.loginPassLayout.error=getString(R.string.enter_password)
+            isValidate=false
+        }else if(password.length<6){
+            binding.loginPassLayout.error=getString(R.string.error_phone)
+            isValidate=false
+        }else {
+            binding.loginPassLayout.error = null
+        }
+
+
+        return isValidate
+    }
+
     fun showDialog(){
         val dialog= Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)

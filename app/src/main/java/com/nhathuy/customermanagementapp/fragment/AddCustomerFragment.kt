@@ -3,6 +3,7 @@ package com.nhathuy.customermanagementapp.fragment
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Patterns
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +15,7 @@ import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.FragmentAddCustomerBinding
 import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
+import java.util.regex.Pattern
 
 class AddCustomerFragment : Fragment() {
     private lateinit var binding:FragmentAddCustomerBinding
@@ -45,20 +47,9 @@ class AddCustomerFragment : Fragment() {
         val group=binding.edAddCustomerGroup.text.toString()
         val notes=binding.edAddCustomerNotes.text.toString()
 
-
-        if(name.isEmpty()||phone.isEmpty()||email.isEmpty()||address.isEmpty()||group.isEmpty()||notes.isEmpty()){
-            Toast.makeText(context,getString(R.string.all_fields_are_required),Toast.LENGTH_LONG).show()
+        if (!validateInputs(name, phone, email, address, group, notes)) {
             return
         }
-        else if(phone.length!=10){
-           binding.edAddCustomerPhone.error=getString(R.string.error_phone)
-            return
-        }
-        else if(name.length>25){
-            binding.edAddCustomerName.error=getString(R.string.error_name)
-            return
-        }
-
         val userId=sharedPreferences.getInt("user_id",-1);
 
         if(userId==-1){
@@ -75,6 +66,73 @@ class AddCustomerFragment : Fragment() {
             Toast.makeText(context,"Customer add failed",Toast.LENGTH_LONG).show()
         }
 
+        clearInputs()
+    }
+
+    private fun validateInputs(name: String, phone: String, email: String, address: String, group: String, notes: String): Boolean {
+        var isValid=true
+
+        if(name.isEmpty()){
+            binding.addCustomerNameLayout.error=getString(R.string.enter_name)
+            isValid=false
+        }
+        else if(name.length>25){
+            binding.addCustomerNameLayout.error=getString(R.string.error_name)
+            isValid=false
+        }else {
+            binding.addCustomerNameLayout.error = null
+        }
+
+        if(phone.isEmpty()){
+            binding.addCustomerPhoneLayout.error=getString(R.string.enter_phone)
+            isValid=false
+        }
+        else if(phone.length!=10){
+            binding.addCustomerPhoneLayout.error=getString(R.string.error_phone)
+            isValid=false
+        }else {
+            binding.addCustomerPhoneLayout.error = null
+        }
+
+        if(email.isEmpty()){
+            binding.addCustomerEmailLayout.error=getString(R.string.enter_email)
+            isValid=false
+        }else if (!isValidEmail(email)) {
+            binding.addCustomerEmailLayout.error = getString(R.string.email_invalid)
+            isValid = false
+        }
+        else {
+            binding.addCustomerEmailLayout.error = null
+        }
+
+        if (address.isEmpty()) {
+            binding.addCustomerAddressLayout.error = getString(R.string.enter_address)
+            isValid = false
+        } else {
+            binding.addCustomerAddressLayout.error = null
+        }
+
+        if (group.isEmpty()) {
+            binding.addCustomerGroupLayout.error = getString(R.string.enter_group)
+            isValid = false
+        } else {
+            binding.addCustomerGroupLayout.error = null
+        }
+
+        if (notes.isEmpty()) {
+            binding.addCustomerNotesLayout.error = getString(R.string.enter_notes)
+            isValid = false
+        } else {
+            binding.addCustomerNotesLayout.error = null
+        }
+
+        return isValid
+    }
+
+    private fun isValidEmail(email: String): Boolean {
+        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+    private fun clearInputs() {
         binding.edAddCustomerName.text?.clear()
         binding.edAddCustomerPhone.text?.clear()
         binding.edAddCustomerEmail.text?.clear()
@@ -82,7 +140,6 @@ class AddCustomerFragment : Fragment() {
         binding.edAddCustomerGroup.text?.clear()
         binding.edAddCustomerNotes.text?.clear()
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         (activity as AppCompatActivity).supportActionBar?.show()
