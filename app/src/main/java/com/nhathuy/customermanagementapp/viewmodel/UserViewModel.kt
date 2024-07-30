@@ -39,4 +39,8 @@ class UserViewModel(application: Application):AndroidViewModel(application) {
     fun logout()= viewModelScope.launch {
         repository.logout()
     }
+
+    fun updatePassword(phone:String,newPassword:String) =viewModelScope.launch {
+        repository.updatePassword(phone,newPassword)
+    }
 }

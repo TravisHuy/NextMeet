@@ -38,7 +38,14 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.setOnClickListener{
             login()
         }
+
+        binding.forgottenPass.setOnClickListener {
+            showForgotDialog()
+        }
+
     }
+
+
     fun login(){
         val phone=binding.edLoginPhone.text.toString()
         val password=binding.edLoginPass.text.toString()
@@ -145,6 +152,53 @@ class LoginActivity : AppCompatActivity() {
                 userViewModel.register(user)
                 dialog.dismiss()
                 Toast.makeText(this,getString(R.string.register_successfull),Toast.LENGTH_LONG).show()
+            }
+        }
+
+        dialog.show()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT)
+//        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations=R.style.DialogAnimation;
+        dialog.window?.setGravity(Gravity.BOTTOM)
+    }
+
+
+
+    private fun showForgotDialog() {
+        val dialog= Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.forgot_password)
+
+        val btnSubmit=dialog.findViewById<Button>(R.id.btn_submit)
+
+        val ed_new_password=dialog.findViewById<TextInputEditText>(R.id.ed_forgot_new_pass)
+        val ed_re_password=dialog.findViewById<TextInputEditText>(R.id.ed_forgot_re_pass)
+
+
+        btnSubmit.setOnClickListener {
+            val newPassword= ed_new_password.text.toString()
+            val rePassword=ed_re_password.text.toString()
+
+            if(newPassword.isEmpty()||rePassword.isEmpty()){
+                Toast.makeText(this,getText(R.string.all_fields_are_required),Toast.LENGTH_LONG).show()
+            }
+            else if(newPassword!=rePassword){
+                Toast.makeText(this,"Password do not match",Toast.LENGTH_SHORT).show()
+            }
+            else if(newPassword.length<6){
+                Toast.makeText(this,"Password must be least 6 character",Toast.LENGTH_SHORT).show()
+            }
+
+            else{
+                val phone=binding.edLoginPhone.text.toString()
+                if(phone.isEmpty() || phone.length!=10){
+                    Toast.makeText(this,"Please must be least 6 character",Toast.LENGTH_SHORT).show()
+                }
+                else{
+                    userViewModel.updatePassword(phone,newPassword)
+                    Toast.makeText(this,"Password update successfully",Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
             }
         }
 

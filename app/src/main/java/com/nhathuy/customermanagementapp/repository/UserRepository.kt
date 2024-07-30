@@ -24,4 +24,8 @@ class UserRepository(private val userDao: UserDao) {
     suspend fun logout(){
         userDao.logout()
     }
+
+    suspend fun updatePassword(phone:String,newPassword:String){
+        userDao.updatePassword(phone,newPassword)
+    }
 }
