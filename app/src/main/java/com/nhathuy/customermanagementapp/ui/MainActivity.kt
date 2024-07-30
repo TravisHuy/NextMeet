@@ -1,8 +1,10 @@
 package com.nhathuy.customermanagementapp.ui
 
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -133,5 +135,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun openAlarmHistoryActivity() {
         startActivity(Intent(this,AlarmHistoryActivity::class.java))
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
     }
 }

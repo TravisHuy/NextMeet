@@ -15,6 +15,9 @@
         <!-- Các thuộc tính khác -->
         <item name="android:statusBarColor">@color/light_primary</item>
         <item name="android:navigationBarColor">@color/light_surface</item>
+
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.App.TitleSmall</item>
+
     </style>
     <style name="Theme.CustomerManagementApp" parent="Base.Theme.CustomerManagementApp" />
     <style name="DialogAnimation">
@@ -25,4 +28,11 @@
         <item name="queryBackground">@android:color/white</item>
         <item name="android:textColor">@android:color/black</item>
     </style>
+
+    <style name="TextAppearance.App.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <!-- Customize the text appearance here if needed -->
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/light_text_primary</item>
+    </style>
+
 </resources>
