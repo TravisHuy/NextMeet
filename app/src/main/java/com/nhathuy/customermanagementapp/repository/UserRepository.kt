@@ -20,4 +20,8 @@ class UserRepository(private val userDao: UserDao) {
     fun getCurrentUser() : LiveData<User?>{
         return userDao.getCurrentUser()
     }
+
+    suspend fun logout(){
+        userDao.logout()
+    }
 }

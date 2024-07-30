@@ -35,4 +35,8 @@ class UserViewModel(application: Application):AndroidViewModel(application) {
     fun getCurrentUser():LiveData<User?>{
         return repository.getCurrentUser()
     }
+
+    fun logout()= viewModelScope.launch {
+        repository.logout()
+    }
 }

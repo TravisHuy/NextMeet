@@ -22,4 +22,7 @@ interface UserDao {
 
     @Query("SELECT * FROM users WHERE isLoggedIn = 1 LIMIT 1")
     fun getCurrentUser(): LiveData<User?>
+
+    @Query("UPDATE users SET isLoggedIn=0 WHERE isLoggedIn=-1")
+    suspend fun logout()
 }
