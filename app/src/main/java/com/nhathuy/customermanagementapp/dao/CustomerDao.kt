@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.nhathuy.customermanagementapp.model.Customer
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CustomerDao {
@@ -16,7 +17,7 @@ interface CustomerDao {
     suspend fun register(customer: Customer)
 
     @Query("select * from customers")
-    fun  getAllCustomer():LiveData<List<Customer>>
+    fun  getAllCustomer():Flow<List<Customer>>
 
     @Update
     suspend fun editCustomer(customer: Customer)
@@ -24,10 +25,10 @@ interface CustomerDao {
     @Delete
     suspend fun deleteCustomer(customer: Customer)
 
-
     @Query("select * from customers where id= :customerId")
-    fun getCustomerById(customerId:Int) : LiveData<Customer?>
+    fun getCustomerById(customerId:Int) : Customer?
 
     @Query("delete from customers")
+
     suspend fun deleteAllCustomer()
 }

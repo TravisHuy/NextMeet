@@ -53,7 +53,7 @@ data class Transaction(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val userId: Int,
     val customerId: Int,
-    val appointment: Int? = null,
+    val appointmentId: Int? = null,
     val productOrService: String,
     val quantity: Int,
     val price: Double,
