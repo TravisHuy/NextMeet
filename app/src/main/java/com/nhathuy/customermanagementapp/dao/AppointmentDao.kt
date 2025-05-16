@@ -19,8 +19,6 @@ interface AppointmentDao {
 
     @Query("select * from appointments")
     fun  getAllAppointment(): LiveData<List<Appointment>>
-
-
     @Update
     suspend fun editAppointment(appointment: Appointment)
 
