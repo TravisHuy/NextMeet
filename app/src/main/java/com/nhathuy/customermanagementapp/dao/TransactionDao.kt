@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.nhathuy.customermanagementapp.model.Transaction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
@@ -15,8 +16,7 @@ interface TransactionDao {
     suspend fun register(transaction: Transaction)
 
     @Query("select * from transactions")
-    fun  getAllTransactions(): LiveData<List<Transaction>>
-
+    fun  getAllTransactions(): Flow<List<Transaction>>
 
     @Update
     suspend fun editTransaction(transaction: Transaction)

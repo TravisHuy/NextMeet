@@ -12,6 +12,24 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/**
+ * Customer entity đại diện cho bảng `customers` trong Room Database.
+ *
+ * - Có ràng buộc foreign key tới bảng `users` thông qua cột `userId`.
+ * - Có chỉ mục (index) trên `userId` để tối ưu truy vấn và tránh cảnh báo KSP.
+ * - Implements Parcelable để truyền dữ liệu giữa các Activity/Fragment.
+ *
+ * @property id ID tự tăng của khách hàng
+ * @property userId ID của user sở hữu khách hàng này (foreign key tới User)
+ * @property name Tên khách hàng
+ * @property address Địa chỉ
+ * @property phone Số điện thoại
+ * @property email Email
+ * @property group Nhóm khách hàng (ví dụ: VIP, Regular, etc.)
+ * @property notes Ghi chú thêm
+ * @property latitude Vĩ độ (vị trí khách hàng, có thể null)
+ * @property longitude Kinh độ (vị trí khách hàng, có thể null)
+ */
 @RequiresApi(Build.VERSION_CODES.Q)
 @Entity(
     tableName = "customers",
@@ -35,6 +53,8 @@ data class Customer(
     val latitude: Double? = null,
     val longitude: Double? = null
 ) : Parcelable {
+
+    // Constructor dùng để đọc dữ liệu từ Parcel
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readInt(),
@@ -49,6 +69,7 @@ data class Customer(
     ) {
     }
 
+    // Ghi dữ liệu vào Parcel (để truyền đối tượng)
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(id)
         parcel.writeInt(userId)

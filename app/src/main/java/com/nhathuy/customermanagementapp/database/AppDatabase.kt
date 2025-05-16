@@ -1,6 +1,8 @@
 package com.nhathuy.customermanagementapp.database
 
 import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -15,6 +17,7 @@ import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.model.User
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Database(entities = [User::class,Customer::class,Appointment::class,Transaction::class,AlarmHistory::class], version = 1, exportSchema = false)
 abstract class AppDatabase:RoomDatabase(){
     abstract fun userDao():UserDao
@@ -22,17 +25,4 @@ abstract class AppDatabase:RoomDatabase(){
     abstract fun appointmentDao() : AppointmentDao
     abstract fun transactionDao() : TransactionDao
     abstract fun alarmHistoryDao() : AlarmHistoryDao
-
-    companion object{
-        @Volatile
-        private var INSTANCE:AppDatabase?=null
-        fun getDatabase(context: Application):AppDatabase{
-            return INSTANCE ?: synchronized(this){
-                val instance=Room.databaseBuilder(context.applicationContext,AppDatabase::class.java,"customer_manager_database").build();
-                INSTANCE=instance
-                instance
-            }
-
-        }
-    }
 }

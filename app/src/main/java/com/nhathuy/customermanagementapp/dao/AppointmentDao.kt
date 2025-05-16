@@ -10,6 +10,7 @@ import androidx.room.Update
 import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.model.Transaction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AppointmentDao {
@@ -18,7 +19,8 @@ interface AppointmentDao {
     suspend fun register(appointment: Appointment)
 
     @Query("select * from appointments")
-    fun  getAllAppointment(): LiveData<List<Appointment>>
+    fun getAllAppointment(): Flow<List<Appointment>>
+
     @Update
     suspend fun editAppointment(appointment: Appointment)
 
