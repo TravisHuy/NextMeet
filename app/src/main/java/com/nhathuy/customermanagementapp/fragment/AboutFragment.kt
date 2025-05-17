@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -24,15 +25,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class AboutFragment : Fragment() {
     private lateinit var binding: FragmentAboutBinding
-    @Inject
-    lateinit var userViewModel: UserViewModel
+    private val userViewModel: UserViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         binding= FragmentAboutBinding.inflate(layoutInflater)
-
-        userViewModel=ViewModelProvider(this).get(UserViewModel::class.java)
 
         binding.facebook.setOnClickListener{
             openUrl("https://www.facebook.com/honhathuy.travishuy")

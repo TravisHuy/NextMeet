@@ -17,8 +17,8 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
@@ -52,17 +52,13 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCustomerDetailBinding
 
-    @Inject
-    lateinit var viewModel: CustomerViewModel
+    private val viewModel: CustomerViewModel by viewModels()
 
-    @Inject
-    lateinit var userViewModel: UserViewModel
+    private val userViewModel: UserViewModel by viewModels()
 
-    @Inject
-    lateinit var appointmentViewModel: AppointmentViewModel
+    private val appointmentViewModel: AppointmentViewModel by viewModels()
 
-    @Inject
-    lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     private var currentUserId: Int = -1
     private var currentCustomer: Customer? = null
@@ -335,6 +331,7 @@ class CustomerDetailActivity : AppCompatActivity() {
 
         val intent = Intent(this, AlarmReceiver::class.java).apply {
             putExtra("customer_id", appointment.customerId)
+            putExtra("appointment_id",appointment.id)
             putExtra("date", appointment.date)
             putExtra("time", appointment.time)
             putExtra("address", appointment.address)

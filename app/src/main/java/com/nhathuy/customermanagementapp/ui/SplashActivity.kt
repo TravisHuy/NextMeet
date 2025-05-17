@@ -5,21 +5,22 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import androidx.activity.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.ActivitySplashBinding
 import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
-    private lateinit var userViewModel: UserViewModel
+    private val userViewModel: UserViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         binding= ActivitySplashBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
-        userViewModel=ViewModelProvider(this).get(UserViewModel::class.java)
 
         userViewModel.getCurrentUser().observe(this, Observer {
             user->

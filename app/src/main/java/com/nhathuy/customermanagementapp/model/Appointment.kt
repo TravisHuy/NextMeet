@@ -35,7 +35,6 @@ import androidx.room.PrimaryKey
  * @version 2.0
  * @since 16.5.2025
  */
-@RequiresApi(Build.VERSION_CODES.Q)
 @Entity(
     tableName = "appointments",
     foreignKeys = [ForeignKey(

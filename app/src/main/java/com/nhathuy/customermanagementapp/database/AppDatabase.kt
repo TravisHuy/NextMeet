@@ -17,7 +17,6 @@ import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.model.Transaction
 import com.nhathuy.customermanagementapp.model.User
 
-@RequiresApi(Build.VERSION_CODES.Q)
 @Database(entities = [User::class,Customer::class,Appointment::class,Transaction::class,AlarmHistory::class], version = 1, exportSchema = false)
 abstract class AppDatabase:RoomDatabase(){
     abstract fun userDao():UserDao
