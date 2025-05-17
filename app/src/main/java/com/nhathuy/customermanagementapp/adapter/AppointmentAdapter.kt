@@ -14,7 +14,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -25,8 +28,10 @@ import com.nhathuy.customermanagementapp.fragment.PlaceFragment
 import com.nhathuy.customermanagementapp.fragment.TimeFragment
 import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.model.Transaction
+import com.nhathuy.customermanagementapp.resource.Resource
 import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
+import kotlinx.coroutines.launch
 
 class AppointmentAdapter(private val context:Context,
                          private var listAppointment: List<Appointment>,
@@ -125,8 +130,22 @@ class AppointmentAdapter(private val context:Context,
         holder.address.text = appointment.address
         holder.notes.text = appointment.notes
         // Fetch customer name
-        customerViewModel.getCustomerById(appointment.customerId).observe(context as LifecycleOwner) { customer ->
-            holder.customerName.text = customer?.name ?: "Unknown"
+        (holder.itemView.context as? LifecycleOwner)?.let { lifecycleOwner ->
+            lifecycleOwner.lifecycleScope.launch {
+                lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    customerViewModel.getCustomerById(appointment.customerId)
+                    customerViewModel.getCustomerById.collect { result ->
+                        when (result) {
+                            is Resource.Success -> {
+                                holder.customerName.text = result.data?.name ?: "Unknown"
+                            }
+                            else -> {
+                                // Keep the default "Unknown" text
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         holder.checkbox.visibility = if (isSelectionMode) View.VISIBLE else View.GONE

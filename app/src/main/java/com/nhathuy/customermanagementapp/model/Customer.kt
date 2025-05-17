@@ -30,7 +30,6 @@ import androidx.room.PrimaryKey
  * @property latitude Vĩ độ (vị trí khách hàng, có thể null)
  * @property longitude Kinh độ (vị trí khách hàng, có thể null)
  */
-@RequiresApi(Build.VERSION_CODES.Q)
 @Entity(
     tableName = "customers",
     foreignKeys = [ForeignKey(
@@ -64,8 +63,8 @@ data class Customer(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        parcel.readDouble().takeIf { !parcel.readBoolean() },
-        parcel.readDouble().takeIf { !parcel.readBoolean() }
+        if (parcel.readByte().toInt() == 0) parcel.readDouble() else null,
+        if (parcel.readByte().toInt() == 0) parcel.readDouble() else null
     ) {
     }
 
@@ -80,20 +79,18 @@ data class Customer(
         parcel.writeString(group)
         parcel.writeString(notes)
 
-        latitude?.let {
-            parcel.writeDouble(it)
-            parcel.writeBoolean(false)
-        } ?: run {
-            parcel.writeDouble(0.0)
-            parcel.writeBoolean(true)
+        if (latitude != null) {
+            parcel.writeByte(0)
+            parcel.writeDouble(latitude)
+        } else {
+            parcel.writeByte(1)
         }
 
-        longitude?.let {
-            parcel.writeDouble(it)
-            parcel.writeBoolean(false)
-        } ?: run {
-            parcel.writeDouble(0.0)
-            parcel.writeBoolean(true)
+        if (longitude != null) {
+            parcel.writeByte(0)
+            parcel.writeDouble(longitude)
+        } else {
+            parcel.writeByte(1)
         }
     }
 

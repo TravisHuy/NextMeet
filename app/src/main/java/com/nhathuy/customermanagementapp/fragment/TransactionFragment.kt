@@ -9,6 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,14 +32,11 @@ class TransactionFragment : Fragment() {
     private var _binding: FragmentTransactionBinding? = null
     private val binding get() = _binding!!
 
-    @Inject
-    lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
-    @Inject
-    lateinit var transactionAdapter: TransactionAdapter
+    private val customerViewModel: CustomerViewModel by viewModels()
 
-    @Inject
-    lateinit var customerViewModel: CustomerViewModel
+    private lateinit var transactionAdapter: TransactionAdapter
 
     private var allTransactions: List<Transaction> = emptyList()
     override fun onCreateView(
@@ -50,9 +49,6 @@ class TransactionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        transactionViewModel = ViewModelProvider(this).get(TransactionViewModel::class.java)
-        customerViewModel = ViewModelProvider(this).get(CustomerViewModel::class.java)
 
         setupRecyclerView()
         observeViewModel()
@@ -85,6 +81,7 @@ class TransactionFragment : Fragment() {
             requireContext(),
             emptyList(),
             customerViewModel,
+            viewLifecycleOwner,
             transactionViewModel,
             onSelectionChanged = { isInSelectionMode ->
 

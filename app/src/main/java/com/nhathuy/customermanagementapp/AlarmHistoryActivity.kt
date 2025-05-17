@@ -2,7 +2,10 @@ package com.nhathuy.customermanagementapp
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.dialog.MaterialDialogs
@@ -10,22 +13,24 @@ import com.nhathuy.customermanagementapp.adapter.AlarmHistoryAdapter
 import com.nhathuy.customermanagementapp.databinding.ActivityAlarmHistoryBinding
 import com.nhathuy.customermanagementapp.databinding.AlarmHistoryItemBinding
 import com.nhathuy.customermanagementapp.model.AlarmHistory
+import com.nhathuy.customermanagementapp.resource.Resource
 import com.nhathuy.customermanagementapp.viewmodel.AlarmHistoryViewModel
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class AlarmHistoryActivity : AppCompatActivity() {
 
-    private lateinit var binding:ActivityAlarmHistoryBinding
-    private lateinit var alarmHistoryViewModel: AlarmHistoryViewModel
-    private lateinit var customerViewModel: CustomerViewModel
+    private lateinit var binding: ActivityAlarmHistoryBinding
+    private val alarmHistoryViewModel: AlarmHistoryViewModel by viewModels()
     private lateinit var adapter: AlarmHistoryAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding=ActivityAlarmHistoryBinding.inflate(layoutInflater)
+        binding = ActivityAlarmHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        alarmHistoryViewModel = ViewModelProvider(this).get(AlarmHistoryViewModel::class.java)
-        customerViewModel = ViewModelProvider(this).get(CustomerViewModel::class.java)
         setupRecyclerView()
         observeAlarmHistory()
 
@@ -33,10 +38,8 @@ class AlarmHistoryActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
 
-
-
-        adapter = AlarmHistoryAdapter(this, customerViewModel){
-            alarmHistory ->  showDeleteComfirmDialog(alarmHistory)
+        adapter = AlarmHistoryAdapter(this) { alarmHistory ->
+            showDeleteComfirmDialog(alarmHistory)
         }
         binding.recHistoryAlarm.apply {
             layoutManager = LinearLayoutManager(this@AlarmHistoryActivity)
@@ -57,22 +60,41 @@ class AlarmHistoryActivity : AppCompatActivity() {
 
     private fun observeAlarmHistory() {
 
+        lifecycleScope.launch {
+            alarmHistoryViewModel.unDisplayedAlarms.collectLatest { resource ->
+                when (resource) {
+                    is Resource.Loading -> {
 
+                    }
 
-        alarmHistoryViewModel.allAlarmHistory.observe(this) { alarmHistory ->
-            adapter.submit(alarmHistory)
+                    is Resource.Success -> {
+                        resource.data?.let { alarms ->
+                            adapter.submit(alarms)
+                        }
+                    }
+
+                    is Resource.Error -> {
+                        Toast.makeText(
+                            this@AlarmHistoryActivity,
+                            resource.message ?: "Unknown error occurred",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
         }
 
-        val customerId=intent.getIntExtra("customer_id",-1)
-        val time = intent.getStringExtra("time") ?:""
-        val date = intent.getStringExtra("date") ?:""
-        val notes = intent.getStringExtra("notes")?:""
 
+        val customerId = intent.getIntExtra("customer_id", -1)
+        val time = intent.getStringExtra("time") ?: ""
+        val date = intent.getStringExtra("date") ?: ""
+        val notes = intent.getStringExtra("notes") ?: ""
+        val appointmentId = intent.getIntExtra("appointment_id", -1)
 
 
         if (customerId != -1) {
             val alarmHistory = AlarmHistory(
-                customerId = customerId,
+                appointmentId = appointmentId,
                 time = time,
                 date = date,
                 notes = notes,

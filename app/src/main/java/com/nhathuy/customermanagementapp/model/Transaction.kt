@@ -26,7 +26,6 @@ import androidx.room.PrimaryKey
  * @author TravisHuy(Ho Nhat Huy)
  * @since 16.05.2025
  */
-@RequiresApi(Build.VERSION_CODES.Q)
 @Entity(
     tableName = "transactions",
     foreignKeys = [ForeignKey(

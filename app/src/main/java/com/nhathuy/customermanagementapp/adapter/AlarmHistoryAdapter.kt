@@ -16,7 +16,7 @@ import java.util.Date
 import java.util.Locale
 
 
-class AlarmHistoryAdapter(private val context: Context, private val customerViewModel: CustomerViewModel,
+class AlarmHistoryAdapter(private val context: Context,
                             private val onDelete: (AlarmHistory) -> Unit) : RecyclerView.Adapter<AlarmHistoryAdapter.AlarmHistoryViewHolder>() {
 
     private var alarmHistoryList: List<AlarmHistory> = emptyList()
@@ -51,9 +51,9 @@ class AlarmHistoryAdapter(private val context: Context, private val customerView
         holder.notes.text= alarmHistory.notes
 
         // Fetch customer name
-        customerViewModel.getCustomerById(alarmHistory.customerId).observe(context as LifecycleOwner) { customer ->
-            holder.customerName.text = customer?.name ?: "Unknown"
-        }
+//        customerViewModel.getCustomerById(alarmHistory.customerId).observe(context as LifecycleOwner) { customer ->
+//            holder.customerName.text = customer?.name ?: "Unknown"
+//        }
 
     }
 

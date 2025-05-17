@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -30,8 +31,7 @@ class AddCustomerFragment : Fragment() {
 
     private lateinit var sharedPreferences: SharedPreferences
 
-    @Inject
-    lateinit var customerViewModel: CustomerViewModel
+    private  val customerViewModel: CustomerViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

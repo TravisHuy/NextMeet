@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,11 +27,9 @@ class AppointmentFragment : Fragment() {
     private var _binding: FragmentAppointmentBinding? = null
     private val binding get() = _binding!!
 
-    @Inject
-    lateinit var appointmentViewModel: AppointmentViewModel
+    private val appointmentViewModel: AppointmentViewModel by viewModels()
 
-    @Inject
-    lateinit var customerViewModel: CustomerViewModel
+    private val customerViewModel: CustomerViewModel by viewModels()
 
     private lateinit var appointmentAdapter: AppointmentAdapter
 
@@ -41,8 +40,7 @@ class AppointmentFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentAppointmentBinding.inflate(inflater, container, false)
 

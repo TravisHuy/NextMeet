@@ -13,15 +13,20 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.model.Transaction
+import com.nhathuy.customermanagementapp.resource.Resource
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 import com.nhathuy.customermanagementapp.viewmodel.TransactionViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -30,6 +35,7 @@ class TransactionAdapter(
     private val context: Context,
     private var listTransaction: List<Transaction>,
     private val customerViewModel: CustomerViewModel,
+    private val lifecycleOwner: LifecycleOwner,
     private val transactionViewModel: TransactionViewModel,
     private val onSelectionChanged: (Boolean) -> Unit
 ) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
@@ -79,10 +85,23 @@ class TransactionAdapter(
         holder.price.text = transaction.price.toString()
         holder.date.text = transaction.date
 
-        customerViewModel.getCustomerById(transaction.customerId)
-            .observe(context as LifecycleOwner) { customer ->
-                holder.customerName.text = customer?.name ?: "Unknown"
+        (holder.itemView.context as? LifecycleOwner)?.let { lifecycleOwner ->
+            lifecycleOwner.lifecycleScope.launch {
+                lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    customerViewModel.getCustomerById(transaction.customerId)
+                    customerViewModel.getCustomerById.collect { result ->
+                        when (result) {
+                            is Resource.Success -> {
+                                holder.customerName.text = result.data?.name ?: "Unknown"
+                            }
+                            else -> {
+                                // Keep the default "Unknown" text
+                            }
+                        }
+                    }
+                }
             }
+        }
 
         holder.checkBox.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
         holder.checkBox.isChecked = isSelected
