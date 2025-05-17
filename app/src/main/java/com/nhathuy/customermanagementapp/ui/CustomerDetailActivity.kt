@@ -17,7 +17,10 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
 import android.widget.Toast
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -32,37 +35,46 @@ import com.nhathuy.customermanagementapp.fragment.TimeFragment
 import com.nhathuy.customermanagementapp.model.Appointment
 import com.nhathuy.customermanagementapp.model.Customer
 import com.nhathuy.customermanagementapp.model.Transaction
+import com.nhathuy.customermanagementapp.resource.Resource
 import com.nhathuy.customermanagementapp.viewmodel.AppointmentViewModel
 import com.nhathuy.customermanagementapp.viewmodel.CustomerViewModel
 import com.nhathuy.customermanagementapp.viewmodel.TransactionViewModel
 import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class CustomerDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCustomerDetailBinding
-    private lateinit var viewModel:CustomerViewModel
-    private lateinit var userViewModel: UserViewModel
-    private lateinit var appointmentViewModel :  AppointmentViewModel
-    private lateinit var transactionViewModel: TransactionViewModel
-    private var currentUserId: Int =-1
+
+    @Inject
+    lateinit var viewModel: CustomerViewModel
+
+    @Inject
+    lateinit var userViewModel: UserViewModel
+
+    @Inject
+    lateinit var appointmentViewModel: AppointmentViewModel
+
+    @Inject
+    lateinit var transactionViewModel: TransactionViewModel
+
+    private var currentUserId: Int = -1
     private var currentCustomer: Customer? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding=ActivityCustomerDetailBinding.inflate(layoutInflater)
+        binding = ActivityCustomerDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        userViewModel= ViewModelProvider(this).get(UserViewModel::class.java)
-        viewModel=ViewModelProvider(this).get(CustomerViewModel::class.java)
-        appointmentViewModel= ViewModelProvider(this).get(AppointmentViewModel::class.java)
-        transactionViewModel= ViewModelProvider(this).get(TransactionViewModel::class.java)
+        setupStateFlowCollectors()
 
-
-        userViewModel.getCurrentUser().observe(this){
-            user ->
-            currentUserId= user?.id?:-1
+        userViewModel.getCurrentUser().observe(this) { user ->
+            currentUserId = user?.id ?: -1
         }
 
         currentCustomer = intent.getParcelableExtra("Customer_extra")
@@ -89,7 +101,148 @@ class CustomerDetailActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupStateFlowCollectors() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.getCustomerById.collect{
+                        result ->
+                    when(result) {
+                        is Resource.Loading -> {
 
+                        }
+                        is Resource.Success -> {
+                            result.data?.let {
+                                customer ->
+                                currentCustomer == customer
+                                displayCustomerDetail(customer)
+                            }
+                        }
+                        is Resource.Error -> {
+                            Toast.makeText(
+                                this@CustomerDetailActivity,
+                                "Error loading customer: ${result.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.editCustomerState.collect{
+                        result ->
+                    when(result) {
+                        is Resource.Loading -> {
+
+                        }
+                        is Resource.Success -> {
+                            if(result.data == true) {
+                                Toast.makeText(
+                                    this@CustomerDetailActivity,
+                                    "Error updated customer successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                currentCustomer?.let { viewModel.getCustomerById(it.id) }
+                            }
+                        }
+                        is Resource.Error -> {
+                            Toast.makeText(
+                                this@CustomerDetailActivity,
+                                "Error updating customer: ${result.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.deleteCustomerState.collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            if (resource.data == true) {
+                                Toast.makeText(
+                                    this@CustomerDetailActivity,
+                                    "Customer deleted successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                finish()
+                            }
+                        }
+                        is Resource.Error -> {
+                            Toast.makeText(
+                                this@CustomerDetailActivity,
+                                "Error deleting customer: ${resource.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        is Resource.Loading -> {
+                            // Show loading indicator if needed
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                appointmentViewModel.addAppointmentState.collect{
+                        result ->
+                    when(result) {
+                        is Resource.Loading -> {
+
+                        }
+                        is Resource.Success -> {
+                            if(result.data == true){
+                                Toast.makeText(
+                                    this@CustomerDetailActivity,
+                                    "Add Appointment Successfully: ${result.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                        is Resource.Error -> {
+                            Toast.makeText(
+                                this@CustomerDetailActivity,
+                                "Error loading customer: ${result.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                transactionViewModel.addTransactionState.collect{
+                        result ->
+                    when(result) {
+                        is Resource.Loading -> {
+
+                        }
+                        is Resource.Success -> {
+                            if(result.data == true){
+                                Toast.makeText(
+                                    this@CustomerDetailActivity,
+                                    "Add Transaction Successfully: ${result.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                        is Resource.Error -> {
+                            Toast.makeText(
+                                this@CustomerDetailActivity,
+                                "Error adding Transaction: ${result.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     //show Alarm Dialog
     private fun showAlarmDialog() {
@@ -111,8 +264,6 @@ class CustomerDetailActivity : AppCompatActivity() {
         val saveButton = dialog.findViewById<Button>(R.id.alram_save)
 
 
-
-
         // Thiết lập TabLayout và ViewPager2
         val adapter = ViewPageAdapter(supportFragmentManager, lifecycle)
 
@@ -127,7 +278,7 @@ class CustomerDetailActivity : AppCompatActivity() {
 
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = when(position){
+            tab.text = when (position) {
                 0 -> getString(R.string.pick_date_amp_time)
                 1 -> getString(R.string.pick_place)
                 else -> null
@@ -138,9 +289,9 @@ class CustomerDetailActivity : AppCompatActivity() {
             dialog.dismiss()
         }
         saveButton.setOnClickListener {
-           val (date,time) = timeFragment.getSelectDateTime()
-           val address = placeFragment.getSelectAddress()
-           val (repeatInterval, repeatUnit) = timeFragment.getRepeatInfo()
+            val (date, time) = timeFragment.getSelectDateTime()
+            val address = placeFragment.getSelectAddress()
+            val (repeatInterval, repeatUnit) = timeFragment.getRepeatInfo()
 
             // parse date and time
             val dateTimeString = "$date $time"
@@ -149,12 +300,11 @@ class CustomerDetailActivity : AppCompatActivity() {
             val currentDate = Calendar.getInstance().time
 
             if (selectedDate != null && selectedDate.before(currentDate)) {
-                Toast.makeText(this, "Cannot select a past date and time", Toast.LENGTH_SHORT).show()
-            }
-            else if (address==null){
+                Toast.makeText(this, "Cannot select a past date and time", Toast.LENGTH_SHORT)
+                    .show()
+            } else if (address == null) {
                 Toast.makeText(this, "Select address", Toast.LENGTH_SHORT).show()
-            }
-            else {
+            } else {
                 currentCustomer?.let { customer ->
                     val appointment = Appointment(
                         customerId = customer.id,
@@ -178,37 +328,46 @@ class CustomerDetailActivity : AppCompatActivity() {
         dialog.show()
 
     }
+
     //schedule the alarm
     private fun scheduleAlarm(appointment: Appointment) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        val intent= Intent(this, AlarmReceiver::class.java).apply {
-            putExtra("customer_id",appointment.customerId)
-            putExtra("date",appointment.date)
-            putExtra("time",appointment.time)
-            putExtra("address",appointment.address)
-            putExtra("notes",appointment.notes)
+        val intent = Intent(this, AlarmReceiver::class.java).apply {
+            putExtra("customer_id", appointment.customerId)
+            putExtra("date", appointment.date)
+            putExtra("time", appointment.time)
+            putExtra("address", appointment.address)
+            putExtra("notes", appointment.notes)
         }
 
-        val pendingIntent =  PendingIntent.getBroadcast(this,appointment.id,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            appointment.id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         //parse date and time
-        val dateTimeString= "${appointment.date} ${appointment.time}"
-        val sdf= SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-        val calendar=Calendar.getInstance()
-        calendar.time=sdf.parse(dateTimeString) ?: return
+        val dateTimeString = "${appointment.date} ${appointment.time}"
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        calendar.time = sdf.parse(dateTimeString) ?: return
 
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
 
-        }
-        else{
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent)
+        } else {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
         }
 
 
@@ -217,23 +376,22 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
 
-
     private fun showEditDialog() {
-        val dialog= Dialog(this)
+        val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.edit_customer)
 
-        val name= dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_name)
-        val phone= dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_phone)
-        val email= dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_email)
-        val address= dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_address)
-        val group= dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_group)
-        val notes= dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_notes)
+        val name = dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_name)
+        val phone = dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_phone)
+        val email = dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_email)
+        val address = dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_address)
+        val group = dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_group)
+        val notes = dialog.findViewById<TextInputEditText>(R.id.ed_edit_customer_notes)
 
         //
-        val btn_edit=dialog.findViewById<Button>(R.id.btn_edit)
+        val btn_edit = dialog.findViewById<Button>(R.id.btn_edit)
 
-        val customer: Customer ? =intent.getParcelableExtra("Customer_extra")
+        val customer: Customer? = intent.getParcelableExtra("Customer_extra")
 
         customer?.let {
             name.setText(it.name)
@@ -248,45 +406,50 @@ class CustomerDetailActivity : AppCompatActivity() {
             val updatedCustomer = Customer(
                 customer?.id!!,
                 currentUserId,
-                name=name.text.toString(),
-                address= address.text.toString(),
-                phone= phone.text.toString(),
-                email= email.text.toString(),
-                group= group.text.toString(),
-                notes= notes.text.toString()
+                name = name.text.toString(),
+                address = address.text.toString(),
+                phone = phone.text.toString(),
+                email = email.text.toString(),
+                group = group.text.toString(),
+                notes = notes.text.toString()
             )
             viewModel.editCustomer(updatedCustomer)
             dialog.dismiss()
             displayCustomerDetail(updatedCustomer)
         }
         dialog.show()
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        dialog.window?.attributes?.windowAnimations=R.style.DialogAnimation;
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation;
         dialog.window?.setGravity(Gravity.BOTTOM)
 
     }
+
     //Show transaction dialog
     private fun showTransactionDialog() {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.add_transaction)
 
-        val productService =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_product_name)
-        val quantity =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_quantity)
-        val price =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_price)
-        val dateEditText =dialog.findViewById<TextInputEditText>(R.id.ed_transaction_date)
+        val productService =
+            dialog.findViewById<TextInputEditText>(R.id.ed_transaction_product_name)
+        val quantity = dialog.findViewById<TextInputEditText>(R.id.ed_transaction_quantity)
+        val price = dialog.findViewById<TextInputEditText>(R.id.ed_transaction_price)
+        val dateEditText = dialog.findViewById<TextInputEditText>(R.id.ed_transaction_date)
         val dateLayout = dialog.findViewById<TextInputLayout>(R.id.add_transaction_date_layout)
         val submit = dialog.findViewById<Button>(R.id.btn_transaction)
 
-        val calendar =Calendar.getInstance()
-        val datePickerDialog = DatePickerDialog(this,{
-            _,year,month,dayOfMonth ->
-            calendar.set(Calendar.YEAR,year)
-            calendar.set(Calendar.MONTH,month)
-            calendar.set(Calendar.DAY_OF_MONTH,dayOfMonth)
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            dateEditText.setText(dateFormat.format(calendar.time))
-        },
+        val calendar = Calendar.getInstance()
+        val datePickerDialog = DatePickerDialog(
+            this, { _, year, month, dayOfMonth ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                dateEditText.setText(dateFormat.format(calendar.time))
+            },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
@@ -303,10 +466,9 @@ class CustomerDetailActivity : AppCompatActivity() {
 
         submit.setOnClickListener {
 
-            currentCustomer?.let {
-                customer ->
+            currentCustomer?.let { customer ->
                 val transaction = Transaction(
-                    userId =  currentUserId,
+                    userId = currentUserId,
                     customerId = customer.id,
                     productOrService = productService.text.toString(),
                     quantity = quantity.text.toString().toInt(),
@@ -323,35 +485,37 @@ class CustomerDetailActivity : AppCompatActivity() {
         }
 
         dialog.show()
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        dialog.window?.attributes?.windowAnimations=R.style.DialogAnimation;
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation;
         dialog.window?.setGravity(Gravity.BOTTOM)
     }
+
     private fun displayCustomerDetail(customer: Customer) {
-        binding.editName.text=customer.name
-        binding.editPhone.text=customer.phone
-        binding.editEmail.text=customer.email
-        binding.editAddress.text=customer.address
-        binding.editGroup.text=customer.group
-        binding.editNotes.text=customer.notes
+        binding.editName.text = customer.name
+        binding.editPhone.text = customer.phone
+        binding.editEmail.text = customer.email
+        binding.editAddress.text = customer.address
+        binding.editGroup.text = customer.group
+        binding.editNotes.text = customer.notes
     }
 
     private fun showDeleteDialog() {
         AlertDialog.Builder(this)
             .setTitle("Delete Customer")
             .setMessage("Are you sure you want to delete this customer?")
-            .setPositiveButton("Yes"){
-                _,_ -> deleteCustomer()
+            .setPositiveButton("Yes") { _, _ ->
+                deleteCustomer()
             }
-            .setNegativeButton("No",null)
+            .setNegativeButton("No", null)
             .show()
     }
 
     private fun deleteCustomer() {
-        currentCustomer?.let {
-            customer ->  viewModel.deleteCustomer(customer)
-            Toast.makeText(this,"Customer deleted",Toast.LENGTH_SHORT).show()
-            finish()
+        currentCustomer?.let { customer ->
+            viewModel.deleteCustomer(customer)
         }
     }
 

@@ -7,17 +7,25 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.nhathuy.customermanagementapp.R
 import com.nhathuy.customermanagementapp.databinding.FragmentAboutBinding
+import com.nhathuy.customermanagementapp.resource.Resource
 import com.nhathuy.customermanagementapp.ui.LoginActivity
 import com.nhathuy.customermanagementapp.viewmodel.UserViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AboutFragment : Fragment() {
     private lateinit var binding: FragmentAboutBinding
-    private lateinit var userViewModel: UserViewModel
+    @Inject
+    lateinit var userViewModel: UserViewModel
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -57,8 +65,25 @@ class AboutFragment : Fragment() {
     }
 
     private fun performLogout() {
-        userViewModel.logout()
-        navigationLogin()
+        lifecycleScope.launch{
+            userViewModel.logoutState.collect{
+                resource ->
+                when(resource) {
+                    is Resource.Loading ->{
+
+                    }
+                    is Resource.Success -> {
+                        if(resource.data == true){
+                            Toast.makeText(requireContext(),"Đăng xuất thành công",Toast.LENGTH_SHORT).show()
+                            navigationLogin()
+                        }
+                    }
+                    is Resource.Error -> {
+                        Toast.makeText(requireContext(),"Đăng xuất lỗi",Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
 
     private fun navigationLogin() {
