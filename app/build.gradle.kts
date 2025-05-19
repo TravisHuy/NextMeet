@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.nhathuy.customermanagementapp"
+    namespace = "com.nhathuy.nextmeet"
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.nhathuy.customermanagementapp"
+        applicationId = "com.nhathuy.nextmeet"
         minSdk = 24
         targetSdk = 33
         versionCode = 2
