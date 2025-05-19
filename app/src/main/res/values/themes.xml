@@ -18,6 +18,8 @@
 
         <item name="textAppearanceTitleSmall">@style/TextAppearance.App.TitleSmall</item>
 
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
+
     </style>
     <style name="Theme.CustomerManagementApp" parent="Base.Theme.CustomerManagementApp" />
     <style name="DialogAnimation">
@@ -30,9 +32,12 @@
     </style>
 
     <style name="TextAppearance.App.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
-        <!-- Customize the text appearance here if needed -->
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/light_text_primary</item>
+    </style>
+
+    <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
     </style>
 
 </resources>

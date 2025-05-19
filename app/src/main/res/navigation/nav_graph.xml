@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/customerFragment"
-        android:name="com.nhathuy.customermanagementapp.fragment.CustomerFragment"
+        android:name="com.nhathuy.nextmeet.fragment.CustomerFragment"
         tools:layout="@layout/fragment_customer" >
         <action
             android:id="@+id/action_customerFragment_to_transactionFragment"
@@ -18,18 +18,18 @@
     </fragment>
     <fragment
         android:id="@+id/transactionFragment"
-        android:name="com.nhathuy.customermanagementapp.fragment.TransactionFragment"
+        android:name="com.nhathuy.nextmeet.fragment.TransactionFragment"
         tools:layout="@layout/fragment_transaction" />
     <fragment
         android:id="@+id/appointmentFragment"
-        android:name="com.nhathuy.customermanagementapp.fragment.AppointmentFragment"
+        android:name="com.nhathuy.nextmeet.fragment.AppointmentFragment"
         tools:layout="@layout/fragment_appointment" />
     <fragment
         android:id="@+id/aboutFragment"
-        android:name="com.nhathuy.customermanagementapp.fragment.AboutFragment"
+        android:name="com.nhathuy.nextmeet.fragment.AboutFragment"
         tools:layout="@layout/fragment_about" />
     <fragment
         android:id="@+id/add"
-        android:name="com.nhathuy.customermanagementapp.fragment.AddCustomerFragment"
+        android:name="com.nhathuy.nextmeet.fragment.AddCustomerFragment"
         tools:layout="@layout/fragment_add_customer" />
 </navigation>
