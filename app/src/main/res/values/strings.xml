@@ -55,5 +55,9 @@
     <string name="enter_group">Enter Group</string>
     <string name="enter_notes">Enter Notes</string>
     <string name="enter_password">Enter password</string>
+    <string name="add_address">Add address</string>
+    <string name="address_not_found">Address not found</string>
+    <string name="location_not_found">Location not found</string>
+    <string name="please_select_location">Please select location</string>
 
 </resources>

@@ -3,6 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#DC0505</color>
+    <color name="gray">#EAEAEA</color>
 
     <!-- Màu sắc cho chế độ sáng -->
     <color name="light_background">#FFFFFF</color>

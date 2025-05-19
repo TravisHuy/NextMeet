@@ -24,11 +24,14 @@ import com.nhathuy.nextmeet.databinding.ActivityMainBinding
 import com.nhathuy.nextmeet.fragment.AppointmentFragment
 import com.nhathuy.nextmeet.fragment.CustomerFragment
 import com.nhathuy.nextmeet.fragment.TransactionFragment
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -37,16 +40,17 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolBar)
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        navController=navHostFragment.navController
+        navController = navHostFragment.navController
 
-       appBarConfiguration = AppBarConfiguration(setOf(
+        appBarConfiguration = AppBarConfiguration(setOf(
             R.id.customerFragment,
             R.id.appointmentFragment,
             R.id.transactionFragment,
             R.id.aboutFragment
         ))
+
         setupActionBarWithNavController(navController, appBarConfiguration)
-        binding.bottomNavItem.setupWithNavController(navController)
+        binding.bottomNavItem?.setupWithNavController(navController)
 
         navController.addOnDestinationChangedListener { _, _, _ ->
             invalidateOptionsMenu()
@@ -58,10 +62,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.topbar_menu,menu)
+        menuInflater.inflate(R.menu.topbar_menu, menu)
 
-        val searchItem =menu.findItem(R.id.search)
-        val searchView =searchItem.actionView as SearchView
+        val searchItem = menu.findItem(R.id.search)
+        val searchView = searchItem.actionView as SearchView
 
         // Apply custom style to SearchView
         val searchPlate = searchView.findViewById(androidx.appcompat.R.id.search_plate) as View
@@ -77,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         // Set the hint text based on the current fragment
         setSearchHint(searchView)
 
-        searchView.setOnQueryTextListener(object :SearchView.OnQueryTextListener{
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 performSearch(query)
                 return true
@@ -87,7 +91,6 @@ class MainActivity : AppCompatActivity() {
                 performSearch(newText)
                 return true
             }
-
         })
 
         // Set up notification icon click listener
@@ -99,12 +102,12 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when(item.itemId){
-            else -> return super.onOptionsItemSelected(item)
+        return when(item.itemId) {
+            else -> super.onOptionsItemSelected(item)
         }
     }
+
     private fun performSearch(query: String?) {
         // Get the current Fragment
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -117,6 +120,7 @@ class MainActivity : AppCompatActivity() {
             is AppointmentFragment -> currentFragment.searchAppointment(query)
         }
     }
+
     private fun setSearchHint(searchView: SearchView) {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val currentFragment = navHostFragment.childFragmentManager.fragments[0]
@@ -131,9 +135,8 @@ class MainActivity : AppCompatActivity() {
         searchView.queryHint = hint
     }
 
-
     private fun openAlarmHistoryActivity() {
-        startActivity(Intent(this,AlarmHistoryActivity::class.java))
+        startActivity(Intent(this, AlarmHistoryActivity::class.java))
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

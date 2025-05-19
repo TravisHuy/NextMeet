@@ -33,18 +33,16 @@ class CustomerFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentCustomerBinding.inflate(inflater, container, false)
-
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupRecylerView()
-        observerViewModel()
+        setupRecyclerView()
+        observeViewModel()
     }
 
-    private fun observerViewModel() {
+    private fun observeViewModel() {
         lifecycleScope.launch {
             customerViewModel.allCustomerState.collect { result ->
                 when (result) {
@@ -71,7 +69,7 @@ class CustomerFragment : Fragment() {
         }
     }
 
-    private fun setupRecylerView() {
+    private fun setupRecyclerView() {
         customerAdapter = CustomerAdapter(requireContext(), emptyList()) { customer ->
             showDeleteConfirmationDialog(customer)
         }
@@ -85,7 +83,7 @@ class CustomerFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Delete Customer")
             .setMessage("Are you sure you want to delete all customer?")
-            .setPositiveButton("Delete") { dialog, which ->
+            .setPositiveButton("Delete") { _, _ ->
                 customerViewModel.deleteAllCustomers()
             }
             .setNegativeButton("Cancel", null)
@@ -99,20 +97,21 @@ class CustomerFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        _binding = null
     }
 
     fun searchCustomers(query: String?) {
-        if (query.isNullOrBlank()) {
-            customerAdapter.setData(allCustomers)
+        val filteredList = if (query.isNullOrBlank()) {
+            allCustomers
         } else {
-            val filteredList = allCustomers.filter { customer ->
-                customer.name.contains(query, ignoreCase = false)
-                customer.name.split(" ").any {
-                    it.contains(query, ignoreCase = true)
-                }
+            allCustomers.filter { customer ->
+                customer.name.contains(query, ignoreCase = true) ||
+                        customer.name.split(" ").any {
+                            it.contains(query, ignoreCase = true)
+                        }
             }
-            customerAdapter.setData(filteredList)
         }
+        customerAdapter.setData(filteredList)
     }
 
 }

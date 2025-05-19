@@ -62,10 +62,12 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.3.0")
     implementation("androidx.navigation:navigation-ui-ktx:2.3.0")
 
-    implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     // Hilt (DI)
     implementation("com.google.dagger:hilt-android:2.48")
+//    implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha01")
     ksp("com.google.dagger:hilt-compiler:2.48")
 
     // Kotlin Coroutines

@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.ui
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -9,7 +10,10 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.TextInputEditText
@@ -28,6 +32,24 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
 
     private val userViewModel: UserViewModel by viewModels()
+
+    private var address:String? = null
+    private var latitude: String? = null
+    private var longitude: String? = null
+
+
+    private val mapPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        result ->
+        if(result.resultCode == Activity.RESULT_OK){
+            result.data?.let {
+                data ->
+                address = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
+                latitude = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_LAT)
+                longitude = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_LNG)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -167,12 +189,20 @@ class LoginActivity : AppCompatActivity() {
         val ed_phone = dialog.findViewById<TextInputEditText>(R.id.ed_register_phone)
         val ed_email = dialog.findViewById<TextInputEditText>(R.id.ed_register_email)
         val ed_password = dialog.findViewById<TextInputEditText>(R.id.ed_register_password)
+        val tv_register_address = dialog.findViewById<TextView>(R.id.tv_register_address)
+        val choose_location = dialog.findViewById<LinearLayout>(R.id.linear_layout_address)
+
+        choose_location.setOnClickListener {
+            val intent = Intent(this@LoginActivity,GoogleMapActivity::class.java)
+            mapPickerLauncher.launch(intent)
+        }
 
         btnSubmit.setOnClickListener {
             val name = ed_name.text.toString()
             val phone = ed_phone.text.toString()
             val email = ed_email.text.toString()
             val password = ed_password.text.toString()
+            val address = tv_register_address.text.toString()
 
             if (name.isEmpty() || phone.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, getString(R.string.all_fields_are_required), Toast.LENGTH_LONG)
@@ -184,7 +214,7 @@ class LoginActivity : AppCompatActivity() {
             } else if (password.length < 6) {
                 ed_password.error = getString(R.string.error_password)
             } else {
-                val user = User(name = name, phone = phone, email = email, password = password)
+                val user = User(name = name, phone = phone, email = email, password = password, defaultLatitude = latitude?.toDouble(), defaultLongitude = longitude?.toDouble())
                 userViewModel.register(user)
 
                 lifecycleScope.launch {
