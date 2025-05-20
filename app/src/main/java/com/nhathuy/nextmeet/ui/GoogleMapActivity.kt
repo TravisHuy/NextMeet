@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -32,11 +33,10 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var binding: ActivityGoogleMapBinding
     private lateinit var mMap: GoogleMap
-    private lateinit var searchBar: SearchBar
-    private lateinit var searchView: SearchView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var selectedLatLng: LatLng? = null
     private var selectAddress: String? = null
+    private var receiverAddress: String? = null
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -50,10 +50,20 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
         binding = ActivityGoogleMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        receiverAddress = intent.getStringExtra("address")
+        val receiverLat = intent.getDoubleExtra("latitude", 0.0)
+        val receiverLng = intent.getDoubleExtra("longitude", 0.0)
+
+        if (receiverLat != 0.0 && receiverLng != 0.0) {
+            selectedLatLng = LatLng(receiverLat, receiverLng)
+            selectAddress = receiverAddress
+        }
+
         initializeMap()
         initializeFusedLocation()
         setupSearchView()
         setupSaveButton()
+        setupFilterButton()
     }
 
     private fun initializeMap() {
@@ -67,11 +77,11 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun setupSearchView() {
-        searchView.setupWithSearchBar(searchBar)
-        searchView.editText.setOnEditorActionListener { _, _, _ ->
-            val query = searchView.text.toString()
+        binding.searchView.setupWithSearchBar(binding.searchBar)
+        binding.searchView.editText.setOnEditorActionListener { _, _, _ ->
+            val query = binding.searchView.text.toString()
             searchAddress(query)
-            searchView.hide()
+            binding.searchView.hide()
             true
         }
     }
@@ -96,20 +106,44 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun setupSaveButton() {
-       binding.btnConfirmLocation.setOnClickListener{
-           if(selectedLatLng!=null){
-               val resultIntent = Intent().apply {
-                   putExtra(EXTRA_SELECTED_ADDRESS,selectAddress)
-                   putExtra(EXTRA_SELECTED_LAT,selectedLatLng!!.latitude)
-                   putExtra(EXTRA_SELECTED_LNG,selectedLatLng!!.longitude)
-               }
-               setResult(RESULT_OK,resultIntent)
-               finish()
-           }
-           else{
-               Toast.makeText(this,getString(R.string.please_select_location),Toast.LENGTH_SHORT).show()
-           }
-       }
+        binding.btnConfirmLocation.setOnClickListener {
+            if (selectedLatLng != null) {
+                val resultIntent = Intent().apply {
+                    putExtra(EXTRA_SELECTED_ADDRESS, selectAddress)
+                    putExtra(EXTRA_SELECTED_LAT, selectedLatLng!!.latitude)
+                    putExtra(EXTRA_SELECTED_LNG, selectedLatLng!!.longitude)
+                }
+                setResult(RESULT_OK, resultIntent)
+                finish()
+            } else {
+                Toast.makeText(this, getString(R.string.please_select_location), Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    }
+
+    private fun setupFilterButton() {
+        binding.btnFilter.setOnClickListener { view ->
+            val popupMenu = PopupMenu(this, view)
+            popupMenu.menuInflater.inflate(R.menu.menu_map_type, popupMenu.menu)
+
+            popupMenu.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.map_type_normal -> {
+                        mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+                        true
+                    }
+
+                    R.id.map_type_satellite -> {
+                        mMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
+                        true
+                    }
+
+                    else -> false
+                }
+            }
+            popupMenu.show()
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -119,6 +153,12 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.uiSettings.isCompassEnabled = true
         mMap.uiSettings.isMyLocationButtonEnabled = true
 
+
+        if (selectedLatLng != null) {
+            mMap.addMarker(MarkerOptions().position(selectedLatLng!!))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng!!, 15f))
+            binding.tvSelectedAddress.text = selectAddress
+        }
         mMap.setOnMapClickListener { latLng ->
             mMap.clear()
             selectedLatLng = latLng

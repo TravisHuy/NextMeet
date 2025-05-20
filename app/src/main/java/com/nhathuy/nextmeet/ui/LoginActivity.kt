@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -33,22 +34,29 @@ class LoginActivity : AppCompatActivity() {
 
     private val userViewModel: UserViewModel by viewModels()
 
-    private var address:String? = null
-    private var latitude: String? = null
-    private var longitude: String? = null
+    private var address: String? = null
+    private var latitude: Double? = null
+    private var longitude: Double? = null
 
+    private var activeDialog: Dialog? = null
 
-    private val mapPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        result ->
-        if(result.resultCode == Activity.RESULT_OK){
-            result.data?.let {
-                data ->
-                address = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
-                latitude = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_LAT)
-                longitude = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_LNG)
+    private val mapPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.let { data ->
+                    address = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
+                    latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
+                    longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
+
+                    activeDialog?.findViewById<TextView>(R.id.tv_register_address)
+                        ?.let { addressTextView ->
+                            if (address != null) {
+                                addressTextView.text = address
+                            }
+                        }
+                }
             }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -180,6 +188,7 @@ class LoginActivity : AppCompatActivity() {
 
     fun showDialog() {
         val dialog = Dialog(this)
+        activeDialog = dialog
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.bottom_register_form)
 
@@ -191,9 +200,20 @@ class LoginActivity : AppCompatActivity() {
         val ed_password = dialog.findViewById<TextInputEditText>(R.id.ed_register_password)
         val tv_register_address = dialog.findViewById<TextView>(R.id.tv_register_address)
         val choose_location = dialog.findViewById<LinearLayout>(R.id.linear_layout_address)
+        val btnAddAddress = dialog.findViewById<ImageButton>(R.id.btn_add_address)
 
-        choose_location.setOnClickListener {
-            val intent = Intent(this@LoginActivity,GoogleMapActivity::class.java)
+
+        address = null
+        latitude = null
+        longitude = null
+
+        btnAddAddress.setOnClickListener {
+            val intent = Intent(this@LoginActivity, GoogleMapActivity::class.java)
+            intent.putExtra("address",address)
+            if(latitude!=null && longitude!= null){
+                intent.putExtra("latitude",latitude)
+                intent.putExtra("longitude",longitude)
+            }
             mapPickerLauncher.launch(intent)
         }
 
@@ -214,7 +234,14 @@ class LoginActivity : AppCompatActivity() {
             } else if (password.length < 6) {
                 ed_password.error = getString(R.string.error_password)
             } else {
-                val user = User(name = name, phone = phone, email = email, password = password, defaultLatitude = latitude?.toDouble(), defaultLongitude = longitude?.toDouble())
+                val user = User(
+                    name = name,
+                    phone = phone,
+                    email = email,
+                    password = password,
+                    defaultLatitude = latitude,
+                    defaultLongitude = longitude
+                )
                 userViewModel.register(user)
 
                 lifecycleScope.launch {
@@ -223,6 +250,7 @@ class LoginActivity : AppCompatActivity() {
                             is Resource.Loading -> {
 
                             }
+
                             is Resource.Success -> {
                                 if (result.data == true) {
                                     dialog.dismiss()
