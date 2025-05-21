@@ -34,7 +34,5 @@ data class User(
     @ColumnInfo(name = "default_latitude")
     val defaultLatitude: Double? = null,
     @ColumnInfo(name = "default_longitude")
-    val defaultLongitude: Double? = null,
-    @ColumnInfo(name = "is_logged_in")
-    var isLoggedIn: Int = -1,
+    val defaultLongitude: Double? = null
 )

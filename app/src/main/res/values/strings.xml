@@ -62,4 +62,27 @@
     <string name="map_type_normal">Normal</string>
     <string name="map_type_statellite">Satellite</string>
 
+    <string name="user_information">Thông tin người dùng</string>
+    <string name="enabled">Đã bật</string>
+    <string name="disabled">Đã tắt</string>
+    <string name="remember_me_status">Remember Me: %s</string>
+    <string name="location_format">Vị trí: Lat: %1$s, Long: %2$s</string>
+    <string name="login_time_format">Thời gian đăng nhập: %s</string>
+    <string name="welcome_message">Chào mừng bạn đến với NextMeet!\nBạn đã đăng nhập thành công.</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="logout_confirmation_title">Xác nhận đăng xuất</string>
+    <string name="logout_confirmation_message">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="logout_success">Đăng xuất thành công</string>
+    <string name="logout_failed">Đăng xuất thất bại</string>
+
+
+    <string name="invalid_password">Mật khẩu không chính xác</string>
+    <string name="user_not_found">Tài khoản không tồn tại</string>
+    <string name="password_update_success">Cập nhật mật khẩu thành công</string>
+    <string name="password_update_failed">Cập nhật mật khẩu thất bại</string>
+    <string name="registration_failed">Đăng ký thất bại</string>
+
+
 </resources>

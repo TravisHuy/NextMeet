@@ -21,30 +21,38 @@ class SplashActivity : AppCompatActivity() {
         binding= ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        userViewModel.getCurrentUser().observe(this, Observer {
-            user->
-            if(user!=null && user.isLoggedIn==1){
-                switchMain()
-            }
-            else{
-                switchLogin()
-            }
-        })
-    }
-    fun switchMain(){
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent=Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            checkLoginStatus()
             overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
             finish()
         },1500)
     }
-    fun switchLogin(){
-        Handler(Looper.getMainLooper()).postDelayed({
-            val intent=Intent(this,LoginActivity::class.java)
+    private fun checkLoginStatus(){
+        if(userViewModel.isLoggedIn()){
+            val intent=Intent(this, MainActivity2::class.java)
             startActivity(intent)
             overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
-            finish()
-        },1500)
+        }else{
+            val intent=Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
+        }
+        finish()
     }
+//    fun switchMain(){
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            val intent=Intent(this, MainActivity2::class.java)
+//            startActivity(intent)
+//            overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
+//            finish()
+//        },1500)
+//    }
+//    fun switchLogin(){
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            val intent=Intent(this,LoginActivity::class.java)
+//            startActivity(intent)
+//            overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
+//            finish()
+//        },1500)
+//    }
 }
