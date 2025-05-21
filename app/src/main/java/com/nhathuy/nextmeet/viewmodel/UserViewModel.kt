@@ -45,6 +45,10 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
     private val _passwordResetFormState = MutableStateFlow<Map<String,ValidationResult>>(emptyMap())
     val passwordFormResetState : StateFlow<Map<String,ValidationResult>> = _passwordResetFormState
 
+    // Remember me state
+    private val _rememberMeState = MutableStateFlow(repository.isRememberMeEnabled())
+    val rememberMeState: StateFlow<Boolean> = _rememberMeState
+
     fun register(user: User) = viewModelScope.launch {
         repository.register(user).collect{
             result ->
@@ -52,8 +56,8 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
         }
     }
 
-    fun login(phone: String, password: String) = viewModelScope.launch {
-        repository.login(phone, password).collect {
+    fun login(phone: String, password: String,rememberMe:Boolean) = viewModelScope.launch {
+        repository.login(phone, password,rememberMe).collect {
             result ->
             _loginState.value = result
         }
@@ -85,7 +89,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
     }
 
 
-    fun validateAndLogin(loginForm: LoginForm):Boolean {
+    fun validateAndLogin(loginForm: LoginForm,rememberMe: Boolean):Boolean {
         val phoneValidation = ValidationUtils.validatePhone(loginForm.phone)
         val passwordValidation = ValidationUtils.validatePassword(loginForm.password)
 
@@ -98,7 +102,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
         val isValid = validationResults.all { it.value.isValid }
 
         if(isValid){
-            login(loginForm.phone,loginForm.password)
+            login(loginForm.phone,loginForm.password,rememberMe)
         }
 
         return isValid
@@ -169,4 +173,17 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
         return isValid
     }
 
+    /**
+     * Checks if a user is currently logged in
+     */
+    fun isLoggedIn(): Boolean {
+        return repository.isLoggedIn()
+    }
+
+    /**
+     * Updates the remember me preference
+     */
+    fun setRememberMe(enabled: Boolean) {
+        _rememberMeState.value = enabled
+    }
 }
