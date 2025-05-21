@@ -24,17 +24,17 @@ import androidx.room.PrimaryKey
 data class User(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "name")
-    val name: String,
+    val name: String = "",
     @ColumnInfo(name = "email")
-    val email: String,
+    val email: String = "",
     @ColumnInfo(name = "phone")
-    val phone: String,
+    val phone: String = "",
     @ColumnInfo(name = "password")
-    val password: String,
-    @ColumnInfo(name = "is_logged_in")
-    var isLoggedIn: Int = -1,
+    val password: String = "",
     @ColumnInfo(name = "default_latitude")
     val defaultLatitude: Double? = null,
     @ColumnInfo(name = "default_longitude")
-    val defaultLongitude: Double? = null
+    val defaultLongitude: Double? = null,
+    @ColumnInfo(name = "is_logged_in")
+    var isLoggedIn: Int = -1,
 )

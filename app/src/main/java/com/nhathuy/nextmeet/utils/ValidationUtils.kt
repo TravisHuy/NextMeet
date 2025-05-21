@@ -41,6 +41,25 @@ object ValidationUtils {
     }
 
     /**
+     * Xác thực address
+     *
+     * @param address Address để xác thực
+     * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
+     */
+    fun validateAddress(address:String) :ValidationResult {
+        return when {
+            address.isEmpty() || address == "Add address" -> ValidationResult(false,"Address is required")
+            else -> ValidationResult(true)
+        }
+    }
+
+//    fun validateCoordinate(latitude:Double,longitude:Double) : ValidationResult {
+//        return when {
+//            (latitude == null || longitude == null) -> ValidationResult(false, "Latitude or longitude required")
+//            else -> ValidationResult(true)
+//        }
+//    }
+    /**
      * Xác thực password
      *
      * @param password Password để xác thực
@@ -67,7 +86,7 @@ object ValidationUtils {
                 "Password must be least one character uppercase letter"
             )
 
-            else -> ValidationResult(false)
+            else -> ValidationResult(true)
         }
     }
 

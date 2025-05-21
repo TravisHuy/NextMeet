@@ -43,7 +43,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
     val registerFormState:StateFlow<Map<String,ValidationResult>> = _registerFormState
 
     private val _passwordResetFormState = MutableStateFlow<Map<String,ValidationResult>>(emptyMap())
-    val passwordResetState : StateFlow<Map<String,ValidationResult>> = _passwordResetFormState
+    val passwordFormResetState : StateFlow<Map<String,ValidationResult>> = _passwordResetFormState
 
     fun register(user: User) = viewModelScope.launch {
         repository.register(user).collect{
@@ -109,12 +109,16 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
         val emailValidation = ValidationUtils.validateEmail(registerForm.email)
         val nameValidation = ValidationUtils.validateName(registerForm.name)
         val passwordValidation = ValidationUtils.validatePassword(registerForm.password)
+        val addressValidation = ValidationUtils.validateAddress(registerForm.address)
+//        val coordinatesValidation = ValidationUtils.validateCoordinate(registerForm.latitude!!, registerForm.longitude!!)
 
         val validationResults = mapOf(
             "name" to nameValidation,
             "phone" to phoneValidation,
             "email" to emailValidation,
-            "password" to passwordValidation
+            "password" to passwordValidation,
+            "address" to addressValidation,
+//            "coordinates" to coordinatesValidation
         )
         _registerFormState.value = validationResults
 
