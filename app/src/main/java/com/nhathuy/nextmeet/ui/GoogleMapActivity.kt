@@ -188,7 +188,7 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            mMap.isMyLocationEnabled = false
+            mMap.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
                     val currentLatLng = LatLng(it.latitude, it.longitude)

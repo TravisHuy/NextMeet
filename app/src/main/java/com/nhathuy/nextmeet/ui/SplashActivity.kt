@@ -33,7 +33,7 @@ class SplashActivity : AppCompatActivity() {
     }
     fun switchMain(){
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent=Intent(this, MainActivity::class.java)
+            val intent=Intent(this, MainActivity2::class.java)
             startActivity(intent)
             overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
             finish()
