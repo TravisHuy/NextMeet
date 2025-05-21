@@ -113,7 +113,7 @@ class LoginActivity : AppCompatActivity() {
                             sharedPreferences.edit().putInt("user_id", user.id).apply()
 
 
-                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                            startActivity(Intent(this@LoginActivity, MainActivity2::class.java))
                             Toast.makeText(
                                 this@LoginActivity,
                                 getString(R.string.login_successfully),
@@ -238,14 +238,21 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
+        lifecycleScope.launch {
+            userViewModel.rememberMeState.collect { isRememberMeEnabled ->
+                binding.switchRememberMe.isChecked = isRememberMeEnabled
+            }
+        }
+
     }
 
 
     private fun handleLogin() {
         val phone = binding.edLoginPhone.text.toString()
         val password = binding.edLoginPass.text.toString()
+        val rememberMe = binding.switchRememberMe.isChecked
 
-        userViewModel.validateAndLogin(LoginForm(phone, password))
+        userViewModel.validateAndLogin(LoginForm(phone, password),rememberMe)
     }
 
     private fun showRegisterDialog() {
