@@ -44,7 +44,7 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
             val user = userDao.login(phone, password)
 
             if(user != null){
-                sessionManager.createLoginSession(user.id,rememberMe)
+                sessionManager.createLoginSession(user.id,rememberMe,phone)
                 emit(Resource.Success(user))
             }
             else{
@@ -56,7 +56,12 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
         }
     }.flowOn(Dispatchers.IO)
 
-
+    /**
+     * Tạo phiên đăng nhập mới
+     */
+    fun createLoginSession(userId: Int, rememberMe: Boolean, phone: String) {
+        sessionManager.createLoginSession(userId, rememberMe, phone)
+    }
     suspend fun  updateUser(user: User) : Flow<Resource<Boolean>> = flow{
         emit(Resource.Loading())
         try{
@@ -112,5 +117,30 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
 
     fun isLoggedIn(): Boolean{
         return sessionManager.isLoggedIn()
+    }
+
+    fun setRememberMe(enabled: Boolean) {
+        sessionManager.setRememberMe(enabled)
+    }
+
+    /**
+     * Lấy ID người dùng từ session
+     */
+    fun getUserId(): Int {
+        return sessionManager.getUserId()
+    }
+
+    /**
+     * Lưu số điện thoại người dùng
+     */
+    fun saveUserPhone(phone: String) {
+        sessionManager.saveUserPhone(phone)
+    }
+
+    /**
+     * Lấy số điện thoại đã lưu
+     */
+    fun getUserPhone(): String {
+        return sessionManager.getUserPhone()
     }
 }

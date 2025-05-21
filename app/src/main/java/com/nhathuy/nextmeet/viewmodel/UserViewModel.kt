@@ -59,10 +59,22 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
     fun login(phone: String, password: String,rememberMe:Boolean) = viewModelScope.launch {
         repository.login(phone, password,rememberMe).collect {
             result ->
+            //Nếu đăng nhập thành công và rememberMe được bac, lưu so điện thoại
+            if(result is Resource.Success){
+                if(rememberMe){
+                    repository.saveUserPhone(phone)
+                }
+            }
             _loginState.value = result
         }
     }
-
+    /**
+     * Tạo phiên đăng nhập mới trong SessionManager
+     */
+    fun createLoginSession(userId: Int, rememberMe: Boolean, phone: String) {
+        repository.createLoginSession(userId, rememberMe, phone)
+        _rememberMeState.value = rememberMe
+    }
     fun updateUser(user: User) = viewModelScope.launch {
         repository.updateUser(user).collect {
             result ->
@@ -76,7 +88,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
 
     fun logout() = viewModelScope.launch {
         repository.logout().collect {
-            result ->
+                result ->
             _logoutState.value = result
         }
     }
@@ -103,6 +115,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
 
         if(isValid){
             login(loginForm.phone,loginForm.password,rememberMe)
+            setRememberMe(rememberMe)
         }
 
         return isValid
@@ -184,6 +197,30 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
      * Updates the remember me preference
      */
     fun setRememberMe(enabled: Boolean) {
+        repository.setRememberMe(enabled)
         _rememberMeState.value = enabled
     }
+
+    /**
+     * Kiểm tra Remember Me có được bật không
+     */
+    fun isRememberMeEnabled(): Boolean {
+        return repository.isRememberMeEnabled()
+    }
+
+    /**
+     * Lấy ID người dùng từ session
+     */
+    fun getUserId(): Int {
+        return repository.getUserId()
+    }
+
+    /**
+     * Lấy số điện thoại của người dùng đã lưu
+     */
+    fun getUserPhone(): String {
+        return repository.getUserPhone()
+    }
+
+
 }

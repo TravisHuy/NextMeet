@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,7 +24,6 @@ import com.nhathuy.nextmeet.databinding.ActivityLoginBinding
 import com.nhathuy.nextmeet.model.LoginForm
 import com.nhathuy.nextmeet.model.PasswordResetForm
 import com.nhathuy.nextmeet.model.RegistrationForm
-import com.nhathuy.nextmeet.model.User
 import com.nhathuy.nextmeet.model.ValidationResult
 import com.nhathuy.nextmeet.resource.Resource
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
@@ -33,7 +31,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 
 @AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
@@ -56,7 +53,8 @@ class LoginActivity : AppCompatActivity() {
                     latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
                     longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
 
-                    val addressTextError = activeDialog?.findViewById<TextView>(R.id.tv_register_address_error)
+                    val addressTextError =
+                        activeDialog?.findViewById<TextView>(R.id.tv_register_address_error)
 
                     activeDialog?.findViewById<TextView>(R.id.tv_register_address)
                         ?.let { addressTextView ->
@@ -77,6 +75,22 @@ class LoginActivity : AppCompatActivity() {
 
         setupObserverViewModel()
         setupClickListeners()
+        loadRememberedCredentials()
+    }
+
+    /**
+     * Tải thông tin đăng nhập đã lưu nếu Remember Me được bật
+     */
+    private fun loadRememberedCredentials() {
+        if (userViewModel.isRememberMeEnabled()) {
+            val phone = userViewModel.getUserPhone()
+
+            if (phone.isNotEmpty()) {
+                binding.edLoginPhone.setText(phone)
+                binding.edLoginPass.requestFocus()
+                binding.switchRememberMe.isChecked = true
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -104,31 +118,56 @@ class LoginActivity : AppCompatActivity() {
                     }
 
                     is Resource.Success -> {
+
+
                         result.data?.let { user ->
-                            user.isLoggedIn = 1
-                            userViewModel.updateUser(user)
 
-                            val sharedPreferences =
-                                getSharedPreferences("user_id", Context.MODE_PRIVATE)
-                            sharedPreferences.edit().putInt("user_id", user.id).apply()
+                            val rememberMe = binding.switchRememberMe.isChecked
+                            val phone = binding.edLoginPhone.text.toString()
 
 
-                            startActivity(Intent(this@LoginActivity, MainActivity2::class.java))
+                            userViewModel.createLoginSession(user.id, rememberMe, phone)
+
                             Toast.makeText(
                                 this@LoginActivity,
                                 getString(R.string.login_successfully),
-                                Toast.LENGTH_LONG
-                            )
-                                .show()
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            val intent = Intent(this@LoginActivity, MainActivity2::class.java)
+                            intent.flags =
+                                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+
+                            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+
+                            finish()
                         }
                     }
 
                     is Resource.Error -> {
+
+                        val errorMessage = when {
+                            result.message?.contains("password", ignoreCase = true) == true ->
+                                getString(R.string.invalid_password)
+
+                            result.message?.contains("not found", ignoreCase = true) == true ||
+                                    result.message?.contains(
+                                        "invalid",
+                                        ignoreCase = true
+                                    ) == true ->
+                                getString(R.string.user_not_found)
+
+                            else ->
+                                result.message ?: getString(R.string.login_failed)
+                        }
+
                         Toast.makeText(
                             this@LoginActivity,
-                            getString(R.string.login_failed),
+                            errorMessage,
                             Toast.LENGTH_LONG
                         ).show()
+
                     }
                 }
             }
@@ -252,7 +291,13 @@ class LoginActivity : AppCompatActivity() {
         val password = binding.edLoginPass.text.toString()
         val rememberMe = binding.switchRememberMe.isChecked
 
-        userViewModel.validateAndLogin(LoginForm(phone, password),rememberMe)
+        //xóa lỗi cũ nếu có
+        binding.loginPhoneLayout.error = null
+        binding.loginPassLayout.error = null
+
+        userViewModel.setRememberMe(rememberMe)
+
+        userViewModel.validateAndLogin(LoginForm(phone, password), rememberMe)
     }
 
     private fun showRegisterDialog() {
@@ -404,8 +449,7 @@ class LoginActivity : AppCompatActivity() {
                 addressText.visibility = View.GONE
                 addressTextError.visibility = View.VISIBLE
                 addressTextError.text = result.errorMessage
-            }
-            else{
+            } else {
                 addressText.visibility = View.VISIBLE
                 addressTextError.visibility = View.GONE
             }
