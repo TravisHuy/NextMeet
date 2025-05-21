@@ -46,31 +46,33 @@
         </receiver>
         <receiver
             android:name=".SnoozeAlarmReceiver"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"/>
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false" />
         <receiver
             android:name=".DismissAlarmReceiver"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"/>
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBijspjZdF_8odY_Z5MZBiUzRD_RI4jzHY" />
+            android:value="@string/google_map_api_key" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <activity
             android:name=".ui.CustomerDetailActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"/>
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false" />
         <activity
             android:name=".ui.GoogleMapActivity"
-            android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            />
+            android:exported="false" />
         <activity
             android:name=".ui.SplashActivity"
-            android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -82,9 +84,8 @@
             android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
-            android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            />
+            android:exported="false" />
 
         <meta-data
             android:name="preloaded_fonts"

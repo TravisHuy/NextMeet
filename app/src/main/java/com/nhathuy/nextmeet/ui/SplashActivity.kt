@@ -17,8 +17,8 @@ class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
     private val userViewModel: UserViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
-        binding= ActivitySplashBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
+        binding= ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         userViewModel.getCurrentUser().observe(this, Observer {

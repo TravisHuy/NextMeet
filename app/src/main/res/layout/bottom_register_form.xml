@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="10dp"
-    >
+    android:paddingHorizontal="10dp">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_top"
@@ -23,10 +22,9 @@
         android:text="TravisHuy Registration"
         android:textColor="#1198D5"
         android:textSize="20sp"
-        app:layout_constraintTop_toBottomOf="@id/guideline_top"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline_top" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/register_name_Layout"
@@ -38,10 +36,9 @@
         app:counterEnabled="true"
         app:counterMaxLength="25"
         app:errorEnabled="true"
-        app:layout_constraintTop_toBottomOf="@+id/tl_app_register"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        >
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tl_app_register">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_register_name"
@@ -63,10 +60,9 @@
         app:counterEnabled="true"
         app:counterMaxLength="10"
         app:errorEnabled="true"
-        app:layout_constraintTop_toBottomOf="@+id/register_name_Layout"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        >
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/register_name_Layout">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_register_phone"
@@ -86,10 +82,9 @@
         android:layout_marginTop="10dp"
         android:layout_marginEnd="15dp"
         app:errorEnabled="true"
-        app:layout_constraintTop_toBottomOf="@+id/register_phone_Layout"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        >
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/register_phone_Layout">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_register_email"
@@ -108,11 +103,11 @@
         android:layout_marginStart="15dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="15dp"
+        app:endIconMode="password_toggle"
         app:errorEnabled="true"
-        app:layout_constraintTop_toBottomOf="@+id/register_email_Layout"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        >
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/register_email_Layout">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_register_password"
@@ -124,23 +119,87 @@
             android:singleLine="true" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <LinearLayout
+        android:id="@+id/layout_add_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="15dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/register_password_Layout">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="10dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/gray">
+
+            <LinearLayout
+                android:id="@+id/linear_layout_address"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageButton
+                    android:id="@+id/btn_add_address"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/add_address"
+                    android:src="@drawable/ic_geo" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/tv_register_address"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/add_address"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-medium"
+            />
+
+        <TextView
+            android:id="@+id/tv_register_address_error"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/red"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-medium"
+            android:visibility="gone"
+            />
+
+    </LinearLayout>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_submit"
+        style="@style/Widget.Material3.Button.ElevatedButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Submit"
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
-        app:backgroundTint="#1DCD24"
-        app:strokeColor="#858383"
-        app:strokeWidth="1dp"
-        app:cornerRadius="4dp"
         android:padding="10dp"
+        android:text="Submit"
         android:textColor="@color/white"
-        style="@style/Widget.Material3.Button.ElevatedButton"
+        app:backgroundTint="#1DCD24"
+        app:cornerRadius="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/register_password_Layout" />
+        app:layout_constraintTop_toBottomOf="@id/layout_add_address"
+        app:strokeColor="#858383"
+        app:strokeWidth="1dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
