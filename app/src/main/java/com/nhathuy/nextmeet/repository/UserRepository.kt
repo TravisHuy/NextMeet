@@ -91,7 +91,7 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
         emit(Resource.Loading())
         try {
             sessionManager.logout()
-            Resource.Success(true)
+            emit(Resource.Success(true))
         }
         catch (e:Exception){
             emit(Resource.Error("Logout failed: ${e.message}"))

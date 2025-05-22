@@ -44,6 +44,7 @@ class LoginActivity : AppCompatActivity() {
     private var longitude: Double? = null
 
     private var activeDialog: Dialog? = null
+    private var resetPasswordDialog: Dialog? =null
 
     private val mapPickerLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -265,10 +266,11 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         }
+
         //form password reset xác thực với observer
         lifecycleScope.launch {
             userViewModel.passwordFormResetState.collectLatest { validationResults ->
-                activeDialog?.let { dialog ->
+                resetPasswordDialog?.let { dialog ->
                     if (validationResults.isNotEmpty()) {
                         clearPasswordResetDialogError(dialog)
                         setPasswordResetDialogErros(dialog, validationResults)
@@ -368,6 +370,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun showForgotPasswordDialog() {
         val dialog = Dialog(this)
+        resetPasswordDialog = dialog
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.forgot_password)
 
@@ -460,16 +463,10 @@ class LoginActivity : AppCompatActivity() {
         val phoneLayout = dialog.findViewById<TextInputLayout>(R.id.forgot_phone_Layout)
         val newPassword = dialog.findViewById<TextInputLayout>(R.id.forgot_pass_Layout)
         val confirmPassLayout = dialog.findViewById<TextInputLayout>(R.id.forgot_re_pass_Layout)
-        val addressText = dialog.findViewById<TextView>(R.id.tv_register_address)
-        val addressTextError = dialog.findViewById<TextView>(R.id.tv_register_address_error)
 
         phoneLayout?.error = null
         newPassword?.error = null
         confirmPassLayout?.error = null
-        addressText.text = null
-
-        addressText.visibility = View.VISIBLE
-        addressTextError.visibility = View.GONE
     }
 
     private fun setPasswordResetDialogErros(
