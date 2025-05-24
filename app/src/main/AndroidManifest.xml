@@ -24,6 +24,9 @@
         android:theme="@style/Theme.CustomerManagementApp"
         tools:targetApi="31">
         <activity
+            android:name=".ui.TestActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.MainActivity2"
             android:exported="false" />
         <activity
