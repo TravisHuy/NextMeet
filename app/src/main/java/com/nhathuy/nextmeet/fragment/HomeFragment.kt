@@ -11,64 +11,47 @@ import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.TabsPagerAdapter
 import com.nhathuy.nextmeet.databinding.FragmentHomeBinding
 import com.nhathuy.nextmeet.ui.TestActivity
+import dagger.hilt.android.AndroidEntryPoint
 
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-
-    private lateinit var tabsPagerAdapter: TabsPagerAdapter
-    private var testActivity: TestActivity? = null
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is TestActivity) {
-            testActivity = context
-        }
-    }
-
+    private lateinit var adapter: TabsPagerAdapter
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        adapter = TabsPagerAdapter(this)
+        binding.homeViewpager2.adapter = adapter
+
+        TabLayoutMediator(binding.tabLayout, binding.homeViewpager2) { tab, position ->
+            tab.text = when (position) {
+                0 -> "Dashboard"
+                1 -> "Notes"
+                2 -> "History"
+                else -> "Tab"
+            }
+        }.attach()
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupViewPager()
-        connectTabLayoutWithViewPager()
+        setupViewPagerAdapter()
+        setupTablayout()
     }
 
-    private fun setupViewPager() {
-        tabsPagerAdapter = TabsPagerAdapter(childFragmentManager, lifecycle)
-        binding.viewPager.adapter = tabsPagerAdapter
+    private fun setupViewPagerAdapter() {
 
-        // tắt swipe nêu không muon swipe giữa các tab
-        binding.viewPager.isUserInputEnabled = false
     }
 
-    private fun connectTabLayoutWithViewPager() {
-        testActivity?.binding?.tabLayout?.let { tabLayout ->
-            TabLayoutMediator(tabLayout, binding.viewPager) { tab, position ->
-                when (position) {
-                    0 -> tab.text = "Dashboard"
-                    1 -> tab.text = "Notes"
-                    2 -> tab.text = "History"
-                }
-            }.attach()
-        }
-    }
+    private fun setupTablayout() {
 
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
-    override fun onDetach() {
-        super.onDetach()
-        testActivity = null
-    }
-
 }

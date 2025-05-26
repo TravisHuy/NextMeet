@@ -9,7 +9,7 @@ import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.FragmentHistoryBinding
 
 
-class HistoryFragment : BaseTabFragment() {
+class HistoryFragment :  Fragment() {
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
 
@@ -20,35 +20,5 @@ class HistoryFragment : BaseTabFragment() {
     ): View {
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupViews()
-    }
-
-    private fun setupViews() {
-//        // Setup RecyclerView cho history
-//        binding.rvHistory.apply {
-//            layoutManager = LinearLayoutManager(context)
-//            // adapter = historyAdapter
-//        }
-    }
-
-    override fun loadDataOnFirstVisible() {
-        loadHistory()
-    }
-
-    override fun refreshData() {
-        loadHistory()
-    }
-
-    private fun loadHistory() {
-        // Load history data
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
