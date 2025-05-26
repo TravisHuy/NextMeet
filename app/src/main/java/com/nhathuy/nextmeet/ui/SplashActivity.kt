@@ -29,7 +29,7 @@ class SplashActivity : AppCompatActivity() {
     }
     private fun checkLoginStatus(){
         if(userViewModel.isLoggedIn()){
-            val intent=Intent(this, MainActivity2::class.java)
+            val intent=Intent(this, TestActivity::class.java)
             startActivity(intent)
             overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
         }else{

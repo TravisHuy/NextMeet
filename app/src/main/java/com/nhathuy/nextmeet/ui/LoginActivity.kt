@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -135,7 +136,7 @@ class LoginActivity : AppCompatActivity() {
                                 Toast.LENGTH_SHORT
                             ).show()
 
-                            val intent = Intent(this@LoginActivity, MainActivity2::class.java)
+                            val intent = Intent(this@LoginActivity, TestActivity::class.java)
                             intent.flags =
                                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
@@ -248,7 +249,7 @@ class LoginActivity : AppCompatActivity() {
                             result.message ?: "Registration failed",
                             Toast.LENGTH_LONG
                         ).show()
-                        // Cancel the collector after error
+                        Log.d("Register", "${result.message}")
                         this.cancel()
                     }
                 }

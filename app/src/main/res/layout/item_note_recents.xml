@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="150dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="12dp"
+    android:elevation="8dp"
+    android:padding="16dp"
+    android:layout_margin="8dp"
+    >
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:background="#FFFFFF"
+        >
+        <TextView
+            android:id="@+id/tv_note_recent_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/manrope_bold"
+            android:textSize="18sp"
+            android:hint="Ý tường dự án moi"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+        <TextView
+            android:id="@+id/tv_note_recent_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter"
+            android:textSize="16sp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:layout_marginTop="5dp"
+            android:hint="Ý tường dự án moi Tôi đã tạo một giao diện chuẩn cho ứng dụng NextMeet với các tính năng chính"
+            app:layout_constraintTop_toBottomOf="@id/tv_note_recent_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/tv_note_recent_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:fontFamily="@font/inter_extralight"
+            android:hint="2 hours"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_note_recent_content" />
+
+        <ImageView
+            android:id="@+id/iv_notes"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="15dp"
+            android:src="@drawable/ic_geo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_note_recent_content"
+            app:tint="#FF5722" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

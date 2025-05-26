@@ -59,6 +59,37 @@ object ValidationUtils {
 //            else -> ValidationResult(true)
 //        }
 //    }
+//    /**
+//     * Xác thực password
+//     *
+//     * @param password Password để xác thực
+//     * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
+//     */
+//    fun validatePassword(password: String): ValidationResult {
+//        val specialCharRegex = Regex("[!@#\$%^&*(),.?\":{}|<>]")
+//        val uppercaseRegex = Regex("[A-Z]")
+//
+//        return when {
+//            password.isEmpty() -> ValidationResult(false, "Password is required")
+//            password.length < 6 -> ValidationResult(
+//                false,
+//                "Password must be less than 6 characters"
+//            )
+//
+//            !specialCharRegex.containsMatchIn(password) -> ValidationResult(
+//                false,
+//                "Password must contain at least one character"
+//            )
+//
+//            !uppercaseRegex.containsMatchIn(password) -> ValidationResult(
+//                false,
+//                "Password must be least one character uppercase letter"
+//            )
+//
+//            else -> ValidationResult(true)
+//        }
+//    }
+
     /**
      * Xác thực password
      *
@@ -66,8 +97,6 @@ object ValidationUtils {
      * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
      */
     fun validatePassword(password: String): ValidationResult {
-        val specialCharRegex = Regex("[!@#\$%^&*(),.?\":{}|<>]")
-        val uppercaseRegex = Regex("[A-Z]")
 
         return when {
             password.isEmpty() -> ValidationResult(false, "Password is required")
@@ -75,21 +104,9 @@ object ValidationUtils {
                 false,
                 "Password must be less than 6 characters"
             )
-
-            !specialCharRegex.containsMatchIn(password) -> ValidationResult(
-                false,
-                "Password must contain at least one character"
-            )
-
-            !uppercaseRegex.containsMatchIn(password) -> ValidationResult(
-                false,
-                "Password must be least one character uppercase letter"
-            )
-
             else -> ValidationResult(true)
         }
     }
-
     /**
      * Xác thực email
      *
