@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_plus"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_dash_board"
+        android:name="com.nhathuy.nextmeet.fragment.DashBoardFragment"
+        android:label="fragment_dash_board"
+        tools:layout="@layout/fragment_dash_board" />
+    <fragment
+        android:id="@+id/nav_appointment"
+        android:name="com.nhathuy.nextmeet.fragment.AppointmentMapFragment"
+        android:label="fragment_appointment_map"
+        tools:layout="@layout/fragment_appointment_map" />
+    <fragment
+        android:id="@+id/nav_contact"
+        android:name="com.nhathuy.nextmeet.fragment.ContactFragment"
+        android:label="fragment_contact"
+        tools:layout="@layout/fragment_contact" />
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="com.nhathuy.nextmeet.fragment.SettingsFragment"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.nhathuy.nextmeet.fragment.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" />
+
+</navigation>

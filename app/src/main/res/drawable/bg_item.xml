@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/selector_appointment_item.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#F5F5F5" />
+            <corners android:radius="12dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#E0E0E0" />
+        </shape>
+    </item>
+
+    <!-- Selected/Focused state -->
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#E3F2FD" />
+            <corners android:radius="12dp" />
+            <stroke
+                android:width="2dp"
+                android:color="#2196F3" />
+        </shape>
+    </item>
+
+    <!-- Normal state -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="12dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#E8E8E8" />
+            <gradient
+                android:angle="90"
+                android:startColor="#FAFAFA"
+                android:endColor="#FFFFFF" />
+        </shape>
+    </item>
+
+</selector>

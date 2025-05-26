@@ -6,4 +6,259 @@
     android:layout_height="match_parent"
     tools:context=".ui.TestActivity">
 
+    <LinearLayout
+        android:id="@+id/topStatusBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:elevation="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/icon_app"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/logo" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!--            <TextView-->
+            <!--                android:id="@+id/tab_dashboard"-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:background="@drawable/top_background_selector"-->
+            <!--                android:fontFamily="sans-serif-medium"-->
+            <!--                android:paddingHorizontal="12dp"-->
+            <!--                android:paddingVertical="8dp"-->
+            <!--                android:text="Dashboard"-->
+            <!--                android:textSize="16sp" />-->
+
+            <!--            <TextView-->
+            <!--                android:id="@+id/tab_notes"-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:background="@drawable/top_background_selector"-->
+            <!--                android:fontFamily="sans-serif-medium"-->
+            <!--                android:paddingHorizontal="12dp"-->
+            <!--                android:paddingVertical="8dp"-->
+            <!--                android:text="Notes"-->
+            <!--                android:textSize="16sp" />-->
+
+            <!--            <TextView-->
+            <!--                android:id="@+id/tab_history"-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:background="@drawable/top_background_selector"-->
+            <!--                android:fontFamily="sans-serif-medium"-->
+            <!--                android:paddingHorizontal="12dp"-->
+            <!--                android:paddingVertical="8dp"-->
+            <!--                android:text="History"-->
+            <!--                android:textSize="16sp" />-->
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                app:tabMode="fixed"
+                app:tabGravity="center"
+                android:visibility="visible"
+                app:tabIndicatorColor="@android:color/white"
+                app:tabIndicatorHeight="3dp"
+                app:tabSelectedTextColor="@android:color/white"
+                app:tabTextColor="#CCFFFFFF"
+                app:tabIndicatorAnimationMode="elastic"
+                app:tabRippleColor="@android:color/transparent"
+                android:minHeight="48dp"/>
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/iv_search"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_search" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/main_content_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/nav_bottom_navigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topStatusBar">
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/nav_host_fragment_plus"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/nav_graph" />
+
+        <FrameLayout
+            android:id="@+id/tab_content_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            />
+    </FrameLayout>
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/ic_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_add"
+        android:layout_marginBottom="10dp"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintBottom_toTopOf="@id/nav_bottom_navigation"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/nav_bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:labelVisibilityMode="labeled"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:menu="@menu/nav_bottom_menu" />
+
+<!--    <LinearLayout-->
+<!--        android:id="@+id/nav_bottom_navigation"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="60dp"-->
+<!--        android:gravity="center"-->
+<!--        android:orientation="horizontal"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent">-->
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/nav_home"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:background="?android:attr/selectableItemBackground"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical">-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="24dp"-->
+<!--                android:layout_height="24dp"-->
+<!--                android:src="@drawable/ic_home_plus" />-->
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="2dp"-->
+<!--                android:text="Home" />-->
+<!--        </LinearLayout>-->
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/nav_appointment"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:background="?android:attr/selectableItemBackground"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical">-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="24dp"-->
+<!--                android:layout_height="24dp"-->
+<!--                android:src="@drawable/ic_appointment" />-->
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="2dp"-->
+<!--                android:text="Appointment" />-->
+<!--        </LinearLayout>-->
+
+<!--        <FrameLayout-->
+<!--            android:id="@+id/nav_create"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:background="?android:attr/selectableItemBackground"-->
+<!--            android:gravity="center">-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="36dp"-->
+<!--                android:layout_height="24dp"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:src="@drawable/ic_add_plus" />-->
+
+<!--        </FrameLayout>-->
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/nav_contact"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:background="?android:attr/selectableItemBackground"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical">-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="24dp"-->
+<!--                android:layout_height="24dp"-->
+<!--                android:src="@drawable/ic_contact" />-->
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="2dp"-->
+<!--                android:text="Contact" />-->
+<!--        </LinearLayout>-->
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/nav_setting"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:background="?android:attr/selectableItemBackground"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical">-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="24dp"-->
+<!--                android:layout_height="24dp"-->
+<!--                android:src="@drawable/ic_setting" />-->
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="2dp"-->
+<!--                android:text="Settings" />-->
+<!--        </LinearLayout>-->
+
+
+<!--    </LinearLayout>-->
+
+
+
+
+    <!--    <ImageButton-->
+    <!--        android:layout_width="60dp"-->
+    <!--        android:layout_height="60dp"-->
+    <!--        android:layout_alignTop="@id/nav_bottom_navigation"-->
+    <!--        android:layout_centerHorizontal="true"-->
+    <!--        android:layout_marginTop="-20dp"-->
+    <!--        android:background="@drawable/bg_circle_white"-->
+    <!--        android:padding="10dp"-->
+    <!--        android:src="@drawable/ic_add_plus"-->
+    <!--        android:contentDescription="Center Button"-->
+    <!--        android:elevation="8dp"-->
+    <!--        />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:layout_margin="8dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_item"
+    android:clickable="true"
+    android:focusable="true"
+    android:elevation="2dp">
+
+    <!-- Time section with vertical line -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp">
+
+        <!-- Vertical line -->
+        <View
+            android:id="@+id/vertical_line"
+            android:layout_width="3dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="20dp"
+            android:background="#2196F3" />
+
+        <!-- Time container -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/vertical_line"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_time_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hôm nay"
+                android:textSize="12sp"
+                android:textColor="#666666"
+                android:fontFamily="@font/inter" />
+
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="09:00"
+                android:textSize="16sp"
+                android:textColor="#2196F3"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <!-- Content section -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Họp team dự án"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:textStyle="bold"
+            android:fontFamily="@font/inter_bold"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Location with icon -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_geo"
+                android:layout_marginEnd="6dp"
+                app:tint="#FF5722" />
+
+            <TextView
+                android:id="@+id/tv_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Phòng họp A - với Nguyễn Văn A"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:fontFamily="@font/inter" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

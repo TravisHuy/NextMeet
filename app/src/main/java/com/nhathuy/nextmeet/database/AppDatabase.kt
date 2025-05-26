@@ -13,7 +13,7 @@ import com.nhathuy.nextmeet.model.Customer
 import com.nhathuy.nextmeet.model.Transaction
 import com.nhathuy.nextmeet.model.User
 
-@Database(entities = [User::class,Customer::class,Appointment::class,Transaction::class,AlarmHistory::class], version = 1, exportSchema = false)
+@Database(entities = [User::class,Customer::class,Appointment::class,Transaction::class,AlarmHistory::class], version = 2, exportSchema = false)
 abstract class AppDatabase:RoomDatabase(){
     abstract fun userDao():UserDao
     abstract fun customerDao():CustomerDao

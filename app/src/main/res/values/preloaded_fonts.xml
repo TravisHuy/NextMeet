@@ -3,6 +3,12 @@
     <array name="preloaded_fonts" translatable="false">
         <item>@font/aldrich</item>
         <item>@font/almendra_italic</item>
+        <item>@font/inter</item>
+        <item>@font/inter_bold</item>
+        <item>@font/inter_extralight</item>
+        <item>@font/inter_light</item>
+        <item>@font/manrope</item>
+        <item>@font/manrope_bold</item>
         <item>@font/mulish_light</item>
         <item>@font/mulish_medium</item>
     </array>

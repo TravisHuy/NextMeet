@@ -26,7 +26,9 @@ object RepositoryModule {
         return Room.databaseBuilder(
             context, AppDatabase::class.java,
             "customer_manager_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
