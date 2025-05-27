@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
  * @property email Email của người dùng
  * @property phone Số điện thoại của người dùng
  * @property password mật khẩu của nguời dùng
- * @property isLoggedIn kiểm tra người dùng có đăng nhập chưa
+ * @property defaultAddress địa chỉ mặt đinh của người dùng
  * @property defaultLatitude vĩ độ ban đầu của người dùng
  * @property defaultLongitude kinh độ ban đầu của nguoi dùng.
  *
@@ -31,8 +31,18 @@ data class User(
     val phone: String = "",
     @ColumnInfo(name = "password")
     val password: String = "",
+    @ColumnInfo(name = "default_address")
+    val defaultAddress: String = "",
     @ColumnInfo(name = "default_latitude")
     val defaultLatitude: Double? = null,
     @ColumnInfo(name = "default_longitude")
-    val defaultLongitude: Double? = null
+    val defaultLongitude: Double? = null,
+    @ColumnInfo(name = "notification_enabled")
+    val notificationEnabled: Boolean = true,
+    @ColumnInfo(name = "default_reminder_minutes")
+    val defaultReminderMinutes : Int = 15,
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "updated_at")
+    val updateAt: Long = System.currentTimeMillis()
 )

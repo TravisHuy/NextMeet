@@ -4,21 +4,20 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
-    android:padding="16dp"
-    android:layout_margin="8dp"
+    android:padding="@dimen/padding_medium"
+    android:layout_margin="@dimen/margin_small"
     android:gravity="center_vertical"
     android:background="@drawable/bg_item"
     android:clickable="true"
     android:focusable="true"
-    android:elevation="2dp">
+    android:elevation="@dimen/elevation_small">
 
-    <!-- Time section with vertical line -->
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp">
 
-        <!-- Vertical line -->
+
         <View
             android:id="@+id/vertical_line"
             android:layout_width="3dp"
@@ -26,7 +25,7 @@
             android:layout_marginStart="20dp"
             android:background="#2196F3" />
 
-        <!-- Time container -->
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -59,26 +58,26 @@
 
     </RelativeLayout>
 
-    <!-- Content section -->
+
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <!-- Title -->
+
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Họp team dự án"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_body"
             android:textColor="#333333"
             android:textStyle="bold"
             android:fontFamily="@font/inter_bold"
             android:layout_marginBottom="4dp" />
 
-        <!-- Location with icon -->
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -89,7 +88,7 @@
                 android:layout_width="14dp"
                 android:layout_height="14dp"
                 android:src="@drawable/ic_geo"
-                android:layout_marginEnd="6dp"
+                android:layout_marginEnd="@dimen/margin_small"
                 app:tint="#FF5722" />
 
             <TextView
@@ -97,7 +96,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Phòng họp A - với Nguyễn Văn A"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_medium"
                 android:textColor="#666666"
                 android:fontFamily="@font/inter" />
 

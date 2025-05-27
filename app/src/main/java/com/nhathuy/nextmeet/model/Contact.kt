@@ -7,7 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Contact Entity đại diện cho  bảng danh bạ liên hệ trong rool
+ * Contact Entity đại diện cho  bảng danh bạ liên hệ trong room
  *
  * - Có ràng buộc foreign key tới bảng `users` thông qua cột `userId`.
  * - Có chỉ mục (index) trên `userId` để tối ưu truy vấn và tránh cảnh báo KSP.
@@ -32,27 +32,33 @@ import androidx.room.PrimaryKey
         childColumns = ["userId"],
         onDelete = ForeignKey.CASCADE
     )],
-    indices = [Index("userId")]
+    indices = [Index("userId"),
+        Index("name"),
+        Index("userId", "phone", unique = true)]
 )
 data class Contact(
     @PrimaryKey(autoGenerate = true)
-    val id: Long,
+    val id: Int = 0,
     @ColumnInfo(name = "user_id")
-    val userId: Long,
+    val userId: Int,
     @ColumnInfo(name = "name")
     val name: String,
-    @ColumnInfo(name= "address")
-    val address:String,
+    @ColumnInfo(name = "address")
+    val address: String = "",
     @ColumnInfo(name = "phone")
-    val phone: String,
+    val phone: String = "",
     @ColumnInfo(name = "email")
-    val email: String,
+    val email: String = "",
     @ColumnInfo(name = "notes")
-    val notes:String,
-    @ColumnInfo(name="latitude")
-    val latitude: Double,
-    @ColumnInfo(name="longitude")
-    val longitude:Double,
-    @ColumnInfo(name="is_favorite")
-    val isFavorite:Boolean
+    val notes: String = "",
+    @ColumnInfo(name = "latitude")
+    val latitude: Double? = null,
+    @ColumnInfo(name = "longitude")
+    val longitude: Double? = null,
+    @ColumnInfo(name = "is_favorite")
+    val isFavorite: Boolean = false,
+    @ColumnInfo(name = "created_at")
+    val createAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "updated_at")
+    val updateAt: Long = System.currentTimeMillis()
 )

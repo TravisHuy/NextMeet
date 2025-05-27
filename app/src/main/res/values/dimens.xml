@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--Padding-->
+    <dimen name="padding_extra_small">4dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">12dp</dimen>
+    <dimen name="padding_large">16dp</dimen>
+    <dimen name="padding_extra_large">20dp</dimen>
+    <dimen name="padding_huge">24dp</dimen>
+
+    <!--Margin-->
+    <dimen name="margin_extra_small">4dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_medium">12dp</dimen>
+    <dimen name="margin_large">16dp</dimen>
+    <dimen name="margin_extra_large">20dp</dimen>
+    <dimen name="margin_huge">24dp</dimen>
+
+    <!--Spacing dimensions-->
+    <dimen name="spacing_extra_small">4dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">12dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="spacing_extra_large">20dp</dimen>
+
+    <!--Corner radius-->
+    <dimen name="corner_radius_small">8dp</dimen>
+    <dimen name="corner_radius_medium">12dp</dimen>
+    <dimen name="corner_radius_large">16dp</dimen>
+    <dimen name="corner_radius_extra_large">20dp</dimen>
+
+    <!--Elevation-->
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_small">4dp</dimen>
+    <dimen name="elevation_medium">8dp</dimen>
+    <dimen name="elevation_large">8dp</dimen>
+    <dimen name="elevation_extra_large">12dp</dimen>
+
+    <!--Text sizes-->
+    <dimen name="text_size_micro">10sp</dimen>
+    <dimen name="text_size_small">12sp</dimen>
+    <dimen name="text_size_medium">14sp</dimen>
+    <dimen name="text_size_body">16sp</dimen>
+    <dimen name="text_size_large">18sp</dimen>
+    <dimen name="text_size_heading">20sp</dimen>
+    <dimen name="text_size_title">22sp</dimen>
+    <dimen name="text_size_display">24sp</dimen>
+    <dimen name="text_size_hero">28sp</dimen>
+
+
+    <!-- Icon sizes -->
+    <dimen name="icon_size_small">16dp</dimen>
+    <dimen name="icon_size_medium">24dp</dimen>
+    <dimen name="icon_size_large">32dp</dimen>
+    <dimen name="icon_size_extra_large">48dp</dimen>
+
+    <!-- Button heights -->
+    <dimen name="button_height_small">32dp</dimen>
+    <dimen name="button_height_medium">40dp</dimen>
+    <dimen name="button_height_large">48dp</dimen>
+
+    <!-- Card specific -->
+    <dimen name="card_width_percent">0.22</dimen>
+
+    <!-- Map height -->
+    <dimen name="map_height">250dp</dimen>
+
+</resources>
