@@ -3,7 +3,6 @@ package com.nhathuy.nextmeet.ui
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.view.get
-import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.ViewPagerAdapter
@@ -25,6 +24,9 @@ class SolutionActivity : AppCompatActivity() {
     private fun setupViewPager() {
         viewPagerAdapter = ViewPagerAdapter(this)
         binding.viewPager2.adapter = viewPagerAdapter
+
+        // tắt scroll viewpager2 bằng tay
+        binding.viewPager2.isUserInputEnabled  = false
 
         //đồng bộ viewpager2 với bottomNavigationItem
         binding.viewPager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {

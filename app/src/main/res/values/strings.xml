@@ -83,6 +83,13 @@
     <string name="password_update_success">Cập nhật mật khẩu thành công</string>
     <string name="password_update_failed">Cập nhật mật khẩu thất bại</string>
     <string name="registration_failed">Đăng ký thất bại</string>
+    <string name="today">Today</string>
+    <string name="appointment_for_today">Appointment for today</string>
+    <string name="view_all">View All</string>
+    <string name="notes">Notes</string>
+    <string name="contact">Contact</string>
+    <string name="notes_for_recent">Notes for Recent</string>
+    <string name="map_for_appointment">Map for appointment</string>
 
 
 </resources>
