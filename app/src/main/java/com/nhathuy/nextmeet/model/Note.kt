@@ -1,6 +1,9 @@
 package com.nhathuy.nextmeet.model
 
 import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 
 /**
  * Entity đại diện cho ghi chú những ghi chú trong ứng dụng
@@ -22,6 +25,18 @@ import androidx.room.ColumnInfo
  * @author TravisHuy (Ho Nhat Huy)
  * @since 27/05/2025
  */
+@Entity(
+    tableName = "notes",
+    foreignKeys = [
+        ForeignKey(
+            entity = User::class,
+            parentColumns = ["id"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("userId"),Index("isPinned"),Index("isShared")]
+)
 data class Note(
     val id:Int = 0,
     @ColumnInfo(name = "user_id")
@@ -36,8 +51,8 @@ data class Note(
     val color: String = "#fffff",
     @ColumnInfo(name = "is_pinned")
     val isPinned: Boolean = false,
-    @ColumnInfo(name = "is_archived")
-    val isArchived: Boolean = false,
+    @ColumnInfo(name = "is_shared")
+    val isShared: Boolean = false,
     @ColumnInfo(name = "reminder_time")
     val reminderTime: Long? = null,
     @ColumnInfo(name = "check_list_items")
