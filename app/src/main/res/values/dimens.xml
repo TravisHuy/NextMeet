@@ -41,6 +41,7 @@
     <dimen name="text_size_micro">10sp</dimen>
     <dimen name="text_size_small">12sp</dimen>
     <dimen name="text_size_medium">14sp</dimen>
+    <dimen name="text_size_body1">15sp</dimen>
     <dimen name="text_size_body">16sp</dimen>
     <dimen name="text_size_large">18sp</dimen>
     <dimen name="text_size_heading">20sp</dimen>
