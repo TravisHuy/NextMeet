@@ -8,7 +8,11 @@
         <item>@font/inter_semibold</item>
         <item>@font/manrope_light</item>
         <item>@font/manrope_medium</item>
+        <item>@font/montserrat_bold</item>
         <item>@font/mulish_light</item>
         <item>@font/mulish_medium</item>
+        <item>@font/open_sans</item>
+        <item>@font/poppins_bold</item>
+        <item>@font/quicksand_medium</item>
     </array>
 </resources>

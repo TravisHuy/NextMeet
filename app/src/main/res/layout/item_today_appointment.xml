@@ -15,23 +15,13 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp">
-
-
-        <View
-            android:id="@+id/vertical_line"
-            android:layout_width="3dp"
-            android:layout_height="60dp"
-            android:layout_marginStart="20dp"
-            android:background="#2196F3" />
+        android:layout_marginEnd="@dimen/margin_large">
 
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toStartOf="@id/vertical_line"
-            android:layout_marginEnd="8dp"
             android:orientation="vertical"
             android:gravity="center">
 
@@ -40,16 +30,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Hôm nay"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_small"
                 android:textColor="#666666"
-                android:fontFamily="@font/inter" />
+                android:fontFamily="@font/open_sans" />
 
             <TextView
                 android:id="@+id/tv_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="09:00"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_body"
                 android:textColor="#2196F3"
                 android:textStyle="bold"
                 android:fontFamily="@font/inter_bold" />
@@ -73,9 +63,9 @@
             android:text="Họp team dự án"
             android:textSize="@dimen/text_size_body"
             android:textColor="#333333"
-            android:textStyle="bold"
-            android:fontFamily="@font/inter_bold"
-            android:layout_marginBottom="4dp" />
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:fontFamily="@font/poppins_bold"/>
 
 
         <LinearLayout
@@ -97,8 +87,10 @@
                 android:layout_height="wrap_content"
                 android:text="Phòng họp A - với Nguyễn Văn A"
                 android:textSize="@dimen/text_size_medium"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textColor="#666666"
-                android:fontFamily="@font/inter" />
+                android:fontFamily="@font/open_sans" />
 
         </LinearLayout>
 

@@ -55,10 +55,10 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/manrope_medium"
-                    android:textSize="@dimen/text_size_medium"
+                    android:fontFamily="@font/quicksand_medium"
                     android:text="@string/today"
-                    android:textAlignment="center" />
+                    android:textAlignment="center"
+                    android:textSize="@dimen/text_size_medium" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -92,10 +92,10 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/manrope_medium"
-                    android:textSize="@dimen/text_size_medium"
+                    android:fontFamily="@font/quicksand_medium"
                     android:text="@string/notes"
-                    android:textAlignment="center" />
+                    android:textAlignment="center"
+                    android:textSize="@dimen/text_size_medium" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -129,10 +129,10 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/manrope_medium"
-                    android:textSize="@dimen/text_size_medium"
+                    android:fontFamily="@font/quicksand_medium"
                     android:text="@string/contact"
-                    android:textAlignment="center" />
+                    android:textAlignment="center"
+                    android:textSize="@dimen/text_size_medium" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -166,12 +166,13 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/manrope_medium"
-                    android:textSize="@dimen/text_size_medium"
-                    android:text="Upcomming"
-                    android:textAlignment="center"
                     android:ellipsize="end"
-                    android:maxLines="1" />
+                    android:fontFamily="@font/quicksand_medium"
+                    android:maxLines="1"
+                    android:text="Upcoming"
+                    android:textAlignment="center"
+                    android:textSize="@dimen/text_size_medium" />
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -207,15 +208,15 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/margin_small"
                         android:layout_weight="1"
-                        android:fontFamily="@font/inter_bold"
+                        android:fontFamily="@font/poppins_bold"
                         android:text="@string/appointment_for_today"
-                        android:textSize="@dimen/text_size_large" />
+                        android:textSize="@dimen/text_size_body1" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:fontFamily="@font/inter_semibold"
+                        android:fontFamily="@font/quicksand_medium"
                         android:text="@string/view_all"
                         android:textColor="#1976D2"
                         android:textSize="@dimen/text_size_medium"
@@ -267,15 +268,16 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/margin_small"
                         android:layout_weight="1"
-                        android:fontFamily="@font/inter_bold"
+                        android:fontFamily="@font/poppins_bold"
                         android:text="@string/notes_for_recent"
-                        android:textSize="@dimen/text_size_large" />
+                        android:textSize="@dimen/text_size_body1"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:fontFamily="@font/inter_semibold"
+                        android:fontFamily="@font/quicksand_medium"
                         android:text="@string/view_all"
                         android:textColor="#1976D2"
                         android:textSize="@dimen/text_size_medium"
@@ -329,18 +331,19 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/margin_small"
                         android:layout_weight="1"
-                        android:fontFamily="@font/inter_bold"
+                        android:fontFamily="@font/poppins_bold"
                         android:text="@string/map_for_appointment"
-                        android:textSize="@dimen/text_size_large" />
+                        android:textSize="@dimen/text_size_body1"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:fontFamily="@font/inter_bold"
-                        android:text="View All"
+                        android:fontFamily="@font/inter_semibold"
+                        android:text="@string/view_all"
                         android:textColor="#1976D2"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_medium"
                         android:textStyle="bold" />
                 </LinearLayout>
 

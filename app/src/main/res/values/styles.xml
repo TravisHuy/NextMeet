@@ -16,4 +16,10 @@
         <item name="android:textStyle">bold</item>
         <item name="textAllCaps">false</item>
     </style>
+
+    <style name="ShapeAppearanceOverlay.App.RoundedImage" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item> <!-- hoặc 12dp nếu muốn bo nhiều hơn -->
+    </style>
+
 </resources>

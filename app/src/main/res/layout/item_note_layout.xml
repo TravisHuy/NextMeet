@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="@dimen/margin_small"
+    app:cardCornerRadius="@dimen/corner_radius_large"
+    app:cardElevation="@dimen/elevation_small"
+    app:strokeWidth="0dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    >
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:padding="@dimen/padding_large"
+        >
+
+        <LinearLayout
+            android:id="@+id/header_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/iv_note_type"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_text_fields"
+                tools:src="@drawable/ic_text_fields"
+                />
+            <!-- Note Type Label -->
+            <TextView
+                android:id="@+id/tv_note_type"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Text"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/open_sans"
+                tools:text="Text" />
+
+            <!-- Pin Icon -->
+            <ImageView
+                android:id="@+id/iv_pin"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_pin"
+                android:visibility="gone"
+                app:tint="@color/red"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <!--Title-->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_body"
+            android:fontFamily="@font/montserrat_bold"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintTop_toBottomOf="@id/header_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="Shopping list for weekend"
+            />
+
+        <!--Content Preview-->
+        <FrameLayout
+            android:id="@+id/content_preivew"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_medium"
+            app:layout_constraintTop_toBottomOf="@+id/tv_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            >
+            <!--Text Content-->
+            <TextView
+                android:id="@+id/tv_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/quicksand_medium"
+                android:ellipsize="end"
+                android:maxLines="4"
+                android:visibility="gone"
+                android:textSize="@dimen/text_size_medium"
+                tools:visibility="gone"
+                tools:text="This is a sample note content that shows how the test"
+                />
+
+            <!--Checklist Preview-->
+            <LinearLayout
+                android:id="@+id/checklist_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible"
+                >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="@dimen/margin_extra_small">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_check_box"
+                        app:tint="@color/green" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Completed item"
+                        android:textSize="14sp"
+                        android:layout_marginStart="8dp"
+                        android:textDecoration="strikethrough" />
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="4dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_check_box_outline"
+                        />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Pending item"
+                        android:textSize="14sp"
+                        android:layout_marginStart="8dp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_checklist_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+2 more items"
+                    android:textSize="12sp"
+                    android:textStyle="italic"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+            <!--Media Preview-->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedImage"
+                tools:src="@drawable/test_image" />
+
+        </FrameLayout>
+
+        <!--Footer Information-->
+        <LinearLayout
+            android:id="@+id/footer_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical|start"
+            app:layout_constraintTop_toBottomOf="@id/content_preivew"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            >
+            <!--Create date-->
+            <TextView
+                android:id="@+id/tv_created_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/text_size_small"
+                android:fontFamily="@font/open_sans"
+                tools:text="May 27,2025"
+                />
+
+            <!--Reminder Indicator-->
+            <LinearLayout
+                android:id="@+id/reminder_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                android:background="@drawable/bg_rounded_accent"
+                android:paddingHorizontal="@dimen/padding_small"
+                android:paddingVertical="@dimen/padding_extra_small"
+                android:layout_marginStart="@dimen/margin_small"
+                tools:visibility="visible"
+                >
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:src="@drawable/ic_notification"
+                    app:tint="@color/white"
+                    />
+                <TextView
+                    android:id="@+id/tv_reminder_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today"
+                    android:textSize="10sp"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="@dimen/margin_extra_small"
+                    android:fontFamily="@font/quicksand_medium"
+                    tools:text="Today" />
+            </LinearLayout>
+
+
+
+            <!--More options-->
+            <ImageView
+                android:id="@+id/btn_more_options"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:padding="2dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginStart="@dimen/margin_small"
+                android:src="@drawable/three_dots_vertical"
+                />
+
+        </LinearLayout>
+
+        <!--Color Indicator Strip-->
+
+        <View
+            android:id="@+id/color_indicator"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="12dp"
+            android:background="@color/gray"
+            app:layout_constraintTop_toBottomOf="@id/footer_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

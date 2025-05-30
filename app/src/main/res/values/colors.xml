@@ -4,6 +4,10 @@
     <color name="white">#FFFFFFFF</color>
     <color name="red">#DC0505</color>
     <color name="gray">#EAEAEA</color>
+    <color name="green">#23B329</color>
+
+    <color name="background_primary">#FEFEFE</color>
+    <color name="text_primary">#1F2937</color>
 
     <!-- Màu sắc cho chế độ sáng -->
     <color name="light_background">#FFFFFF</color>
@@ -25,5 +29,7 @@
     <color name="dark_text_primary">#ECF0F1</color>
     <color name="dark_text_secondary">#BDC3C7</color>
 
+    <!-- Border Colors -->
+    <color name="border_light">#E5E7EB</color>
 
 </resources>
