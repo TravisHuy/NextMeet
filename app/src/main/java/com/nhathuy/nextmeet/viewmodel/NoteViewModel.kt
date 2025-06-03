@@ -84,17 +84,12 @@ class NoteViewModel @Inject constructor(private val noteRepository: NoteReposito
      */
 
     fun createNote(
-        userId: Int,
-        title: String = "",
-        content: String ="",
-        noteType: NoteType = NoteType.TEXT,
-        color :String = "#ffffff",
-        checkListItems : String? = null
+        note:Note
     ){
         viewModelScope.launch {
             _uiState.value = NoteUiState.Loading
 
-            noteRepository.createNote(userId, title, content, noteType, color, checkListItems)
+            noteRepository.createNote(note.userId, note.title, note.content, note.noteType, note.color,note.isPinned,note.isShared,note.reminderTime, note.checkListItems)
                 .onSuccess { noteId ->
                     _uiState.value = NoteUiState.NoteCreated(noteId, "Ghi chú đã được tạo thành công")
                 }

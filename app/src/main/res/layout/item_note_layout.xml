@@ -130,7 +130,7 @@
                         android:text="Completed item"
                         android:textSize="14sp"
                         android:layout_marginStart="8dp"
-                        android:textDecoration="strikethrough" />
+                         />
                 </LinearLayout>
 
 
@@ -176,7 +176,9 @@
                 android:adjustViewBounds="true"
                 android:visibility="gone"
                 app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedImage"
-                tools:src="@drawable/test_image" />
+                tools:src="@drawable/test_image"
+                tools:visibility="gone"
+                />
 
         </FrameLayout>
 

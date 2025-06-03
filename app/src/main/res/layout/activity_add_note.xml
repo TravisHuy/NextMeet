@@ -2,9 +2,9 @@
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_add_note"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_primary"
     tools:context=".ui.AddNoteActivity"
     >
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -61,6 +61,7 @@
             app:cardElevation="2dp"
             app:strokeWidth="1dp"
             app:strokeColor="@color/border_light"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/header_section"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -116,7 +117,7 @@
             android:id="@+id/text_input_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_large"
+            android:layout_marginTop="24dp"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             app:boxCornerRadiusTopStart="@dimen/margin_medium"
             app:boxCornerRadiusTopEnd="@dimen/margin_medium"
@@ -125,8 +126,10 @@
             app:layout_constraintTop_toBottomOf="@id/card_note_type"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:hintEnabled="false"
             >
             <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/text_edit_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Enter title..."
@@ -144,7 +147,7 @@
             android:id="@+id/content_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/margin_large"
+            android:layout_marginTop="@dimen/margin_medium"
             app:layout_constraintTop_toBottomOf="@id/text_input_title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -160,10 +163,11 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusBottomEnd="12dp"
+                app:hintEnabled="false"
                 >
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edt_content"
+                    android:id="@+id/text_ed_content"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Write your note here..."
@@ -224,7 +228,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="@dimen/corner_radius_medium"
-            app:cardElevation="@dimen/elevation_extra_large"
             app:strokeWidth="1dp"
             app:strokeColor="@color/border_light"
             android:layout_marginTop="@dimen/margin_large"
@@ -265,7 +268,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="@dimen/corner_radius_medium"
-            app:cardElevation="@dimen/elevation_extra_large"
             app:strokeWidth="1dp"
             app:strokeColor="@color/border_light"
             android:layout_marginTop="@dimen/margin_large"
@@ -340,7 +342,7 @@
                         android:fontFamily="@font/quicksand_medium" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_archive"
+                        android:id="@+id/switch_share"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
 
@@ -381,7 +383,7 @@
                             android:id="@+id/tv_reminder_time"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="No reminder set"
+                            android:hint="No reminder set"
                             android:textSize="12sp"
                             android:fontFamily="@font/quicksand_medium" />
 
@@ -399,34 +401,5 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Action Buttons -->
-        <LinearLayout
-            android:id="@+id/action_buttons"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end"
-            android:layout_marginTop="24dp"
-            app:layout_constraintTop_toBottomOf="@id/card_settings"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_cancel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cancel"
-                android:layout_marginEnd="12dp"
-                style="@style/Widget.Material3.Button.TextButton" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_save_note"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Save Note"
-                style="@style/Widget.Material3.Button"
-                app:backgroundTint="@color/light_primary" />
-
-        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

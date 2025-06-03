@@ -148,6 +148,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
                     phone = registerForm.phone,
                     email = registerForm.email,
                     password = registerForm.password,
+                    defaultAddress = registerForm.address,
                     defaultLatitude = registerForm.latitude,
                     defaultLongitude = registerForm.longitude
                 )

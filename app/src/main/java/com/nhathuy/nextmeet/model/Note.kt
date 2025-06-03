@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 
 /**
  * Entity đại diện cho ghi chú những ghi chú trong ứng dụng
@@ -27,17 +28,16 @@ import androidx.room.Index
  */
 @Entity(
     tableName = "notes",
-    foreignKeys = [
-        ForeignKey(
-            entity = User::class,
-            parentColumns = ["id"],
-            childColumns = ["userId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("userId"),Index("isPinned"),Index("isShared")]
+    foreignKeys = [ForeignKey(
+        entity = User::class,
+        parentColumns = ["id"],
+        childColumns = ["user_id"],
+        onDelete = ForeignKey.CASCADE
+    )],
+    indices = [Index("user_id"),Index("is_pinned"),Index("is_shared")]
 )
 data class Note(
+    @PrimaryKey(autoGenerate = true)
     val id:Int = 0,
     @ColumnInfo(name = "user_id")
     val userId : Int,
@@ -48,7 +48,7 @@ data class Note(
     @ColumnInfo(name = "note_type")
     val noteType: NoteType = NoteType.TEXT,
     @ColumnInfo(name = "color")
-    val color: String = "#fffff",
+    val color: String = "color_white",
     @ColumnInfo(name = "is_pinned")
     val isPinned: Boolean = false,
     @ColumnInfo(name = "is_shared")

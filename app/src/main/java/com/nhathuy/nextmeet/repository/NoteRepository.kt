@@ -91,7 +91,10 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         title:String = "",
         content: String = "",
         noteType: NoteType = NoteType.TEXT,
-        color:String = "#ffffff",
+        color:String = "color_white",
+        pinned:Boolean = false,
+        shared:Boolean = false,
+        reminderTime: Long? = null,
         checkListItems : String? = null
     ):Result<Long>{
         return try{
@@ -113,7 +116,10 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
                 content  = content.trim(),
                 noteType = noteType,
                 color = color,
+                isPinned = pinned,
+                isShared = shared,
                 checkListItems = checkListItems,
+                reminderTime = reminderTime,
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
             )

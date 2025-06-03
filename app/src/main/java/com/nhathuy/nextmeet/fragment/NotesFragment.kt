@@ -1,26 +1,51 @@
 package com.nhathuy.nextmeet.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.OvershootInterpolator
+import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.nhathuy.nextmeet.R
+import com.nhathuy.nextmeet.adapter.NotesAdapter
 import com.nhathuy.nextmeet.databinding.FragmentNotesBinding
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import com.nhathuy.nextmeet.model.Note
+import com.nhathuy.nextmeet.model.NoteType
+import com.nhathuy.nextmeet.resource.NoteUiState
+import com.nhathuy.nextmeet.ui.AddNoteActivity
+import com.nhathuy.nextmeet.ui.EditNoteActivity
+import com.nhathuy.nextmeet.utils.Constant
+import com.nhathuy.nextmeet.viewmodel.NoteViewModel
+import com.nhathuy.nextmeet.viewmodel.UserViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 /**
- * A simple [Fragment] subclass.
- * Use the [NotesFragment.newInstance] factory method to
- * create an instance of this fragment.
+ * NoteFragment fragment thể hiện logic với FAB menu animation
  */
-class NotesFragment : BaseTabFragment() {
+@AndroidEntryPoint
+class NotesFragment : Fragment() {
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
+
+    private var isFabMenuOpen = false
+
+    private var currentUserId: Int = 0
+
+    private lateinit var notesAdapter: NotesAdapter
+
+    private lateinit var noteViewModel: NoteViewModel
+
+    private lateinit var userViewModel: UserViewModel
+
+    private var allNotes = listOf<Note>()
+
+    private var pinnedNotes = listOf<Note>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -33,23 +58,346 @@ class NotesFragment : BaseTabFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        noteViewModel = ViewModelProvider(this)[NoteViewModel::class.java]
+        userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
+
+        setupUserInfo()
+        setupObserverNotes()
         setupViews()
+        setupRecyclerView()
+        setupChipFilters()
+//        setObserver()
+        setupFabMenu()
+
+    }
+
+    private fun setupUserInfo() {
+        userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->
+            user?.let {
+                currentUserId = user.id
+            }
+        }
     }
 
     private fun setupViews() {
+        //cài đặt chip filters nếu đã check
+        binding.chipAll.isChecked = true
+        // initial state
+        updateEmptyState()
+    }
+
+    private fun setObserver() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            noteViewModel.uiState.collect { state ->
+                when (state) {
+                    is NoteUiState.Loading -> {
+
+                    }
+
+                    is NoteUiState.NoteLoaded -> {
+
+                    }
+
+                    is NoteUiState.Error -> {
+                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    }
+
+                    is NoteUiState.NotePinToggled -> {
+                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    }
+
+                    is NoteUiState.NoteDeleted -> {
+                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    }
+
+                    else -> {
+
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupObserverNotes() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            noteViewModel.getAllNotes(currentUserId).collect { notes ->
+                allNotes = notes
+
+                pinnedNotes = notes.filter { it.isPinned }
+
+                when {
+                    binding.chipAll.isChecked -> showAllNotes()
+                    binding.chipPinned.isChecked -> showPinnedNotes()
+                    binding.chipReminder.isChecked -> showReminderNotes()
+                }
+            }
+        }
+    }
+
+    // hiển thị tất cả note
+    private fun showAllNotes() {
+        val combinedNotes = mutableListOf<Note>()
+        combinedNotes.addAll(pinnedNotes)
+
+        val unpinnedNotes = allNotes.filter {
+            !it.isPinned
+        }
+        combinedNotes.addAll(unpinnedNotes)
+
+        notesAdapter.updateNotes(combinedNotes)
+        updateEmptyState(combinedNotes.isEmpty())
 
     }
 
-    override fun loadDataOnFirstVisible() {
-        loadNotes()
+    // hiển thị note pin
+    private fun showPinnedNotes() {
+        notesAdapter.updateNotes(pinnedNotes)
+        updateEmptyState(pinnedNotes.isEmpty())
     }
 
-    override fun refreshData() {
-        loadNotes()
+
+    //hiển thị note đã pin
+    private fun showReminderNotes() {
+        val reminderNotes = allNotes.filter {
+            it.reminderTime != null && it.reminderTime > System.currentTimeMillis()
+        }
+
+        notesAdapter.updateNotes(reminderNotes)
+        updateEmptyState(reminderNotes.isEmpty())
+    }
+    private fun setupRecyclerView() {
+        notesAdapter = NotesAdapter(
+            notes = mutableListOf(),
+            onNoteClick = { note -> openNoteForEdit(note) },
+            onNoteLongClick = { note -> handleNoteLongClick(note) },
+            onPinClick = { note -> togglePin(note) },
+            onMoreClick = { note -> showNoteOptions(note) }
+        )
+
+        val layoutManager = StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL)
+        layoutManager.gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
+
+        binding.rvNotes.apply {
+            this.layoutManager = layoutManager
+            adapter = notesAdapter
+            setHasFixedSize(false)
+        }
     }
 
-    private fun loadNotes() {
-        // Load notes data
+    // xử lý khi onclick vao item chuyển sao edit
+    private fun openNoteForEdit(note: Note) {
+        val intent = Intent(requireContext(),EditNoteActivity::class.java)
+        intent.putExtra(Constant.EXTRA_NOTE_ID,note.id)
+        startActivity(intent)
+    }
+
+    private fun handleNoteLongClick(note:Note){
+        showNoteOptions(note)
+    }
+    private fun togglePin(note:Note){
+        noteViewModel.togglePin(note.id)
+    }
+    private fun showNoteOptions(note:Note){
+        //delete ,share.....
+    }
+
+    private fun setupChipFilters() {
+        binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
+            if(isChecked){
+                clearOtherChips(binding.chipAll.id)
+                showAllNotes()
+            }
+        }
+        binding.chipPinned.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                clearOtherChips(binding.chipPinned.id)
+                showPinnedNotes()
+            }
+        }
+        binding.chipReminder.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                clearOtherChips(binding.chipReminder.id)
+                showPinnedNotes()
+            }
+        }
+    }
+
+    private fun clearOtherChips(checkedChipId: Int) {
+        when(checkedChipId){
+            binding.chipAll.id -> {
+                binding.chipPinned.isChecked = false
+                binding.chipReminder.isChecked = false
+            }
+            binding.chipPinned.id -> {
+                binding.chipAll.isChecked = false
+                binding.chipReminder.isChecked = false
+            }
+            binding.chipReminder.id -> {
+                binding.chipPinned.isChecked = false
+                binding.chipAll.isChecked = false
+            }
+        }
+    }
+
+    private fun updateEmptyState(isEmpty:Boolean = allNotes.isEmpty()) {
+        binding.emptyState.visibility = if(isEmpty) View.VISIBLE else View.GONE
+    }
+
+    private fun setupFabMenu() {
+        binding.fabAddNote.setOnClickListener {
+            toggleFabMenu()
+        }
+
+        binding.fabMenuOverlay.setOnClickListener {
+            closeFabMenu()
+        }
+
+        binding.fabTextNote.setOnClickListener {
+            closeFabMenu()
+            openAddNote(NoteType.TEXT)
+        }
+
+        binding.fabImageNote.setOnClickListener {
+            closeFabMenu()
+            openAddNote(NoteType.PHOTO)
+        }
+
+        binding.fabChecklistNote.setOnClickListener {
+            closeFabMenu()
+            openAddNote(NoteType.CHECKLIST)
+        }
+
+
+    }
+
+    private fun openAddNote(noteType: NoteType) {
+        val intent = Intent(requireContext(), AddNoteActivity::class.java)
+        intent.putExtra(Constant.EXTRA_NOTE_TYPE, noteType)
+        startActivity(intent)
+    }
+
+    private fun toggleFabMenu() {
+        if (isFabMenuOpen) {
+            closeFabMenu()
+        } else {
+            openFabMenu()
+        }
+    }
+
+    private fun openFabMenu() {
+        isFabMenuOpen = true
+
+        // Hiển thị lớp phủ và vùng chứa menu
+        binding.fabMenuOverlay.visibility = View.VISIBLE
+        binding.fabMenuContainer.visibility = View.VISIBLE
+
+        // Animate overlay mờ dần
+        binding.fabMenuOverlay.alpha = 0f
+        binding.fabMenuOverlay.animate()
+            .alpha(1f)
+            .setDuration(250)
+            .start()
+
+        // Chuyển main FAB
+        binding.fabAddNote.animate()
+            .rotation(45f)
+            .setDuration(250)
+            .start()
+
+        // Animate các FAB phụ với thời gian
+        animateSubFabIn(binding.fabTextNote, binding.tvTextNote, 0)
+        animateSubFabIn(binding.fabImageNote, binding.tvImageNote, 90)
+        animateSubFabIn(binding.fabChecklistNote, binding.tvCheckListNote, 180)
+    }
+
+    private fun closeFabMenu() {
+        isFabMenuOpen = false
+
+        // làm mờ fab menu overlay
+        binding.fabMenuOverlay.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.fabMenuOverlay.visibility = View.GONE
+            }
+            .start()
+
+        // Rotate main FAB back
+        binding.fabAddNote.animate()
+            .rotation(0f)
+            .setDuration(200)
+            .start()
+
+        // Animate sub FABs
+        animateSubFabOut(binding.fabChecklistNote, binding.tvCheckListNote, 0)
+        animateSubFabOut(binding.fabImageNote, binding.tvImageNote, 70)
+        animateSubFabOut(binding.fabTextNote, binding.tvTextNote, 140) {
+            binding.fabMenuContainer.visibility = View.GONE
+        }
+    }
+
+    private fun animateSubFabIn(fab: View, label: View, delay: Long) {
+        // Khởi tạo trạng thái ban đầu
+        fab.scaleX = 0f
+        fab.scaleY = 0f
+        fab.alpha = 0f
+        fab.translationY = 50f
+
+        label.scaleX = 0f
+        label.scaleY = 0f
+        label.alpha = 0f
+        label.translationY = 50f
+
+        // Animate FAB
+        fab.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(300)
+            .setStartDelay(delay)
+            .setInterpolator(OvershootInterpolator(1.2f))
+            .start()
+
+        // Animate label với delay nhỏ hơn
+        label.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(250)
+            .setStartDelay(delay + 50)
+            .setInterpolator(OvershootInterpolator(1.1f))
+            .start()
+    }
+
+    private fun animateSubFabOut(
+        fab: View,
+        label: View,
+        delay: Long,
+        endAction: (() -> Unit)? = null
+    ) {
+        // Animate label trước
+        label.animate()
+            .scaleX(0f)
+            .scaleY(0f)
+            .alpha(0f)
+            .translationY(50f)
+            .setDuration(150)
+            .setStartDelay(delay)
+            .start()
+
+        // Animate FAB
+        fab.animate()
+            .scaleX(0f)
+            .scaleY(0f)
+            .alpha(0f)
+            .translationY(50f)
+            .setDuration(150)
+            .setStartDelay(delay + 30)
+            .withEndAction { endAction?.invoke() }
+            .start()
     }
 
     override fun onDestroyView() {

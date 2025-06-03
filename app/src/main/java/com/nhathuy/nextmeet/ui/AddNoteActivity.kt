@@ -2,11 +2,343 @@ package com.nhathuy.nextmeet.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.Animation
+import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointBackward
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import com.nhathuy.nextmeet.R
+import com.nhathuy.nextmeet.adapter.ColorPickerAdapter
+import com.nhathuy.nextmeet.databinding.ActivityAddNoteBinding
+import com.nhathuy.nextmeet.model.Note
+import com.nhathuy.nextmeet.model.NoteType
+import com.nhathuy.nextmeet.resource.NoteUiState
+import com.nhathuy.nextmeet.utils.AnimationUtils
+import com.nhathuy.nextmeet.utils.Constant
+import com.nhathuy.nextmeet.viewmodel.NoteViewModel
+import com.nhathuy.nextmeet.viewmodel.UserViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
+@AndroidEntryPoint
 class AddNoteActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityAddNoteBinding
+    private lateinit var colorAdapter: ColorPickerAdapter
+    private var noteType: NoteType? = null
+    private var reminderTime: Long? = null
+    private var selectedColorName: String = "color_white"
+    private var isPinned = false
+    private var isShared = false
+    private var currentUserId: Int? = null
+    private val noteViewModel: NoteViewModel by viewModels()
+    private val userViewModel: UserViewModel by viewModels()
+
+    companion object {
+        val listColor = listOf(
+            R.color.color_white,
+            R.color.color_red,
+            R.color.color_orange,
+            R.color.color_yellow,
+            R.color.color_green,
+            R.color.color_teal,
+            R.color.color_blue,
+            R.color.color_dark_blue,
+            R.color.color_purple,
+            R.color.color_pink,
+            R.color.color_brown,
+            R.color.color_gray
+        )
+
+        val colorSourceNames = mapOf(
+            R.color.color_white to "color_white",
+            R.color.color_red to "color_red",
+            R.color.color_orange to "color_orange",
+            R.color.color_yellow to "color_yellow",
+            R.color.color_green to "color_green",
+            R.color.color_teal to "color_teal",
+            R.color.color_blue to "color_blue",
+            R.color.color_dark_blue to "color_dark_blue",
+            R.color.color_purple to "color_purple",
+            R.color.color_pink to "color_pink",
+            R.color.color_brown to "color_brown",
+            R.color.color_gray to "color_gray"
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_note)
+        binding = ActivityAddNoteBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        noteType = intent.getSerializableExtra(Constant.EXTRA_NOTE_TYPE) as NoteType?
+
+        setupUI()
+        setupObservers()
+        setupClickListeners()
+
     }
+
+    // khởi tạo giao diện
+    private fun setupUI() {
+        setupColorPicker()
+        setupChecklist()
+        showContentBasedOnType(noteType!!)
+    }
+
+    //khởi tạo observer
+    private fun setupObservers() {
+        lifecycleScope.launch {
+            noteViewModel.uiState.collect { state ->
+                when (state) {
+                    is NoteUiState.Loading -> {
+
+                    }
+
+                    is NoteUiState.NoteCreated -> {
+                        showSuccessAndFinish(state.message)
+                    }
+
+                    is NoteUiState.Error -> {
+                        Toast.makeText(this@AddNoteActivity, state.message, Toast.LENGTH_SHORT)
+                            .show()
+                    }
+
+                    else -> {
+
+                    }
+                }
+            }
+        }
+        userViewModel.getCurrentUser().observe(this) { user ->
+            user?.let {
+                currentUserId = user.id
+            }
+        }
+    }
+
+    // Sửa lỗi trong showSuccessAndFinish
+    private fun showSuccessAndFinish(message: String) {
+        val saveButtonLocation = IntArray(2)
+        binding.btnSave.getLocationInWindow(saveButtonLocation)
+
+        val bounceAnim = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.bounce)
+        binding.btnSave.startAnimation(bounceAnim)
+
+        val successView = View(this)
+        successView.setBackgroundColor(ContextCompat.getColor(this, R.color.green))
+        successView.alpha = 0.5f
+
+        val rootView = binding.root as ViewGroup
+        rootView.addView(successView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_out)
+            successView.startAnimation(fadeOut) // Thêm dòng này
+            fadeOut.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(p0: Animation?) {}
+                override fun onAnimationEnd(p0: Animation?) {
+                    finish()
+                    overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                }
+                override fun onAnimationRepeat(p0: Animation?) {}
+            })
+        }, 300)
+    }
+
+    // hàm sử lý click
+    private fun setupClickListeners() {
+        binding.btnBack.setOnClickListener {
+            showDialogBack()
+        }
+        binding.btnSave.setOnClickListener {
+            saveNote()
+        }
+        binding.layoutReminder.setOnClickListener {
+            showDateTimePicker()
+        }
+        binding.switchPin.setOnCheckedChangeListener { _, isChecked ->
+            isPinned = isChecked
+        }
+        binding.switchShare.setOnCheckedChangeListener { _, isChecked ->
+            isShared = isChecked
+        }
+    }
+
+    private fun setupChecklist() {
+
+    }
+
+    // hàm show layout với notetype tương ứng
+    private fun showContentBasedOnType(noteType: NoteType) {
+        when (noteType) {
+            NoteType.TEXT -> {
+                binding.textInputContent.visibility = View.VISIBLE
+                binding.checklistContainer.visibility = View.GONE
+                binding.rvMediaItems.visibility = View.GONE
+            }
+
+            NoteType.CHECKLIST -> {
+                binding.textInputContent.visibility = View.GONE
+                binding.checklistContainer.visibility = View.VISIBLE
+                binding.rvMediaItems.visibility = View.GONE
+            }
+
+            NoteType.VIDEO, NoteType.PHOTO -> {
+                binding.textInputContent.visibility = View.GONE
+                binding.checklistContainer.visibility = View.GONE
+                binding.rvMediaItems.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    // xử lý chọn color cho note
+    private fun setupColorPicker() {
+        colorAdapter = ColorPickerAdapter(listColor, colorSourceNames) { colorResId, colorName ->
+            val color = ContextCompat.getColor(this, colorResId)
+            binding.layoutAddNote.setBackgroundColor(color)
+            selectedColorName = colorName
+        }
+
+        binding.rvColorPicker.adapter = colorAdapter
+        binding.rvColorPicker.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+    }
+
+    // hiển thị dialog thoát
+    private fun showDialogBack() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Do you want to cancel creating this note?")
+            .setMessage("Your note will not be saved.")
+            .setIcon(R.drawable.ic_cancel)
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.setPositiveButton("Yes") { _, _ ->
+                onBackPressedDispatcher.onBackPressed()
+            }
+            .show()
+    }
+
+    //hàm lưu note
+    private fun saveNote() {
+        val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
+
+        when (noteType) {
+            NoteType.TEXT -> {
+                val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+
+                val note = Note(
+                    userId = currentUserId!!,
+                    title = title,
+                    content = content,
+                    noteType = noteType!!,
+                    color = selectedColorName,
+                    isPinned = isPinned,
+                    isShared = isShared,
+                    reminderTime = reminderTime!!
+                )
+                noteViewModel.createNote(note)
+            }
+
+            NoteType.PHOTO, NoteType.VIDEO -> {
+
+            }
+
+            NoteType.CHECKLIST -> {
+
+            }
+
+            else -> {}
+        }
+    }
+
+    // hiển thị ra ngày ,tháng năm
+    private fun showDateTimePicker() {
+
+        val constraintBuilder =
+            CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
+
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Select date")
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setCalendarConstraints(constraintBuilder.build())
+            .build()
+
+        datePicker.addOnPositiveButtonClickListener { selectedDate ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = selectedDate
+
+            showTimePicker(calendar)
+        }
+
+        datePicker.show(supportFragmentManager, "date_picker")
+    }
+
+    // hiển thị thời gian chọn
+    private fun showTimePicker(calendar: Calendar) {
+        val now = Calendar.getInstance()
+
+        val timePicker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_24H)
+            .setHour(calendar.get(Calendar.HOUR_OF_DAY))
+            .setMinute(calendar.get(Calendar.MINUTE))
+            .setTitleText("Select time")
+            .build()
+
+        timePicker.addOnPositiveButtonClickListener {
+            val selectedHour = timePicker.hour
+            val selectedMinute = timePicker.minute
+
+            if (isToday(calendar)) {
+                if (selectedHour < now.get(Calendar.HOUR_OF_DAY) ||
+                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(
+                        Calendar.MINUTE
+                    )
+                ) {
+                    Toast.makeText(this, "Please select a future time", Toast.LENGTH_SHORT).show()
+                    return@addOnPositiveButtonClickListener
+                }
+            }
+
+            calendar.set(Calendar.HOUR_OF_DAY, timePicker.hour)
+            calendar.set(Calendar.MINUTE, timePicker.minute)
+            calendar.set(Calendar.SECOND, 0)
+
+            reminderTime = calendar.timeInMillis
+
+            updateReminderDisplay()
+        }
+
+        timePicker.show(supportFragmentManager, "time_picker")
+    }
+
+    private fun isToday(calendar: Calendar): Boolean {
+        val today = Calendar.getInstance()
+        return today.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
+                today.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun updateReminderDisplay() {
+        val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
+        val formattedDate = formatter.format(Date(reminderTime!!))
+        binding.tvReminderTime.text = formattedDate
+    }
+
+
 }
