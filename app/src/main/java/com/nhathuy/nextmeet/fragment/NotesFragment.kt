@@ -2,6 +2,7 @@ package com.nhathuy.nextmeet.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -10,11 +11,13 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.NotesAdapter
 import com.nhathuy.nextmeet.databinding.FragmentNotesBinding
 import com.nhathuy.nextmeet.model.Note
+import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.resource.NoteUiState
 import com.nhathuy.nextmeet.ui.AddNoteActivity
@@ -47,6 +50,9 @@ class NotesFragment : Fragment() {
 
     private var pinnedNotes = listOf<Note>()
 
+    // Map lưu trữ danh sách ảnh cho mỗi note
+    private val noteImagesMap = mutableMapOf<Int, List<NoteImage>>()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -63,7 +69,6 @@ class NotesFragment : Fragment() {
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
 
         setupUserInfo()
-        setupObserverNotes()
         setupViews()
         setupRecyclerView()
         setupChipFilters()
@@ -76,6 +81,7 @@ class NotesFragment : Fragment() {
         userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->
             user?.let {
                 currentUserId = user.id
+                setupObserverNotes()
             }
         }
     }
@@ -121,15 +127,43 @@ class NotesFragment : Fragment() {
 
     private fun setupObserverNotes() {
         viewLifecycleOwner.lifecycleScope.launch {
-            noteViewModel.getAllNotes(currentUserId).collect { notes ->
-                allNotes = notes
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                noteViewModel.getAllNotes(currentUserId).collect { notes ->
+                    allNotes = notes
+                    pinnedNotes = notes.filter { it.isPinned }
 
-                pinnedNotes = notes.filter { it.isPinned }
+                    // Tải ảnh cho tất cả note kiểu PHOTO
+                    loadImagesForPhotoNotes(notes)
 
-                when {
-                    binding.chipAll.isChecked -> showAllNotes()
-                    binding.chipPinned.isChecked -> showPinnedNotes()
-                    binding.chipReminder.isChecked -> showReminderNotes()
+                    when {
+                        binding.chipAll.isChecked -> showAllNotes()
+                        binding.chipPinned.isChecked -> showPinnedNotes()
+                        binding.chipReminder.isChecked -> showReminderNotes()
+                    }
+                }
+            }
+        }
+    }
+
+    // Hàm mới để tải ảnh cho tất cả note kiểu PHOTO
+    private fun loadImagesForPhotoNotes(notes: List<Note>) {
+        val photoNotes = notes.filter { it.noteType == NoteType.PHOTO }
+        if (photoNotes.isEmpty()) return
+
+        var loadedCount = 0
+        photoNotes.forEach { note ->
+            noteViewModel.getImagesForNote(note.id) { images ->
+                Log.d("NotesFragment", "Loaded ${images.size} images for note ID: ${note.id}")
+                noteImagesMap[note.id] = images
+                loadedCount++
+
+                // Chỉ cập nhật khi tất cả ảnh đã được load
+                if (loadedCount == photoNotes.size) {
+                    when {
+                        binding.chipAll.isChecked -> showAllNotes()
+                        binding.chipPinned.isChecked -> showPinnedNotes()
+                        binding.chipReminder.isChecked -> showReminderNotes()
+                    }
                 }
             }
         }
@@ -145,17 +179,17 @@ class NotesFragment : Fragment() {
         }
         combinedNotes.addAll(unpinnedNotes)
 
-        notesAdapter.updateNotes(combinedNotes)
+        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
+        notesAdapter.updateNotesWithImages(combinedNotes, noteImagesMap)
         updateEmptyState(combinedNotes.isEmpty())
-
     }
 
     // hiển thị note pin
     private fun showPinnedNotes() {
-        notesAdapter.updateNotes(pinnedNotes)
+        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
+        notesAdapter.updateNotesWithImages(pinnedNotes, noteImagesMap)
         updateEmptyState(pinnedNotes.isEmpty())
     }
-
 
     //hiển thị note đã pin
     private fun showReminderNotes() {
@@ -163,9 +197,11 @@ class NotesFragment : Fragment() {
             it.reminderTime != null && it.reminderTime > System.currentTimeMillis()
         }
 
-        notesAdapter.updateNotes(reminderNotes)
+        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
+        notesAdapter.updateNotesWithImages(reminderNotes, noteImagesMap)
         updateEmptyState(reminderNotes.isEmpty())
     }
+
     private fun setupRecyclerView() {
         notesAdapter = NotesAdapter(
             notes = mutableListOf(),
@@ -307,8 +343,9 @@ class NotesFragment : Fragment() {
 
         // Animate các FAB phụ với thời gian
         animateSubFabIn(binding.fabTextNote, binding.tvTextNote, 0)
-        animateSubFabIn(binding.fabImageNote, binding.tvImageNote, 90)
-        animateSubFabIn(binding.fabChecklistNote, binding.tvCheckListNote, 180)
+        animateSubFabIn(binding.fabImageNote, binding.tvCheckListNote, 90)
+        animateSubFabIn(binding.fabChecklistNote, binding.tvImageNote, 180)
+
     }
 
     private fun closeFabMenu() {
@@ -330,8 +367,8 @@ class NotesFragment : Fragment() {
             .start()
 
         // Animate sub FABs
-        animateSubFabOut(binding.fabChecklistNote, binding.tvCheckListNote, 0)
-        animateSubFabOut(binding.fabImageNote, binding.tvImageNote, 70)
+        animateSubFabOut(binding.fabChecklistNote, binding.tvImageNote, 0)
+        animateSubFabOut(binding.fabImageNote, binding.tvCheckListNote, 70)
         animateSubFabOut(binding.fabTextNote, binding.tvTextNote, 140) {
             binding.fabMenuContainer.visibility = View.GONE
         }
@@ -405,3 +442,4 @@ class NotesFragment : Fragment() {
         _binding = null
     }
 }
+

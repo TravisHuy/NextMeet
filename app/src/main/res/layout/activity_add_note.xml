@@ -134,7 +134,6 @@
                 android:layout_height="wrap_content"
                 android:hint="Enter title..."
                 android:textSize="18sp"
-                android:textStyle="bold"
                 android:fontFamily="@font/open_sans"
                 android:textColor="@color/text_primary"
                 android:maxLines="2"
@@ -211,14 +210,40 @@
             </LinearLayout>
 
             <!--Photo/Video Content-->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_media_items"
+            <LinearLayout
+                android:id="@+id/layout_media"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:visibility="gone"
-                android:nestedScrollingEnabled="false"
-                tools:listitem="@layout/item_media"
-                />
+                tools:visibility="visible"
+                android:layout_marginTop="8dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_media_items"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:overScrollMode="never"
+                    android:visibility="visible"
+                    android:nestedScrollingEnabled="false"
+                    android:adjustViewBounds="true"
+                    android:clipToPadding="false"
+                    android:paddingBottom="4dp"
+                    tools:listitem="@layout/item_media" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_add_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thêm ảnh"
+                    app:icon="@drawable/ic_photo"
+                    app:iconGravity="start"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_gravity="start"
+                    android:layout_marginTop="4dp"
+                    />
+            </LinearLayout>
 
         </FrameLayout>
 

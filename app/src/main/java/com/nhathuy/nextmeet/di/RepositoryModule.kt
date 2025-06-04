@@ -6,6 +6,7 @@ import com.nhathuy.nextmeet.dao.AlarmHistoryDao
 import com.nhathuy.nextmeet.dao.AppointmentDao
 import com.nhathuy.nextmeet.dao.CustomerDao
 import com.nhathuy.nextmeet.dao.NoteDao
+import com.nhathuy.nextmeet.dao.NoteImageDao
 import com.nhathuy.nextmeet.dao.TransactionDao
 import com.nhathuy.nextmeet.dao.UserDao
 import com.nhathuy.nextmeet.database.AppDatabase
@@ -60,5 +61,9 @@ object RepositoryModule {
     @Provides
     fun providerNoteDao(database: AppDatabase):NoteDao{
         return database.noteDao()
+    }
+    @Provides
+    fun providerNoteImageDao(database: AppDatabase): NoteImageDao{
+        return database.noteImageDao()
     }
 }

@@ -5,6 +5,7 @@ import com.nhathuy.nextmeet.dao.AlarmHistoryDao
 import com.nhathuy.nextmeet.dao.AppointmentDao
 import com.nhathuy.nextmeet.dao.CustomerDao
 import com.nhathuy.nextmeet.dao.NoteDao
+import com.nhathuy.nextmeet.dao.NoteImageDao
 import com.nhathuy.nextmeet.dao.TransactionDao
 import com.nhathuy.nextmeet.dao.UserDao
 import com.nhathuy.nextmeet.repository.AlarmHistoryRepository
@@ -63,7 +64,7 @@ object ObjectModule {
 
     @Singleton
     @Provides
-    fun providerNoteRepository(noteDao:NoteDao) : NoteRepository {
-        return NoteRepository(noteDao)
+    fun providerNoteRepository(noteDao:NoteDao,noteImageDao: NoteImageDao) : NoteRepository {
+        return NoteRepository(noteDao,noteImageDao)
     }
 }

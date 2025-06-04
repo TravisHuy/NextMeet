@@ -1,20 +1,18 @@
 package com.nhathuy.nextmeet.ui
 
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
-import android.view.animation.Animation
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.datepicker.CalendarConstraints
-import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -22,11 +20,14 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.ColorPickerAdapter
+import com.nhathuy.nextmeet.adapter.ChecklistAdapter
+import com.nhathuy.nextmeet.adapter.MediaAdapter
 import com.nhathuy.nextmeet.databinding.ActivityAddNoteBinding
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
+import com.nhathuy.nextmeet.model.ChecklistItem
+import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.resource.NoteUiState
-import com.nhathuy.nextmeet.utils.AnimationUtils
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
@@ -42,6 +43,10 @@ class AddNoteActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddNoteBinding
     private lateinit var colorAdapter: ColorPickerAdapter
+    private lateinit var checklistAdapter: ChecklistAdapter
+    private lateinit var mediaAdapter: MediaAdapter
+    private val checklistItems = mutableListOf<ChecklistItem>()
+    private val imageList = mutableListOf<NoteImage>()
     private var noteType: NoteType? = null
     private var reminderTime: Long? = null
     private var selectedColorName: String = "color_white"
@@ -50,6 +55,14 @@ class AddNoteActivity : AppCompatActivity() {
     private var currentUserId: Int? = null
     private val noteViewModel: NoteViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
+
+
+    private val pickMultipleImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) {
+        uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            handleMultipleImageSelection(uris)
+        }
+    }
 
     companion object {
         val listColor = listOf(
@@ -93,7 +106,7 @@ class AddNoteActivity : AppCompatActivity() {
         setupUI()
         setupObservers()
         setupClickListeners()
-
+        setupMediaSection()
     }
 
     // khởi tạo giao diện
@@ -109,10 +122,22 @@ class AddNoteActivity : AppCompatActivity() {
             noteViewModel.uiState.collect { state ->
                 when (state) {
                     is NoteUiState.Loading -> {
-
+                        // Show loading indicator if needed
                     }
 
                     is NoteUiState.NoteCreated -> {
+                        if(noteType == NoteType.PHOTO && imageList.isNotEmpty()){
+                            // Lưu ảnh cho ghi chú đã tạo
+                            val noteId = state.noteId.toInt()
+                            val imagesToSave = imageList.map { it.copy(noteId = noteId) }
+                            noteViewModel.insertImagesForNote(imagesToSave)
+                        } else {
+                            showSuccessAndFinish(state.message)
+                        }
+                    }
+
+                    is NoteUiState.ImagesInserted -> {
+                        // Khi ảnh đã được lưu thành công, đóng activity
                         showSuccessAndFinish(state.message)
                     }
 
@@ -122,45 +147,26 @@ class AddNoteActivity : AppCompatActivity() {
                     }
 
                     else -> {
-
                     }
                 }
             }
         }
+
         userViewModel.getCurrentUser().observe(this) { user ->
             user?.let {
                 currentUserId = user.id
             }
         }
+
+
+
     }
 
-    // Sửa lỗi trong showSuccessAndFinish
+    // Hiệu ứng đơn giản, hiệu quả khi tạo note xong
     private fun showSuccessAndFinish(message: String) {
-        val saveButtonLocation = IntArray(2)
-        binding.btnSave.getLocationInWindow(saveButtonLocation)
-
-        val bounceAnim = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.bounce)
-        binding.btnSave.startAnimation(bounceAnim)
-
-        val successView = View(this)
-        successView.setBackgroundColor(ContextCompat.getColor(this, R.color.green))
-        successView.alpha = 0.5f
-
-        val rootView = binding.root as ViewGroup
-        rootView.addView(successView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_out)
-            successView.startAnimation(fadeOut) // Thêm dòng này
-            fadeOut.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationStart(p0: Animation?) {}
-                override fun onAnimationEnd(p0: Animation?) {
-                    finish()
-                    overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-                }
-                override fun onAnimationRepeat(p0: Animation?) {}
-            })
-        }, 300)
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        finish()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 
     // hàm sử lý click
@@ -183,7 +189,25 @@ class AddNoteActivity : AppCompatActivity() {
     }
 
     private fun setupChecklist() {
+        checklistAdapter = ChecklistAdapter(checklistItems, onItemChanged = {
+            // Optional: handle changes if needed
+        }, onRequestFocus = { position ->
+            binding.rvChecklistItems.post {
+                val holder = binding.rvChecklistItems.findViewHolderForAdapterPosition(position)
+                if (holder is ChecklistAdapter.ChecklistViewHolder) {
+                    holder.binding.etCheckItem.requestFocus()
+                }
+            }
+        })
+        binding.rvChecklistItems.adapter = checklistAdapter
+        binding.rvChecklistItems.layoutManager = LinearLayoutManager(this)
 
+        binding.btnAddChecklistItem.setOnClickListener {
+            checklistAdapter.addItem()
+            binding.rvChecklistItems.smoothScrollToPosition(checklistItems.size - 1)
+        }
+        // Add one empty item by default
+        if (noteType == NoteType.CHECKLIST && checklistItems.isEmpty()) checklistAdapter.addItem()
     }
 
     // hàm show layout với notetype tương ứng
@@ -192,19 +216,19 @@ class AddNoteActivity : AppCompatActivity() {
             NoteType.TEXT -> {
                 binding.textInputContent.visibility = View.VISIBLE
                 binding.checklistContainer.visibility = View.GONE
-                binding.rvMediaItems.visibility = View.GONE
+                binding.layoutMedia.visibility = View.GONE
             }
 
             NoteType.CHECKLIST -> {
                 binding.textInputContent.visibility = View.GONE
                 binding.checklistContainer.visibility = View.VISIBLE
-                binding.rvMediaItems.visibility = View.GONE
+                binding.layoutMedia.visibility = View.GONE
             }
 
             NoteType.VIDEO, NoteType.PHOTO -> {
                 binding.textInputContent.visibility = View.GONE
                 binding.checklistContainer.visibility = View.GONE
-                binding.rvMediaItems.visibility = View.VISIBLE
+                binding.layoutMedia.visibility = View.VISIBLE
             }
         }
     }
@@ -218,7 +242,8 @@ class AddNoteActivity : AppCompatActivity() {
         }
 
         binding.rvColorPicker.adapter = colorAdapter
-        binding.rvColorPicker.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvColorPicker.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
     // hiển thị dialog thoát
@@ -233,6 +258,74 @@ class AddNoteActivity : AppCompatActivity() {
                 onBackPressedDispatcher.onBackPressed()
             }
             .show()
+    }
+
+    //khởi tạo recyclerview và nút thêm ảnh
+    private fun setupMediaSection() {
+        mediaAdapter = MediaAdapter(
+            images = imageList,
+            onRemovedClick = { noteImage ->
+                mediaAdapter.removeImage(noteImage)
+                updateGridLayout()
+            },
+            isEditMode = true // Chế độ chỉnh sửa (hiển thị nút xóa)
+        )
+
+        binding.rvMediaItems.apply {
+            layoutManager = GridLayoutManager(this@AddNoteActivity, 3)
+            adapter = mediaAdapter
+            setHasFixedSize(false)  // Change to false to allow resize
+        }
+
+        binding.btnAddImage.setOnClickListener {
+            pickMultipleImagesLauncher.launch("image/*")
+        }
+    }
+
+    private fun updateGridLayout() {
+        val spanCount = when {
+            imageList.size == 1 -> 1
+            imageList.size == 2 -> 2
+            else -> 3
+        }
+
+        val layoutManager = binding.rvMediaItems.layoutManager as? GridLayoutManager
+        layoutManager?.spanCount = spanCount
+
+        // Force layout update
+        binding.rvMediaItems.post {
+            binding.rvMediaItems.requestLayout()
+        }
+    }
+
+    // Chon nhieu anh
+    private fun handleMultipleImageSelection(uris: List<Uri>) {
+        try {
+            val noteImages = uris.map { uri ->
+                NoteImage(
+                    noteId = 0, // Will be set when note is created
+                    imagePath = uri.toString()
+                )
+            }
+
+            // Add to data source
+            imageList.addAll(noteImages)
+
+            // Update UI with the new images
+            mediaAdapter.addMultipleImages(noteImages)
+
+            // Force refresh the RecyclerView layout
+            binding.rvMediaItems.post {
+                binding.rvMediaItems.adapter = mediaAdapter
+            }
+
+            // Show success message
+            val count = noteImages.size
+            Log.d("AddNoteActivity","$count images added successfully")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
+            Log.e("AddNoteActivity", "Error adding multiple images", e)
+        }
     }
 
     //hàm lưu note
@@ -251,17 +344,45 @@ class AddNoteActivity : AppCompatActivity() {
                     color = selectedColorName,
                     isPinned = isPinned,
                     isShared = isShared,
-                    reminderTime = reminderTime!!
+                    reminderTime = reminderTime
                 )
                 noteViewModel.createNote(note)
             }
 
             NoteType.PHOTO, NoteType.VIDEO -> {
+                if (noteType == NoteType.PHOTO && imageList.isEmpty()) {
+                    Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
+                    return
+                }
 
+                val note = Note(
+                    userId = currentUserId!!,
+                    title = title,
+                    noteType = noteType!!,
+                    color = selectedColorName,
+                    isPinned = isPinned,
+                    isShared = isShared,
+                    reminderTime = reminderTime
+                )
+                noteViewModel.createNote(note)
+                // Note: Images will be saved in the observer when note creation is successful
             }
 
             NoteType.CHECKLIST -> {
-
+                val items = checklistAdapter.getItems()
+                val checklistString =
+                    items.joinToString("\n") { (if (it.isChecked) "- [x] " else "- [ ] ") + it.text }
+                val note = Note(
+                    userId = currentUserId!!,
+                    title = title,
+                    noteType = noteType!!,
+                    color = selectedColorName,
+                    isPinned = isPinned,
+                    isShared = isShared,
+                    reminderTime = reminderTime,
+                    checkListItems = checklistString
+                )
+                noteViewModel.createNote(note)
             }
 
             else -> {}
@@ -342,3 +463,4 @@ class AddNoteActivity : AppCompatActivity() {
 
 
 }
+

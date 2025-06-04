@@ -5,15 +5,23 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.ItemNoteLayoutBinding
+import com.nhathuy.nextmeet.model.ChecklistItem
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
+import com.nhathuy.nextmeet.model.NoteImage
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import com.google.android.material.imageview.ShapeableImageView
 
 class NotesAdapter(
     private var notes: MutableList<Note>,
@@ -25,9 +33,13 @@ class NotesAdapter(
 
     private val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val reminderFormatter = SimpleDateFormat("MMM dd", Locale.getDefault())
+    private var noteImagesMap: MutableMap<Int, List<NoteImage>> = mutableMapOf()
 
     inner class NoteViewHolder(val binding: ItemNoteLayoutBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
+        private var checklistAdapter = ChecklistAdapter(emptyList<ChecklistItem>().toMutableList())
+
         fun bind(note: Note) {
             with(binding) {
                 tvTitle.text = if (note.title.isNotEmpty()) note.title else "Untitled"
@@ -69,56 +81,123 @@ class NotesAdapter(
             }
         }
 
-        private fun setupNoteType(noteType:NoteType){
-            with(binding){
-                when(noteType){
+        private fun setupNoteType(noteType: NoteType) {
+            with(binding) {
+                when (noteType) {
                     NoteType.TEXT -> {
                         ivNoteType.setImageResource(R.drawable.ic_text_fields)
                         ivNoteType.contentDescription = "Text"
+                        tvNoteType.text = "Text"
                     }
-                    NoteType.CHECKLIST ->{
+
+                    NoteType.CHECKLIST -> {
                         ivNoteType.setImageResource(R.drawable.ic_checklist)
                         ivNoteType.contentDescription = "Checklist"
+                        tvNoteType.text = "Checklist"
                     }
+
                     NoteType.PHOTO, NoteType.VIDEO -> {
                         ivNoteType.setImageResource(R.drawable.ic_photo)
                         ivNoteType.contentDescription = "Image"
+                        tvNoteType.text = "Image"
                     }
                 }
             }
         }
-        private fun setupContent(note:Note){
-            with(binding){
-                when(note.noteType){
+
+        private fun setupContent(note: Note) {
+            with(binding) {
+                when (note.noteType) {
                     NoteType.TEXT -> {
                         tvContent.visibility = View.VISIBLE
-                        checklistPreview.visibility = View.GONE
+                        rvChecklistPreview.visibility = View.GONE
+                        tvChecklistCount.visibility = View.GONE
                         tvContent.text = note.content
+                        ivMediaPreview.visibility = View.GONE
                     }
+
                     NoteType.CHECKLIST -> {
                         tvContent.visibility = View.GONE
-                        checklistPreview.visibility = View.VISIBLE
+                        rvChecklistPreview.visibility = View.VISIBLE
                         setupCheckListPreview(note)
+                        ivMediaPreview.visibility = View.GONE
                     }
-                    NoteType.PHOTO,NoteType.VIDEO -> {
-                        tvContent.visibility = View.GONE
-                        checklistPreview.visibility = View.GONE
 
+                    NoteType.PHOTO, NoteType.VIDEO -> {
+                        tvContent.visibility = View.GONE
+                        rvChecklistPreview.visibility = View.GONE
+                        tvChecklistCount.visibility = View.GONE
+
+                        // Hiển thị ảnh đầu tiên nếu có
+                        val mediaView = binding.ivMediaPreview
+                        val images = noteImagesMap[note.id] ?: emptyList()
+                        if (images.isNotEmpty()) {
+                            Log.d("NotesAdapter", "Loading image: ${images[0].imagePath}")
+                            mediaView.visibility = View.VISIBLE
+                            Glide.with(mediaView.context)
+                                .load(images[0].imagePath)
+                                .centerCrop()
+                                .placeholder(R.drawable.ic_photo)
+                                .into(mediaView)
+                        } else {
+                            android.util.Log.d("NotesAdapter", "No images found for note ${note.id}")
+                            mediaView.visibility = View.GONE
+                        }
                     }
                 }
             }
         }
 
-        private fun setupCheckListPreview(note: Note){
+        private fun setupCheckListPreview(note: Note) {
             with(binding) {
-                // Show placeholder checklist items
-                tvChecklistCount.text = "View checklist items"
+                val checklistItems = parseChecklistString(note.checkListItems ?: "")
+                if (checklistItems.isNotEmpty()) {
+                    if (rvChecklistPreview.layoutManager == null) {
+                        rvChecklistPreview.layoutManager = LinearLayoutManager(binding.root.context)
+                    }
+                    val maxItems = 3
+                    val visibleItems = checklistItems.take(maxItems)
+
+                    checklistAdapter = ChecklistAdapter(visibleItems.toMutableList(), isPreviewMode = true)
+                    rvChecklistPreview.adapter = checklistAdapter
+
+                    val remainingCount = checklistItems.size - maxItems
+                    if(remainingCount>0){
+                        tvChecklistCount.visibility = View.VISIBLE
+                        tvChecklistCount.text = "+$remainingCount more"
+                    } else {
+                        tvChecklistCount.visibility = View.GONE
+                    }
+                }
+                else{
+                    rvChecklistPreview.adapter = null
+                    tvChecklistCount.visibility = View.GONE
+                }
             }
         }
 
-        private fun setupReminder(reminderTime:Long?){
-            with(binding){
-                if(reminderTime != null && reminderTime > System.currentTimeMillis()){
+        // chuyển một chuỗi checklist thành danh sách ChecklistItem
+        private fun parseChecklistString(checklistString: String): List<ChecklistItem> {
+            if (checklistString.isBlank()) return emptyList()
+
+            return checklistString.split("\n").mapNotNull { line ->
+                when {
+                    line.startsWith("- [ ]") -> ChecklistItem(
+                        text = line.removePrefix("- [ ]").trim(), isChecked = false
+                    )
+
+                    line.startsWith("- [x]") -> ChecklistItem(
+                        text = line.removePrefix("- [x]").trim(), isChecked = true
+                    )
+
+                    else -> null
+                }
+            }.filter { it.text.isNotBlank() }
+        }
+
+        private fun setupReminder(reminderTime: Long?) {
+            with(binding) {
+                if (reminderTime != null && reminderTime > System.currentTimeMillis()) {
                     reminderIndicator.visibility = View.VISIBLE
 
                     val reminderDate = Date(reminderTime)
@@ -128,8 +207,8 @@ class NotesAdapter(
                     }
 
                     val reminderText = when {
-                        isSameDay(today,reminderCalendar) -> "Today"
-                        isTomorrowDay(today ,reminderCalendar) -> "Tomorrow"
+                        isSameDay(today, reminderCalendar) -> "Today"
+                        isTomorrowDay(today, reminderCalendar) -> "Tomorrow"
 
                         else -> reminderFormatter.format(reminderDate)
                     }
@@ -139,28 +218,30 @@ class NotesAdapter(
             }
         }
 
-        private fun isSameDay(cal1:Calendar, cal2:Calendar):Boolean{
-            return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)  &&
+        private fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean {
+            return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
                     cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
         }
 
-        private fun isTomorrowDay(today:Calendar,target:Calendar):Boolean{
+        private fun isTomorrowDay(today: Calendar, target: Calendar): Boolean {
             val tomorrow = today.clone() as Calendar
             tomorrow.add(Calendar.DAY_OF_YEAR, 1)
             return isSameDay(tomorrow, target)
         }
 
-        private fun setupBackgroundColor(colorName:String){
+        private fun setupBackgroundColor(colorName: String) {
             val colorResId = getColorResourceId(colorName)
-            val color = ContextCompat.getColor(binding.root.context,colorResId)
+            val color = ContextCompat.getColor(binding.root.context, colorResId)
 
         }
-        private fun setupColorIndicator(colorName: String){
+
+        private fun setupColorIndicator(colorName: String) {
             val colorResId = getColorResourceId(colorName)
             val color = ContextCompat.getColor(binding.root.context, colorResId)
             binding.colorIndicator.setBackgroundColor(color)
         }
-        private fun getColorResourceId(colorName: String):Int{
+
+        private fun getColorResourceId(colorName: String): Int {
             return when (colorName) {
                 "color_white" -> R.color.color_white
                 "color_red" -> R.color.color_red
@@ -177,8 +258,12 @@ class NotesAdapter(
                 else -> R.color.color_white
             }
         }
-    }
 
+        // Lấy view media preview (ShapeableImageView) trong layout
+//        private fun getMediaPreviewView(): ShapeableImageView {
+//            return binding.contentPreivew.getChildAt(binding.contentPreivew.childCount - 1) as ShapeableImageView
+//        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesAdapter.NoteViewHolder {
         val binding =
@@ -192,7 +277,6 @@ class NotesAdapter(
 
     override fun getItemCount(): Int = notes.size
 
-
     fun updateNotes(newNotes: List<Note>) {
         val diffCallback = NotesDiffCallback(notes, newNotes)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
@@ -200,6 +284,15 @@ class NotesAdapter(
         notes.clear()
         notes.addAll(newNotes)
         diffResult.dispatchUpdatesTo(this)
+    }
+
+    // New: update notes and images map directly, no DB/DAO logic here
+    fun updateNotesWithImages(newNotes: List<Note>, noteImagesMap: Map<Int, List<NoteImage>>) {
+        notes.clear()
+        notes.addAll(newNotes)
+        this.noteImagesMap.clear()
+        this.noteImagesMap.putAll(noteImagesMap)
+        notifyDataSetChanged()
     }
 
     //lấy vị trí của note
@@ -233,3 +326,4 @@ class NotesAdapter(
 
     }
 }
+

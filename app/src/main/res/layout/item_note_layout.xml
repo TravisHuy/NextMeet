@@ -78,11 +78,12 @@
             />
 
         <!--Content Preview-->
-        <FrameLayout
+        <LinearLayout
             android:id="@+id/content_preivew"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/margin_medium"
+            android:orientation="vertical"
             app:layout_constraintTop_toBottomOf="@+id/tv_title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -102,74 +103,31 @@
                 />
 
             <!--Checklist Preview-->
-            <LinearLayout
-                android:id="@+id/checklist_preview"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_checklist_preview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:visibility="gone"
-                tools:visibility="visible"
-                >
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="@dimen/margin_extra_small">
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_checklist"
+                tools:visibility="gone"
+                />
 
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_check_box"
-                        app:tint="@color/green" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Completed item"
-                        android:textSize="14sp"
-                        android:layout_marginStart="8dp"
-                         />
-                </LinearLayout>
-
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="4dp">
-
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_check_box_outline"
-                        />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Pending item"
-                        android:textSize="14sp"
-                        android:layout_marginStart="8dp" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tv_checklist_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+2 more items"
-                    android:textSize="12sp"
-                    android:textStyle="italic"
-                    android:layout_marginTop="4dp" />
-
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tv_checklist_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+2 more items"
+                android:textSize="12sp"
+                android:layout_marginTop="@dimen/margin_extra_small"
+                android:textStyle="italic"
+                android:layout_gravity="bottom"
+                android:visibility="gone"
+                />
 
             <!--Media Preview-->
             <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_media_preview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scaleType="centerCrop"
@@ -180,7 +138,7 @@
                 tools:visibility="gone"
                 />
 
-        </FrameLayout>
+        </LinearLayout>
 
         <!--Footer Information-->
         <LinearLayout
@@ -189,6 +147,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical|start"
+            android:layout_marginTop="@dimen/margin_extra_small"
             app:layout_constraintTop_toBottomOf="@id/content_preivew"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -246,6 +205,7 @@
                 android:padding="2dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_marginStart="@dimen/margin_small"
+                android:visibility="gone"
                 android:src="@drawable/three_dots_vertical"
                 />
 
@@ -266,3 +226,4 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>
+
