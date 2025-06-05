@@ -64,6 +64,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
                 if(rememberMe){
                     repository.saveUserPhone(phone)
                 }
+                createLoginSession(result.data!!.id,rememberMe,phone)
             }
             _loginState.value = result
         }

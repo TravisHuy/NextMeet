@@ -57,12 +57,12 @@ class AddNoteActivity : AppCompatActivity() {
     private val userViewModel: UserViewModel by viewModels()
 
 
-    private val pickMultipleImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) {
-        uris: List<Uri> ->
-        if (uris.isNotEmpty()) {
-            handleMultipleImageSelection(uris)
+    private val pickMultipleImagesLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
+            if (uris.isNotEmpty()) {
+                handleMultipleImageSelection(uris)
+            }
         }
-    }
 
     companion object {
         val listColor = listOf(
@@ -126,7 +126,7 @@ class AddNoteActivity : AppCompatActivity() {
                     }
 
                     is NoteUiState.NoteCreated -> {
-                        if(noteType == NoteType.PHOTO && imageList.isNotEmpty()){
+                        if (noteType == NoteType.PHOTO && imageList.isNotEmpty()) {
                             // Lưu ảnh cho ghi chú đã tạo
                             val noteId = state.noteId.toInt()
                             val imagesToSave = imageList.map { it.copy(noteId = noteId) }
@@ -159,7 +159,6 @@ class AddNoteActivity : AppCompatActivity() {
         }
 
 
-
     }
 
     // Hiệu ứng đơn giản, hiệu quả khi tạo note xong
@@ -172,7 +171,7 @@ class AddNoteActivity : AppCompatActivity() {
     // hàm sử lý click
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            showDialogBack()
+            onBackPressed()
         }
         binding.btnSave.setOnClickListener {
             saveNote()
@@ -246,8 +245,38 @@ class AddNoteActivity : AppCompatActivity() {
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
+    // kiểm tra xem có nhập dữ lieu chua
+    private fun isNoteChanged(): Boolean {
+        val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
+        val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+        val checkListItems = checklistAdapter.getItems()
+        val checklist = checkListItems.any { it.text.isNotBlank() || it.isChecked }
+
+        return when (noteType) {
+            NoteType.TEXT -> {
+                title.isNotBlank() || content.isNotBlank()
+            }
+
+            NoteType.PHOTO, NoteType.VIDEO -> {
+                title.isNotBlank()
+            }
+
+            NoteType.CHECKLIST -> title.isNotBlank() || checklist
+            null -> false
+        }
+    }
+
+    override fun onBackPressed() {
+        showDialogBack()
+    }
+
     // hiển thị dialog thoát
     private fun showDialogBack() {
+        if(!isNoteChanged()){
+            finish()
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            return
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle("Do you want to cancel creating this note?")
             .setMessage("Your note will not be saved.")
@@ -255,7 +284,8 @@ class AddNoteActivity : AppCompatActivity() {
             .setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
             }.setPositiveButton("Yes") { _, _ ->
-                onBackPressedDispatcher.onBackPressed()
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                finish()
             }
             .show()
     }
@@ -321,7 +351,7 @@ class AddNoteActivity : AppCompatActivity() {
 
             // Show success message
             val count = noteImages.size
-            Log.d("AddNoteActivity","$count images added successfully")
+            Log.d("AddNoteActivity", "$count images added successfully")
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
             Log.e("AddNoteActivity", "Error adding multiple images", e)

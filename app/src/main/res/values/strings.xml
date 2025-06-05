@@ -92,6 +92,10 @@
     <string name="map_for_appointment">Map for appointment</string>
     <string name="delete_image">Delete Image</string>
     <string name="image_note">Image Note</string>
+    <string name="reminder">Reminder</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
+    <string name="pin_unpin">Pin/Unpin</string>
 
 
 </resources>

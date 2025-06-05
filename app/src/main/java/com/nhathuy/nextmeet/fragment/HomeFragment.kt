@@ -67,7 +67,7 @@ class HomeFragment : Fragment() {
                 when(position){
                     0->binding.btnAdd.visibility = View.VISIBLE
                     1->binding.btnAdd.visibility = View.GONE
-                    2->binding.btnAdd.visibility = View.VISIBLE
+                    2->binding.btnAdd.visibility = View.GONE
                 }
             }
         })

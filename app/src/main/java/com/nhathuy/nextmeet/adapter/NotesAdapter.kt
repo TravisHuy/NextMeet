@@ -65,12 +65,14 @@ class NotesAdapter(
                 //set color indiator
                 setupColorIndicator(note.color)
 
+
                 // click listener
                 root.setOnClickListener {
                     onNoteClick(note)
                 }
 
                 root.setOnLongClickListener {
+//                    btnMoreOptions.visibility = View.VISIBLE
                     onNoteLongClick(note)
                     true
                 }

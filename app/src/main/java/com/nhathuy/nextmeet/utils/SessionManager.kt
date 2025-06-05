@@ -1,6 +1,7 @@
 package com.nhathuy.nextmeet.utils
 
 import android.content.Context
+import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,6 +17,7 @@ import javax.inject.Singleton
 class SessionManager @Inject constructor(context: Context) {
 
     companion object {
+        private const val TAG = "SessionManager"
         private const val PREF_NAME = "NextMeetPrefs"
         private const val KEY_USER_ID = "user_id"
         private const val KEY_REMEMBER_ME = "remember_me"
@@ -65,7 +67,11 @@ class SessionManager @Inject constructor(context: Context) {
      * @return true Nếu người dùng đã đăng nhập, false khi người dùng đăng xuất
      */
     fun isLoggedIn(): Boolean {
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+        val isLoggedIn = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+        val userId = sharedPreferences.getInt(KEY_USER_ID,-1)
+
+        Log.d(TAG, "isLoggedIn: $isLoggedIn, userId: $userId")
+        return isLoggedIn && userId > 0
     }
 
     /**

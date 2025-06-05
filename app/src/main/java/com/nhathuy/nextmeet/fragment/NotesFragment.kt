@@ -1,20 +1,26 @@
 package com.nhathuy.nextmeet.fragment
 
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.NotesAdapter
+import com.nhathuy.nextmeet.databinding.BottomSheetNoteOptionsBinding
 import com.nhathuy.nextmeet.databinding.FragmentNotesBinding
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteImage
@@ -202,6 +208,7 @@ class NotesFragment : Fragment() {
         updateEmptyState(reminderNotes.isEmpty())
     }
 
+
     private fun setupRecyclerView() {
         notesAdapter = NotesAdapter(
             notes = mutableListOf(),
@@ -235,9 +242,91 @@ class NotesFragment : Fragment() {
         noteViewModel.togglePin(note.id)
     }
     private fun showNoteOptions(note:Note){
-        //delete ,share.....
+        val dialogBinding = BottomSheetNoteOptionsBinding.inflate(layoutInflater)
+        val dialog = Dialog(requireContext())
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(dialogBinding.root)
+
+
+        dialogBinding.tvNoteTitle.text = note.title
+
+        dialogBinding.llPin.setOnClickListener {
+            togglePin(note)
+            dialog.dismiss()
+        }
+        dialogBinding.llShare.setOnClickListener {
+            shareNote(note)
+            dialog.dismiss()
+        }
+        dialogBinding.llDelete.setOnClickListener {
+            showDeleteConfirmation(note)
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+        dialog.window?.apply {
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            setBackgroundDrawableResource(R.drawable.rounded_background)
+            attributes.windowAnimations = R.style.DialogAnimation
+            setGravity(Gravity.BOTTOM)
+        }
     }
 
+    // show dialog delete note
+    private fun showDeleteConfirmation(note:Note){
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Delete Note")
+            .setMessage("Are you sure you want to delete this note?")
+            .setPositiveButton("Delete") { _, _ ->
+                deleteNote(note)
+            }
+            .setNegativeButton("Yes",null)
+            .show()
+    }
+    private fun deleteNote(note: Note) {
+        viewLifecycleOwner.lifecycleScope.launch{
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED){
+                noteViewModel.uiState.collect { state ->
+                    when (state) {
+                        is NoteUiState.Error -> {
+                            Snackbar.make(binding.root, state.message, Snackbar.LENGTH_SHORT).show()
+                        }
+
+                        is NoteUiState.NoteDeleted -> {
+                            if(note.id != 0){
+                                noteViewModel.deleteNote(note.id)
+                                // Xử lý khi ghi chú đã được xóa thành công
+                                Log.d("NotesFragment", "Note deleted: ${note.id}")
+                            }
+                            else{
+                                Snackbar.make(binding.root, "Note not found", Snackbar.LENGTH_SHORT).show()
+                            }
+                        }
+
+                        else -> {
+                            // Không làm gì với các trạng thái khác
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // hien thi share note
+    private fun shareNote(note: Note) {
+        val shareText = "${note.title}\n\n${note.content}"
+
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        startActivity(Intent.createChooser(shareIntent, "Share Note"))
+    }
     private fun setupChipFilters() {
         binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
             if(isChecked){
@@ -254,7 +343,7 @@ class NotesFragment : Fragment() {
         binding.chipReminder.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 clearOtherChips(binding.chipReminder.id)
-                showPinnedNotes()
+                showReminderNotes()
             }
         }
     }
