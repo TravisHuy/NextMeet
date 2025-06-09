@@ -76,11 +76,13 @@ data class AppointmentPlus(
     @ColumnInfo(name = "status")
     val status: AppointmentStatus = AppointmentStatus.SCHEDULED,
     @ColumnInfo(name = "color")
-    val color: String = "#2196F3",
+    val color: String = "color_white",
     @ColumnInfo(name = "travel_time_minutes")
     val travelTimeMinutes: Int = 0,
     @ColumnInfo(name = "navigation_started")
     val navigationStarted: Boolean = false,
+    @ColumnInfo(name = "is_pinned")
+    val isPinned:Boolean = false,
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at")

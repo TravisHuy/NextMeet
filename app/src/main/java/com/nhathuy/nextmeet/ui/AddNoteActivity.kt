@@ -57,12 +57,13 @@ class AddNoteActivity : AppCompatActivity() {
     private val userViewModel: UserViewModel by viewModels()
 
 
-    private val pickMultipleImagesLauncher =
-        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
-            if (uris.isNotEmpty()) {
-                handleMultipleImageSelection(uris)
-            }
+
+    private val pickMultipleImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) {
+        uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            handleMultipleImageSelection(uris)
         }
+    }
 
     companion object {
         val listColor = listOf(
@@ -126,19 +127,15 @@ class AddNoteActivity : AppCompatActivity() {
                     }
 
                     is NoteUiState.NoteCreated -> {
-                        if (noteType == NoteType.PHOTO && imageList.isNotEmpty()) {
-                            // Lưu ảnh cho ghi chú đã tạo
+                        if(noteType == NoteType.PHOTO && imageList.isNotEmpty()){
                             val noteId = state.noteId.toInt()
                             val imagesToSave = imageList.map { it.copy(noteId = noteId) }
                             noteViewModel.insertImagesForNote(imagesToSave)
+                            // Show success and finish immediately after saving images
+                            showSuccessAndFinish(state.message)
                         } else {
                             showSuccessAndFinish(state.message)
                         }
-                    }
-
-                    is NoteUiState.ImagesInserted -> {
-                        // Khi ảnh đã được lưu thành công, đóng activity
-                        showSuccessAndFinish(state.message)
                     }
 
                     is NoteUiState.Error -> {
@@ -151,14 +148,12 @@ class AddNoteActivity : AppCompatActivity() {
                 }
             }
         }
-
+        
         userViewModel.getCurrentUser().observe(this) { user ->
             user?.let {
                 currentUserId = user.id
             }
         }
-
-
     }
 
     // Hiệu ứng đơn giản, hiệu quả khi tạo note xong
@@ -171,7 +166,7 @@ class AddNoteActivity : AppCompatActivity() {
     // hàm sử lý click
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            onBackPressed()
+            showDialogBack()
         }
         binding.btnSave.setOnClickListener {
             saveNote()
@@ -245,38 +240,8 @@ class AddNoteActivity : AppCompatActivity() {
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
-    // kiểm tra xem có nhập dữ lieu chua
-    private fun isNoteChanged(): Boolean {
-        val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
-        val content = binding.textEdContent.text?.toString()?.trim() ?: ""
-        val checkListItems = checklistAdapter.getItems()
-        val checklist = checkListItems.any { it.text.isNotBlank() || it.isChecked }
-
-        return when (noteType) {
-            NoteType.TEXT -> {
-                title.isNotBlank() || content.isNotBlank()
-            }
-
-            NoteType.PHOTO, NoteType.VIDEO -> {
-                title.isNotBlank()
-            }
-
-            NoteType.CHECKLIST -> title.isNotBlank() || checklist
-            null -> false
-        }
-    }
-
-    override fun onBackPressed() {
-        showDialogBack()
-    }
-
     // hiển thị dialog thoát
     private fun showDialogBack() {
-        if(!isNoteChanged()){
-            finish()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-            return
-        }
         MaterialAlertDialogBuilder(this)
             .setTitle("Do you want to cancel creating this note?")
             .setMessage("Your note will not be saved.")
@@ -284,47 +249,37 @@ class AddNoteActivity : AppCompatActivity() {
             .setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
             }.setPositiveButton("Yes") { _, _ ->
-                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-                finish()
+                onBackPressedDispatcher.onBackPressed()
             }
             .show()
     }
 
     //khởi tạo recyclerview và nút thêm ảnh
     private fun setupMediaSection() {
-        mediaAdapter = MediaAdapter(
-            images = imageList,
-            onRemovedClick = { noteImage ->
-                mediaAdapter.removeImage(noteImage)
-                updateGridLayout()
-            },
-            isEditMode = true // Chế độ chỉnh sửa (hiển thị nút xóa)
-        )
-
-        binding.rvMediaItems.apply {
-            layoutManager = GridLayoutManager(this@AddNoteActivity, 3)
-            adapter = mediaAdapter
-            setHasFixedSize(false)  // Change to false to allow resize
+        mediaAdapter = MediaAdapter(imageList) { noteImage ->
+            mediaAdapter.removeImage(noteImage)
         }
-
+        
+        val gridLayoutManager = GridLayoutManager(this, calculateSpanCount(imageList.size))
+        
+        binding.rvMediaItems.apply {
+            layoutManager = gridLayoutManager
+            adapter = mediaAdapter
+            setHasFixedSize(false)
+            itemAnimator?.changeDuration = 0
+        }
+        
         binding.btnAddImage.setOnClickListener {
             pickMultipleImagesLauncher.launch("image/*")
         }
     }
 
-    private fun updateGridLayout() {
-        val spanCount = when {
-            imageList.size == 1 -> 1
-            imageList.size == 2 -> 2
-            else -> 3
-        }
-
-        val layoutManager = binding.rvMediaItems.layoutManager as? GridLayoutManager
-        layoutManager?.spanCount = spanCount
-
-        // Force layout update
-        binding.rvMediaItems.post {
-            binding.rvMediaItems.requestLayout()
+    // Calculate appropriate span count based on the number of items
+    private fun calculateSpanCount(itemCount: Int): Int {
+        return when {
+            itemCount <= 1 -> 1    // Single column for 0-1 items
+            itemCount <= 4 -> 2    // Two columns for 2-4 items
+            else -> 3              // Three columns for 5+ items
         }
     }
 
@@ -337,21 +292,18 @@ class AddNoteActivity : AppCompatActivity() {
                     imagePath = uri.toString()
                 )
             }
-
             // Add to data source
             imageList.addAll(noteImages)
-
+            // Update span count based on new size before updating the adapter
+            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+            layoutManager.spanCount = calculateSpanCount(imageList.size)
             // Update UI with the new images
             mediaAdapter.addMultipleImages(noteImages)
-
-            // Force refresh the RecyclerView layout
-            binding.rvMediaItems.post {
-                binding.rvMediaItems.adapter = mediaAdapter
-            }
-
+            // Force layout update
+            binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
             // Show success message
             val count = noteImages.size
-            Log.d("AddNoteActivity", "$count images added successfully")
+            Log.d("AddNoteActivity","$count images added successfully")
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
             Log.e("AddNoteActivity", "Error adding multiple images", e)
@@ -384,7 +336,7 @@ class AddNoteActivity : AppCompatActivity() {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
                     return
                 }
-
+                
                 val note = Note(
                     userId = currentUserId!!,
                     title = title,
@@ -493,4 +445,3 @@ class AddNoteActivity : AppCompatActivity() {
 
 
 }
-

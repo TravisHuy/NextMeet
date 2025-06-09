@@ -16,8 +16,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.NotesAdapter
 import com.nhathuy.nextmeet.databinding.BottomSheetNoteOptionsBinding
@@ -33,6 +38,7 @@ import com.nhathuy.nextmeet.viewmodel.NoteViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 /**
  * NoteFragment fragment thể hiện logic với FAB menu animation
@@ -75,10 +81,10 @@ class NotesFragment : Fragment() {
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
 
         setupUserInfo()
+        setObserver()
         setupViews()
         setupRecyclerView()
         setupChipFilters()
-//        setObserver()
         setupFabMenu()
 
     }
@@ -101,30 +107,52 @@ class NotesFragment : Fragment() {
 
     private fun setObserver() {
         viewLifecycleOwner.lifecycleScope.launch {
-            noteViewModel.uiState.collect { state ->
-                when (state) {
-                    is NoteUiState.Loading -> {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                noteViewModel.uiState.collect { state ->
+                    when (state) {
+                        is NoteUiState.Loading -> {
 
-                    }
+                        }
+                        is NoteUiState.Error -> {
+                            Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
+                        }
 
-                    is NoteUiState.NoteLoaded -> {
+                        is NoteUiState.NotePinToggled -> {
+                            val message = if (state.isPinned) "Đã ghim ghi chú" else "Đã bỏ ghim ghi chú"
+                            Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+                        }
 
-                    }
+                        is NoteUiState.NoteDeleted -> {
+                            Snackbar.make(binding.root, "Đã xóa ghi chú thành công", Snackbar.LENGTH_SHORT).show()
+                        }
 
-                    is NoteUiState.Error -> {
-                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                    }
+                        is NoteUiState.NoteDuplicated -> {
+                            Snackbar.make(binding.root, "Đã tạo bản sao ghi chú", Snackbar.LENGTH_SHORT).show()
+                        }
 
-                    is NoteUiState.NotePinToggled -> {
-                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                    }
+                        is NoteUiState.NoteShared -> {
+                            // Nếu chia sẻ thành công, lấy nội dung và thực hiện Intent share
+                            val shareContent = state.shareResult.shareContent
+                            if (!shareContent.isNullOrBlank()) {
+                                val shareIntent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, shareContent)
+                                }
+                                startActivity(Intent.createChooser(shareIntent, "Share Note"))
+                            } else {
+                                Snackbar.make(binding.root, state.message, Snackbar.LENGTH_SHORT).show()
+                            }
+                        }
 
-                    is NoteUiState.NoteDeleted -> {
-                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                    }
+                        is NoteUiState.ReminderUpdated -> {
+                            val message = state.message ?: "Đã cập nhật lời nhắc"
+                            Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+                        }
 
-                    else -> {
+                        else -> {
 
+                        }
                     }
                 }
             }
@@ -218,7 +246,7 @@ class NotesFragment : Fragment() {
             onMoreClick = { note -> showNoteOptions(note) }
         )
 
-        val layoutManager = StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL)
+        val layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         layoutManager.gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
 
         binding.rvNotes.apply {
@@ -230,23 +258,24 @@ class NotesFragment : Fragment() {
 
     // xử lý khi onclick vao item chuyển sao edit
     private fun openNoteForEdit(note: Note) {
-        val intent = Intent(requireContext(),EditNoteActivity::class.java)
-        intent.putExtra(Constant.EXTRA_NOTE_ID,note.id)
+        val intent = Intent(requireContext(), EditNoteActivity::class.java)
+        intent.putExtra(Constant.EXTRA_NOTE_ID, note.id)
         startActivity(intent)
     }
 
-    private fun handleNoteLongClick(note:Note){
+    private fun handleNoteLongClick(note: Note) {
         showNoteOptions(note)
     }
-    private fun togglePin(note:Note){
+
+    private fun togglePin(note: Note) {
         noteViewModel.togglePin(note.id)
     }
-    private fun showNoteOptions(note:Note){
+
+    private fun showNoteOptions(note: Note) {
         val dialogBinding = BottomSheetNoteOptionsBinding.inflate(layoutInflater)
         val dialog = Dialog(requireContext())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(dialogBinding.root)
-
 
         dialogBinding.tvNoteTitle.text = note.title
 
@@ -255,7 +284,16 @@ class NotesFragment : Fragment() {
             dialog.dismiss()
         }
         dialogBinding.llShare.setOnClickListener {
-            shareNote(note)
+            // Gọi toggleShare thay vì shareNote trực tiếp
+            noteViewModel.toggleShare(note.id)
+            dialog.dismiss()
+        }
+        dialogBinding.llReminder.setOnClickListener {
+            dialog.dismiss()
+            showReminderDialog(note)
+        }
+        dialogBinding.llDuplicate.setOnClickListener {
+            duplicateNote(note)
             dialog.dismiss()
         }
         dialogBinding.llDelete.setOnClickListener {
@@ -263,7 +301,7 @@ class NotesFragment : Fragment() {
             dialog.dismiss()
         }
 
-        dialog.setOnDismissListener {
+        dialogBinding.root.setOnClickListener {
             dialog.dismiss()
         }
 
@@ -276,60 +314,80 @@ class NotesFragment : Fragment() {
         }
     }
 
+    private fun showReminderDialog(note: Note) {
+
+        val constraintBuilder =
+            CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
+
+
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Chọn ngày nhắc nhở")
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setCalendarConstraints(constraintBuilder.build())
+            .build()
+
+        datePicker.addOnPositiveButtonClickListener { selectedDate ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = selectedDate
+
+            val timePicker = MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_24H)
+                .setHour(calendar.get(Calendar.HOUR_OF_DAY))
+                .setMinute(calendar.get(Calendar.MINUTE))
+                .setTitleText("Chọn giờ nhắc nhở")
+                .build()
+
+            timePicker.addOnPositiveButtonClickListener {
+                calendar.set(Calendar.HOUR_OF_DAY, timePicker.hour)
+                calendar.set(Calendar.MINUTE, timePicker.minute)
+                calendar.set(Calendar.SECOND, 0)
+                val reminderTime = calendar.timeInMillis
+                if (reminderTime <= System.currentTimeMillis()) {
+                    Snackbar.make(binding.root, "Vui lòng chọn thời gian trong tương lai", Snackbar.LENGTH_SHORT).show()
+                } else {
+                    noteViewModel.updateReminder(note.id, reminderTime)
+                }
+            }
+            timePicker.show(parentFragmentManager, "time_picker")
+        }
+        datePicker.show(parentFragmentManager, "date_picker")
+    }
+
     // show dialog delete note
-    private fun showDeleteConfirmation(note:Note){
+    private fun showDeleteConfirmation(note: Note) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Delete Note")
             .setMessage("Are you sure you want to delete this note?")
             .setPositiveButton("Delete") { _, _ ->
                 deleteNote(note)
             }
-            .setNegativeButton("Yes",null)
+            .setNegativeButton("No", null)
             .show()
     }
+
     private fun deleteNote(note: Note) {
-        viewLifecycleOwner.lifecycleScope.launch{
-            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED){
-                noteViewModel.uiState.collect { state ->
-                    when (state) {
-                        is NoteUiState.Error -> {
-                            Snackbar.make(binding.root, state.message, Snackbar.LENGTH_SHORT).show()
-                        }
-
-                        is NoteUiState.NoteDeleted -> {
-                            if(note.id != 0){
-                                noteViewModel.deleteNote(note.id)
-                                // Xử lý khi ghi chú đã được xóa thành công
-                                Log.d("NotesFragment", "Note deleted: ${note.id}")
-                            }
-                            else{
-                                Snackbar.make(binding.root, "Note not found", Snackbar.LENGTH_SHORT).show()
-                            }
-                        }
-
-                        else -> {
-                            // Không làm gì với các trạng thái khác
-                        }
-                    }
-                }
+        if (note.id != 0) {
+            if(note.noteType == NoteType.PHOTO) {
+                // Xóa ảnh liên quan đến note nếu là note kiểu PHOTO
+                noteViewModel.deleteImagesByNoteId(note.id)
             }
+            // xóa
+            noteViewModel.deleteNote(note.id)
+        }
+        else{
+            Snackbar.make(binding.root,"Không thể xóa ghi chú này", Snackbar.LENGTH_SHORT).show()
         }
     }
 
-    // hien thi share note
-    private fun shareNote(note: Note) {
-        val shareText = "${note.title}\n\n${note.content}"
-
-        val shareIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, shareText)
-        }
-        startActivity(Intent.createChooser(shareIntent, "Share Note"))
+    // tao ban sao cho note
+    private fun duplicateNote(note:Note){
+        noteViewModel.duplicateNote(note.id)
     }
+
+
     private fun setupChipFilters() {
         binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
-            if(isChecked){
+            if (isChecked) {
                 clearOtherChips(binding.chipAll.id)
                 showAllNotes()
             }
@@ -349,15 +407,17 @@ class NotesFragment : Fragment() {
     }
 
     private fun clearOtherChips(checkedChipId: Int) {
-        when(checkedChipId){
+        when (checkedChipId) {
             binding.chipAll.id -> {
                 binding.chipPinned.isChecked = false
                 binding.chipReminder.isChecked = false
             }
+
             binding.chipPinned.id -> {
                 binding.chipAll.isChecked = false
                 binding.chipReminder.isChecked = false
             }
+
             binding.chipReminder.id -> {
                 binding.chipPinned.isChecked = false
                 binding.chipAll.isChecked = false
@@ -365,8 +425,8 @@ class NotesFragment : Fragment() {
         }
     }
 
-    private fun updateEmptyState(isEmpty:Boolean = allNotes.isEmpty()) {
-        binding.emptyState.visibility = if(isEmpty) View.VISIBLE else View.GONE
+    private fun updateEmptyState(isEmpty: Boolean = allNotes.isEmpty()) {
+        binding.emptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
     }
 
     private fun setupFabMenu() {

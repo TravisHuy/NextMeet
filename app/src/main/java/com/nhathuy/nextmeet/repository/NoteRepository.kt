@@ -205,6 +205,7 @@ class NoteRepository @Inject constructor(
         return try {
             val note = noteDao.getNoteById(noteId)
                 ?: return Result.failure(IllegalArgumentException("ghi chú không tồn tại"))
+            noteDao.deleteNote(note)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

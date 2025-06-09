@@ -1,12 +1,10 @@
 package com.nhathuy.nextmeet.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.ItemMediaBinding
 import com.nhathuy.nextmeet.model.NoteImage
 
@@ -17,8 +15,7 @@ import com.nhathuy.nextmeet.model.NoteImage
  */
 class MediaAdapter(
     private val images: MutableList<NoteImage>,
-    private val onRemovedClick : (NoteImage) -> Unit,
-    private val isEditMode: Boolean = true // Mặc định là true (chế độ chỉnh sửa - hiển thị nút xóa)
+    private val onRemovedClick : (NoteImage)  -> Unit
 ) : RecyclerView.Adapter<MediaAdapter.MediaViewHolder>() {
 
     inner class MediaViewHolder(val binding: ItemMediaBinding) :
@@ -28,16 +25,11 @@ class MediaAdapter(
                 .load(noteImage.imagePath)
                 .centerCrop()
                 .into(binding.ivMedia)
-
-            // Chỉ hiển thị nút xóa trong chế độ chỉnh sửa
-            binding.btnRemoveImage.visibility = if (isEditMode) View.VISIBLE else View.GONE
-
             binding.btnRemoveImage.setOnClickListener {
                 onRemovedClick(noteImage)
             }
         }
     }
-
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -60,10 +52,28 @@ class MediaAdapter(
         val index = images.indexOf(noteImage)
         if(index != -1){
             images.removeAt(index)
-            notifyItemRemoved(index)
-            // Notify range changed to update positions
-            if (index < images.size) {
-                notifyItemRangeChanged(index, images.size - index)
+            
+            // Getting the RecyclerView instance
+            val recyclerView = getRecyclerView()
+            
+            // Update span count based on new size
+            if (recyclerView != null) {
+                val layoutManager = recyclerView.layoutManager as? GridLayoutManager
+                layoutManager?.let {
+                    it.spanCount = when {
+                        images.size <= 1 -> 1
+                        images.size <= 4 -> 2
+                        else -> 3
+                    }
+                }
+            }
+            
+            // Notify adapter of data change
+            notifyDataSetChanged()
+            
+            // Force layout update
+            recyclerView?.post {
+                recyclerView.requestLayout()
             }
         }
     }
@@ -83,19 +93,43 @@ class MediaAdapter(
         // Kiểm tra xem ảnh đã tồn tại chưa
         if (!images.any { it.imagePath == noteImage.imagePath }) {
             images.add(noteImage)
+            
+            // Update span count if needed
+            updateSpanCount()
+            
             notifyItemInserted(images.size - 1)
         }
     }
 
     fun addMultipleImages(newImages: List<NoteImage>) {
         val uniqueImages = newImages.filter { newImage ->
+            // Kiểm tra trùng lặp dựa trên imagePath
             !images.any { existingImage -> existingImage.imagePath == newImage.imagePath }
         }
 
         if (uniqueImages.isNotEmpty()) {
-            val startPosition = images.size
             images.addAll(uniqueImages)
-            notifyItemRangeInserted(startPosition, uniqueImages.size)
+            
+            // Update span count based on new size
+            updateSpanCount()
+            
+            notifyDataSetChanged()
+            
+            // Force layout update on the RecyclerView
+            getRecyclerView()?.post {
+                getRecyclerView()?.requestLayout()
+            }
+        }
+    }
+    
+    private fun updateSpanCount() {
+        val recyclerView = getRecyclerView() ?: return
+        val layoutManager = recyclerView.layoutManager as? GridLayoutManager ?: return
+        
+        layoutManager.spanCount = when {
+            images.size <= 1 -> 1
+            images.size <= 4 -> 2
+            else -> 3
         }
     }
 

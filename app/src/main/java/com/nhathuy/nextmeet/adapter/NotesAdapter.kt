@@ -23,6 +23,26 @@ import android.os.Looper
 import android.util.Log
 import com.google.android.material.imageview.ShapeableImageView
 
+/**
+* Adapter hiển thị danh sách ghi chú trong RecyclerView.
+*
+* Adapter này xử lý các loại ghi chú khác nhau (văn bản, checklist, ảnh/video)
+* và cung cấp các listener cho các thao tác như mở ghi chú, ghim, hoặc truy cập tuỳ chọn khác.
+*
+* @property notes Danh sách mutable các đối tượng [Note] để hiển thị.
+* @property onNoteClick Lambda được gọi khi một item ghi chú được nhấn.
+* Nhận vào đối tượng [Note] vừa được nhấn.
+* @property onNoteLongClick Lambda được gọi khi một item ghi chú bị nhấn giữ.
+* Nhận vào đối tượng [Note] vừa được nhấn giữ.
+* @property onPinClick Lambda được gọi khi icon ghim của ghi chú được nhấn.
+* Nhận vào đối tượng [Note] tương ứng.
+* @property onMoreClick Lambda được gọi khi nút "tuỳ chọn khác" của ghi chú được nhấn.
+* Nhận vào đối tượng [Note] tương ứng.
+ *
+ * @version 2.0
+ * @author TravisHuy (Ho Nhat Huy)
+ * @since 04/06/2025
+*/
 class NotesAdapter(
     private var notes: MutableList<Note>,
     private var onNoteClick: (Note) -> Unit,
@@ -88,20 +108,20 @@ class NotesAdapter(
                 when (noteType) {
                     NoteType.TEXT -> {
                         ivNoteType.setImageResource(R.drawable.ic_text_fields)
-                        ivNoteType.contentDescription = "Text"
-                        tvNoteType.text = "Text"
+                        ivNoteType.contentDescription = root.context.getString(R.string.text)
+                        tvNoteType.text = root.context.getString(R.string.text)
                     }
 
                     NoteType.CHECKLIST -> {
                         ivNoteType.setImageResource(R.drawable.ic_checklist)
-                        ivNoteType.contentDescription = "Checklist"
-                        tvNoteType.text = "Checklist"
+                        ivNoteType.contentDescription = root.context.getString(R.string.checklist)
+                        tvNoteType.text = root.context.getString(R.string.checklist)
                     }
 
                     NoteType.PHOTO, NoteType.VIDEO -> {
                         ivNoteType.setImageResource(R.drawable.ic_photo)
-                        ivNoteType.contentDescription = "Image"
-                        tvNoteType.text = "Image"
+                        ivNoteType.contentDescription = root.context.getString(R.string.image)
+                        tvNoteType.text = root.context.getString(R.string.image)
                     }
                 }
             }
@@ -209,8 +229,8 @@ class NotesAdapter(
                     }
 
                     val reminderText = when {
-                        isSameDay(today, reminderCalendar) -> "Today"
-                        isTomorrowDay(today, reminderCalendar) -> "Tomorrow"
+                        isSameDay(today, reminderCalendar) -> root.context.getString(R.string.today)
+                        isTomorrowDay(today, reminderCalendar) -> root.context.getString(R.string.tomorrow)
 
                         else -> reminderFormatter.format(reminderDate)
                     }
@@ -234,13 +254,13 @@ class NotesAdapter(
         private fun setupBackgroundColor(colorName: String) {
             val colorResId = getColorResourceId(colorName)
             val color = ContextCompat.getColor(binding.root.context, colorResId)
-
+            binding.cardNoteLayout.setCardBackgroundColor(color)
         }
 
         private fun setupColorIndicator(colorName: String) {
             val colorResId = getColorResourceId(colorName)
             val color = ContextCompat.getColor(binding.root.context, colorResId)
-            binding.colorIndicator.setBackgroundColor(color)
+//            binding.colorIndicator.setBackgroundColor(color)
         }
 
         private fun getColorResourceId(colorName: String): Int {

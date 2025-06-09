@@ -29,12 +29,12 @@ import androidx.room.PrimaryKey
     foreignKeys = [ForeignKey(
         entity = User::class,
         parentColumns = ["id"],
-        childColumns = ["userId"],
+        childColumns = ["user_id"],
         onDelete = ForeignKey.CASCADE
     )],
-    indices = [Index("userId"),
+    indices = [Index("user_id"),
         Index("name"),
-        Index("userId", "phone", unique = true)]
+        Index("user_id", "phone", unique = true)]
 )
 data class Contact(
     @PrimaryKey(autoGenerate = true)
@@ -49,6 +49,8 @@ data class Contact(
     val phone: String = "",
     @ColumnInfo(name = "email")
     val email: String = "",
+    @ColumnInfo(name = "role")
+    val role: String ="",
     @ColumnInfo(name = "notes")
     val notes: String = "",
     @ColumnInfo(name = "latitude")

@@ -96,6 +96,15 @@
     <string name="delete">Delete</string>
     <string name="share">Share</string>
     <string name="pin_unpin">Pin/Unpin</string>
-
-
+    <string name="duplicate">Duplicate</string>
+    <string name="text">Text</string>
+    <string name="checklist">Checklist</string>
+    <string name="image">Image</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="search_contacts">Search contacts....</string>
+    <string name="add_contact">Add contact</string>
+    <string name="appointment">Appointment</string>
+    <string name="call">Call</string>
+    <string name="no_location_selected">No location selected</string>
+    <string name="meet">Meet</string>
 </resources>
