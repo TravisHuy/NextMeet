@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 
 /**
  * Data class đại diện cho một cuộc hẹn chi tiết, được kết hợp từ thông tin cuộc hẹn gốc và các dữ liệu bổ sung.
@@ -36,24 +37,25 @@ import androidx.room.Index
         ForeignKey(
             entity = User::class,
             parentColumns = ["id"],
-            childColumns = ["userId"],
+            childColumns = ["user_id"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = Contact::class,
             parentColumns = ["id"],
-            childColumns = ["contactId"],
+            childColumns = ["contact_id"],
             onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
-        Index("userId"),
-        Index("contactId"),
-        Index("startDateTime"),
+        Index("user_id"),
+        Index("contact_id"),
+        Index("start_date_time"),
         Index("status")
     ]
 )
 data class AppointmentPlus(
+    @PrimaryKey(autoGenerate = true)
     val id: Int,
     @ColumnInfo(name = "user_id")
     val userId: Int,
@@ -70,9 +72,9 @@ data class AppointmentPlus(
     @ColumnInfo(name = "location")
     val location: String = "",
     @ColumnInfo(name = "latitude")
-    val latitude: Double? = null,
+    val latitude: Double = 0.0,
     @ColumnInfo(name = "longitude")
-    val longitude: Double? = null,
+    val longitude: Double = 0.0,
     @ColumnInfo(name = "status")
     val status: AppointmentStatus = AppointmentStatus.SCHEDULED,
     @ColumnInfo(name = "color")

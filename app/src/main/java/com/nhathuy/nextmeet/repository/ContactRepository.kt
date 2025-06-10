@@ -2,9 +2,11 @@ package com.nhathuy.nextmeet.repository
 
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.Contact
+import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.utils.ValidationUtils
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -202,5 +204,20 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Lấy danh sách đơn giản của liên hệ chỉ gồm ID và tên
+     * Hữu ích cho các dropdown selector
+     * 
+     * @param userId ID người dùng
+     * @return Flow danh sách các đối tượng ContactNameId
+     */
+    fun getContactNamesAndIds(userId: Int): Flow<List<ContactNameId>> {
+        return contactDao.getContactNamesAndIds(userId)
+            .catch { e ->
+                emit(emptyList())
+                throw e
+            }
     }
 }

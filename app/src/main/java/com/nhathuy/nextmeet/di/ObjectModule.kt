@@ -3,6 +3,7 @@ package com.nhathuy.nextmeet.di
 import android.content.Context
 import com.nhathuy.nextmeet.dao.AlarmHistoryDao
 import com.nhathuy.nextmeet.dao.AppointmentDao
+import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.dao.CustomerDao
 import com.nhathuy.nextmeet.dao.NoteDao
@@ -10,6 +11,7 @@ import com.nhathuy.nextmeet.dao.NoteImageDao
 import com.nhathuy.nextmeet.dao.TransactionDao
 import com.nhathuy.nextmeet.dao.UserDao
 import com.nhathuy.nextmeet.repository.AlarmHistoryRepository
+import com.nhathuy.nextmeet.repository.AppointmentPlusRepository
 import com.nhathuy.nextmeet.repository.AppointmentRepository
 import com.nhathuy.nextmeet.repository.ContactRepository
 import com.nhathuy.nextmeet.repository.CustomerRepository
@@ -74,5 +76,11 @@ object ObjectModule {
     @Provides
     fun providerContactRepository(contactDao: ContactDao) : ContactRepository{
         return ContactRepository(contactDao)
+    }
+
+    @Singleton
+    @Provides
+    fun providerAppointmentPlusRepository(appointmentDao: AppointmentPlusDao) : AppointmentPlusRepository {
+        return AppointmentPlusRepository(appointmentDao)
     }
 }

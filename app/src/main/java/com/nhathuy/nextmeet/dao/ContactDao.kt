@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.nhathuy.nextmeet.model.Contact
+import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.model.Note
 import kotlinx.coroutines.flow.Flow
 
@@ -60,5 +61,16 @@ interface ContactDao {
      */
     @Delete
     suspend fun deleteContact(contact: Contact)
-}
 
+    /**
+     * Lấy danh sách tên và ID của tất cả liên hệ của một người dùng
+     * @param userId ID của người dùng
+     * @return Flow chứa danh sách các đối tượng ContactNameId
+     */
+    @Query("""
+        SELECT id, name FROM contacts
+        WHERE user_id = :userId
+        ORDER BY name ASC
+    """)
+    fun getContactNamesAndIds(userId: Int): Flow<List<ContactNameId>>
+}

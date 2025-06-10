@@ -107,4 +107,5 @@
     <string name="call">Call</string>
     <string name="no_location_selected">No location selected</string>
     <string name="meet">Meet</string>
+    <string name="add_contact_hint">%1$s</string>
 </resources>

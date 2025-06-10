@@ -15,7 +15,7 @@ interface AppointmentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun register(appointment: Appointment)
 
-    @Query("select * from appointments")
+    @Query("select * from appointment")
     fun getAllAppointment(): Flow<List<Appointment>>
 
     @Update
@@ -24,6 +24,6 @@ interface AppointmentDao {
     @Delete
     suspend fun deleteAppointment(appointment: Appointment)
 
-    @Query("delete from appointments")
+    @Query("delete from appointment")
     suspend fun deleteAllAppointments()
 }

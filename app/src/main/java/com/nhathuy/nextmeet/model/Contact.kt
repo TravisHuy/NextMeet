@@ -64,3 +64,4 @@ data class Contact(
     @ColumnInfo(name = "updated_at")
     val updateAt: Long = System.currentTimeMillis()
 )
+

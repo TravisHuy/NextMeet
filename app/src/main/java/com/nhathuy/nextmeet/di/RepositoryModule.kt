@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.nhathuy.nextmeet.dao.AlarmHistoryDao
 import com.nhathuy.nextmeet.dao.AppointmentDao
+import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.dao.CustomerDao
 import com.nhathuy.nextmeet.dao.NoteDao
@@ -28,7 +29,7 @@ object RepositoryModule {
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context, AppDatabase::class.java,
-            "2_database"
+            "2.1_database"
         )
             .fallbackToDestructiveMigration()
             .build()
@@ -67,8 +68,14 @@ object RepositoryModule {
     fun providerNoteImageDao(database: AppDatabase): NoteImageDao{
         return database.noteImageDao()
     }
+
     @Provides
     fun providerContactDao(database: AppDatabase): ContactDao {
         return database.contactDao()
+    }
+
+    @Provides
+    fun providerAppointmentPlusDao(database: AppDatabase): AppointmentPlusDao {
+        return database.appointmentPlusDao()
     }
 }

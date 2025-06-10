@@ -3,6 +3,7 @@ package com.nhathuy.nextmeet.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.nextmeet.model.Contact
+import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.repository.ContactRepository
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.NoteUiState
@@ -18,6 +19,10 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
 
     private val _contactUiState = MutableStateFlow<ContactUiState>(ContactUiState.Idle)
     val contactUiState: StateFlow<ContactUiState> = _contactUiState
+
+    // Cập nhật StateFlow cho danh sách tên và ID của contacts
+    private val _contactNamesAndIds = MutableStateFlow<List<ContactNameId>>(emptyList())
+    val contactNamesAndIds: StateFlow<List<ContactNameId>> = _contactNamesAndIds
 
     /**
      * Tạo liên hệ mới
@@ -101,5 +106,22 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
             }
         }
     }
-}
 
+    /**
+     * Lấy danh sách đơn giản của các liên hệ (chỉ ID và tên)
+     * Thường dùng cho các dropdown selector
+     * 
+     * @param userId ID của người dùng
+     */
+    fun getContactNamesAndIds(userId: Int) {
+        viewModelScope.launch {
+            try {
+                contactRepository.getContactNamesAndIds(userId).collect { contacts ->
+                    _contactNamesAndIds.value = contacts
+                }
+            } catch (e: Exception) {
+                _contactUiState.value = ContactUiState.Error(e.message ?: "Error loading contact names")
+            }
+        }
+    }
+}
