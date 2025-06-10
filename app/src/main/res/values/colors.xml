@@ -32,4 +32,19 @@
     <!-- Border Colors -->
     <color name="border_light">#E5E7EB</color>
 
+    <!--Color picker-->
+    <color name="color_white">#FFFFFF</color>
+    <color name="color_red">#F28B82</color>
+    <color name="color_orange">#FBBC04</color>
+    <color name="color_yellow">#FFF475</color>
+    <color name="color_green">#CCFF90</color>
+    <color name="color_teal">#A7FFEB</color>
+    <color name="color_blue">#CBF0F8</color>
+    <color name="color_dark_blue">#AECBFA</color>
+    <color name="color_purple">#D7AEFB</color>
+    <color name="color_pink">#FDCFE8</color>
+    <color name="color_brown">#E6C9A8</color>
+    <color name="color_gray">#E8EAED</color>
+
+
 </resources>

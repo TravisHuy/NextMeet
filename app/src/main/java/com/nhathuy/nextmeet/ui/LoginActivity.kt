@@ -33,6 +33,17 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+* Activity cho đăng nhập và đăng ký người dùng.
+*
+* Activity này xử lý xác thực người dùng, đăng ký và chức năng đặt lại mật khẩu.
+* Sử dụng [UserViewModel] để quản lý dữ liệu người dùng và tương tác với backend.
+* Activity hiển thị các dialog khác nhau cho đăng ký và đặt lại mật khẩu.
+* Hỗ trợ chức năng "Ghi nhớ đăng nhập" để tự động điền thông tin đăng nhập.
+* Thực hiện kiểm tra hợp lệ cho các form đăng nhập, đăng ký và đặt lại mật khẩu.
+*
+* Lớp này được đánh dấu `@AndroidEntryPoint` để sử dụng Hilt dependency injection.
+ */
 @AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
 
@@ -136,7 +147,7 @@ class LoginActivity : AppCompatActivity() {
                                 Toast.LENGTH_SHORT
                             ).show()
 
-                            val intent = Intent(this@LoginActivity, TestActivity::class.java)
+                            val intent = Intent(this@LoginActivity, SolutionActivity::class.java)
                             intent.flags =
                                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
@@ -319,17 +330,9 @@ class LoginActivity : AppCompatActivity() {
         val btnAddAddress = dialog.findViewById<ImageButton>(R.id.btn_add_address)
 
 
-        address = null
-        latitude = null
-        longitude = null
 
         btnAddAddress.setOnClickListener {
             val intent = Intent(this@LoginActivity, GoogleMapActivity::class.java)
-            intent.putExtra("address", address)
-            if (latitude != null && longitude != null) {
-                intent.putExtra("latitude", latitude)
-                intent.putExtra("longitude", longitude)
-            }
             mapPickerLauncher.launch(intent)
         }
 

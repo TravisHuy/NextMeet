@@ -64,6 +64,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
                 if(rememberMe){
                     repository.saveUserPhone(phone)
                 }
+                createLoginSession(result.data!!.id,rememberMe,phone)
             }
             _loginState.value = result
         }
@@ -148,6 +149,7 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
                     phone = registerForm.phone,
                     email = registerForm.email,
                     password = registerForm.password,
+                    defaultAddress = registerForm.address,
                     defaultLatitude = registerForm.latitude,
                     defaultLongitude = registerForm.longitude
                 )

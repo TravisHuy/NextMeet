@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
+import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.repository.NoteRepository
 import com.nhathuy.nextmeet.resource.FilterState
 import com.nhathuy.nextmeet.resource.NoteUiState
@@ -84,17 +85,12 @@ class NoteViewModel @Inject constructor(private val noteRepository: NoteReposito
      */
 
     fun createNote(
-        userId: Int,
-        title: String = "",
-        content: String ="",
-        noteType: NoteType = NoteType.TEXT,
-        color :String = "#ffffff",
-        checkListItems : String? = null
+        note:Note
     ){
         viewModelScope.launch {
             _uiState.value = NoteUiState.Loading
 
-            noteRepository.createNote(userId, title, content, noteType, color, checkListItems)
+            noteRepository.createNote(note.userId, note.title, note.content, note.noteType, note.color,note.isPinned,note.isShared,note.reminderTime, note.checkListItems)
                 .onSuccess { noteId ->
                     _uiState.value = NoteUiState.NoteCreated(noteId, "Ghi chú đã được tạo thành công")
                 }
@@ -270,6 +266,52 @@ class NoteViewModel @Inject constructor(private val noteRepository: NoteReposito
     }
 
     /**
+     * Thêm nhiều ảnh cho 1 ghi chú
+     */
+    fun insertImagesForNote(images: List<NoteImage>) {
+        viewModelScope.launch {
+            try {
+                noteRepository.insertImagesForNote(images)
+                _uiState.value = NoteUiState.ImagesInserted("Đã lưu ghi chú với ảnh")
+            } catch (e: Exception) {
+                _uiState.value = NoteUiState.Error(e.message ?: "Lỗi khi lưu ảnh")
+            }
+        }
+    }
+
+    /**
+     * Lấy danh sách ảnh của 1 ghi chú
+     */
+    fun getImagesForNote(noteId: Int, onResult: (List<NoteImage>) -> Unit) {
+        viewModelScope.launch {
+            val result = noteRepository.getImagesForNote(noteId)
+            if (result.isSuccess) {
+                onResult(result.getOrDefault(emptyList()))
+            } else {
+                onResult(emptyList())
+            }
+        }
+    }
+
+    /**
+     * Xóa 1 ảnh khỏi ghi chú
+     */
+    fun deleteImage(image: NoteImage) {
+        viewModelScope.launch {
+            noteRepository.deleteImage(image)
+        }
+    }
+
+    /**
+     * Xóa tất cả ảnh của 1 ghi chú
+     */
+    fun deleteImagesByNoteId(noteId: Int) {
+        viewModelScope.launch {
+            noteRepository.deleteImagesByNoteId(noteId)
+        }
+    }
+
+    /**
      * Cập nhật filter
      */
     fun updateFilter(
@@ -300,3 +342,4 @@ class NoteViewModel @Inject constructor(private val noteRepository: NoteReposito
         _uiState.value = NoteUiState.Idle
     }
 }
+

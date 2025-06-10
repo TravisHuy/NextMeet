@@ -34,7 +34,7 @@ import androidx.room.PrimaryKey
  * @since 16.5.2025
  */
 @Entity(
-    tableName = "appointments",
+    tableName = "appointment",
     foreignKeys = [ForeignKey(
         entity = Customer::class,
         parentColumns = ["id"],

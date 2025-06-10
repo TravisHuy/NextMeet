@@ -36,7 +36,6 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var selectedLatLng: LatLng? = null
     private var selectAddress: String? = null
-    private var receiverAddress: String? = null
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -49,15 +48,6 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         binding = ActivityGoogleMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        receiverAddress = intent.getStringExtra("address")
-        val receiverLat = intent.getDoubleExtra("latitude", 0.0)
-        val receiverLng = intent.getDoubleExtra("longitude", 0.0)
-
-        if (receiverLat != 0.0 && receiverLng != 0.0) {
-            selectedLatLng = LatLng(receiverLat, receiverLng)
-            selectAddress = receiverAddress
-        }
 
         initializeMap()
         initializeFusedLocation()
@@ -151,7 +141,7 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.uiSettings.isCompassEnabled = true
-        mMap.uiSettings.isMyLocationButtonEnabled = true
+//        mMap.uiSettings.isMyLocationButtonEnabled = true
 
 
         if (selectedLatLng != null) {
@@ -189,19 +179,37 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             mMap.isMyLocationEnabled = true
-            if(selectedLatLng==null){
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    location?.let {
-                        val currentLatLng = LatLng(it.latitude, it.longitude)
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
 
-                        selectedLatLng = currentLatLng
+            getCurrentLocationAndSetMarker()
 
-                        mMap.clear()
-                        mMap.addMarker(MarkerOptions().position(currentLatLng))
-                        getAddressFromLatLng(currentLatLng)
-                    }
+            mMap.setOnMyLocationButtonClickListener {
+                getCurrentLocationAndSetMarker()
+                false
+            }
+        }
+    }
+
+    // lấy vị trí hiện taị và market nó
+    private fun getCurrentLocationAndSetMarker() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                location?.let {
+                    val currentLatLng = LatLng(it.latitude, it.longitude)
+
+                    mMap.clear()
+                    selectedLatLng = currentLatLng
+                    mMap.addMarker(MarkerOptions().position(currentLatLng))
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+
+                    // Lấy địa chỉ từ tọa độ
+                    getAddressFromLatLng(currentLatLng)
                 }
+            }.addOnFailureListener {
+                Toast.makeText(this, "Không thể lấy vị trí hiện tại", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -238,7 +246,9 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
                 mMap.clear()
                 selectedLatLng = latLng
-                mMap.addMarker(MarkerOptions().position(latLng).title(address.getAddressLine(0)))
+                mMap.addMarker(
+                    MarkerOptions().position(latLng).title(address.getAddressLine(0))
+                )
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
 
                 selectAddress = address.getAddressLine(0) ?: ""
@@ -268,4 +278,23 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
         selectAddress = "${latLng.latitude}, ${latLng.longitude}"
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String?>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                enableMyLocation()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Cần cấp quyền vị trí để sử dụng tính năng này",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+    }
 }

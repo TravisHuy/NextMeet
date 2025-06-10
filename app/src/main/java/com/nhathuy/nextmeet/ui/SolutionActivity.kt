@@ -7,7 +7,9 @@ import androidx.viewpager2.widget.ViewPager2
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.ViewPagerAdapter
 import com.nhathuy.nextmeet.databinding.ActivitySolutionBinding
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class SolutionActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySolutionBinding
     private lateinit var viewPagerAdapter: ViewPagerAdapter

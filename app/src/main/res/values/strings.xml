@@ -90,6 +90,22 @@
     <string name="contact">Contact</string>
     <string name="notes_for_recent">Notes for Recent</string>
     <string name="map_for_appointment">Map for appointment</string>
-
-
+    <string name="delete_image">Delete Image</string>
+    <string name="image_note">Image Note</string>
+    <string name="reminder">Reminder</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
+    <string name="pin_unpin">Pin/Unpin</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="text">Text</string>
+    <string name="checklist">Checklist</string>
+    <string name="image">Image</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="search_contacts">Search contacts....</string>
+    <string name="add_contact">Add contact</string>
+    <string name="appointment">Appointment</string>
+    <string name="call">Call</string>
+    <string name="no_location_selected">No location selected</string>
+    <string name="meet">Meet</string>
+    <string name="add_contact_hint">%1$s</string>
 </resources>

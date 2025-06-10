@@ -14,6 +14,8 @@ sealed class NoteUiState{
     data class NoteUpdated(val message:String) :NoteUiState()
     data class NoteDeleted(val message: String):NoteUiState()
 
+    data class ImagesInserted(val message:String): NoteUiState()
+
     data class MultipleNotesDeleted(val deletedCount: Int, val message:String):NoteUiState()
     data class NotePinToggled(val isPinned:Boolean , val message:String) : NoteUiState()
 

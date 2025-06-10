@@ -21,6 +21,7 @@ import com.nhathuy.nextmeet.adapter.TabsPagerAdapter
 import com.nhathuy.nextmeet.databinding.DialogAddGridLayoutBinding
 import com.nhathuy.nextmeet.databinding.FragmentHomeBinding
 import com.nhathuy.nextmeet.model.RegistrationForm
+import com.nhathuy.nextmeet.ui.AddNoteActivity
 import com.nhathuy.nextmeet.ui.GoogleMapActivity
 import com.nhathuy.nextmeet.ui.TestActivity
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,7 +67,7 @@ class HomeFragment : Fragment() {
                 when(position){
                     0->binding.btnAdd.visibility = View.VISIBLE
                     1->binding.btnAdd.visibility = View.GONE
-                    2->binding.btnAdd.visibility = View.VISIBLE
+                    2->binding.btnAdd.visibility = View.GONE
                 }
             }
         })
@@ -78,6 +79,10 @@ class HomeFragment : Fragment() {
 
             val dialogBinding = DialogAddGridLayoutBinding.inflate(LayoutInflater.from(requireContext()))
             dialog.setContentView(dialogBinding.root)
+
+            dialogBinding.ivAddNotes.setOnClickListener {
+                startActivity(Intent(requireContext(),AddNoteActivity::class.java))
+            }
 
             dialogBinding.ivCancel.setOnClickListener {
                 dialog.dismiss()

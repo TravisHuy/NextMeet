@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#FEFEFE"
     tools:context=".fragment.NotesFragment">
-    
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
@@ -52,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-        
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -77,15 +77,6 @@
                     android:fontFamily="@font/montserrat_bold"
                     />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rv_pinned_notes"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    tools:listitem="@layout/item_note_layout" />
-
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -95,6 +86,17 @@
                     android:background="@color/gray" />
 
             </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_notes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:clipToPadding="false"
+                tools:listitem="@layout/item_note_layout" />
+
 
             <!-- Empty State -->
             <LinearLayout
@@ -127,7 +129,138 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Floating Action Button -->
+    <!-- FAB Menu Overlay (Background dimmer) -->
+    <View
+        android:id="@+id/fab_menu_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true" />
+
+
+
+    <!-- FAB Menu Items Container -->
+    <LinearLayout
+        android:id="@+id/fab_menu_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="88dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <!-- Image Note FAB -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="end|center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_image_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/fab_label_background"
+                android:elevation="4dp"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
+                android:text="Image"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_image_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Image note"
+                android:src="@drawable/ic_image"
+                app:backgroundTint="@color/light_primary"
+                app:fabSize="mini"
+                app:tint="@android:color/white" />
+
+        </LinearLayout>
+
+        <!-- Checklist Note FAB -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_check_list_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/fab_label_background"
+                android:elevation="4dp"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
+                android:text="Checklist"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_checklist_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="CheckList"
+                android:src="@drawable/ic_checklist"
+                app:backgroundTint="@color/light_primary"
+                app:fabSize="mini"
+                app:tint="@android:color/white" />
+
+        </LinearLayout>
+
+
+        <!-- Text Note FAB -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end|center_vertical"
+            >
+
+            <TextView
+                android:id="@+id/tv_text_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/fab_label_background"
+                android:elevation="4dp"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
+                android:text="Text"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_text_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Text"
+                android:src="@drawable/ic_text_fields"
+                app:backgroundTint="@color/light_primary"
+                app:fabSize="mini"
+                app:tint="@android:color/white" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Main Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_note"
         android:layout_width="wrap_content"
