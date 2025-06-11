@@ -56,7 +56,7 @@ import androidx.room.PrimaryKey
 )
 data class AppointmentPlus(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
+    val id: Int = 0,
     @ColumnInfo(name = "user_id")
     val userId: Int,
     @ColumnInfo(name = "contact_id")
@@ -84,7 +84,7 @@ data class AppointmentPlus(
     @ColumnInfo(name = "navigation_started")
     val navigationStarted: Boolean = false,
     @ColumnInfo(name = "is_pinned")
-    val isPinned:Boolean = false,
+    val isPinned: Boolean = false,
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at")

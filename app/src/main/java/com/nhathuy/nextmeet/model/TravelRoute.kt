@@ -33,10 +33,10 @@ import androidx.room.Index
     foreignKeys = [ForeignKey(
         entity = Appointment::class,
         parentColumns = ["id"],
-        childColumns = ["appointmentId"],
+        childColumns = ["appointment_id"],
         onDelete = ForeignKey.CASCADE
     )],
-    indices = [Index("appointmentId")]
+    indices = [Index("appointment_id")]
 )
 data class TravelRoute(
     val id: Int = 0,

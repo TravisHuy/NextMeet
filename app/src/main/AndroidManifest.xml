@@ -24,6 +24,9 @@
         android:theme="@style/Theme.CustomerManagementApp"
         tools:targetApi="31">
         <activity
+            android:name=".ui.NavigationMapActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.EditNoteActivity"
             android:exported="false" />
         <activity
@@ -36,7 +39,7 @@
         </activity>
         <activity
             android:name=".ui.SolutionActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".ui.TestActivity"
             android:exported="false" />

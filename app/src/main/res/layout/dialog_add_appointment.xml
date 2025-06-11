@@ -6,6 +6,7 @@
     android:layout_height="wrap_content"
     android:backgroundTint="@color/white"
     android:padding="24dp"
+    android:id="@+id/layoutAddAppointment"
     >
 
     <com.google.android.material.textfield.TextInputLayout
