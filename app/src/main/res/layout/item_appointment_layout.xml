@@ -107,7 +107,7 @@
                 />
 
             <ImageView
-                android:id="@+id/checkbox_select"
+                android:id="@+id/iv_navigation_map"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginTop="@dimen/margin_small"

@@ -45,6 +45,10 @@ class AppointmentPlusAdapter(
                 ivPin.setOnClickListener { onPinClickListener(appointment) }
 
                 setupBackgroundColor(appointment.color)
+
+                ivNavigationMap.setOnClickListener {
+                    navigationMap(appointment)
+                }
             }
         }
         private fun formatTime(time: Long?): String {

@@ -46,7 +46,7 @@
     </string-array>
 
     <string name="custom_time_format">Custom (%s)</string>
-    <string name="google_map_api_key">AIzaSyBeQYwZZC47dKippd4ocDEU-D4XkLvOkV0</string>
+    <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
     <string name="enter_name">Enter Name</string>
     <string name="enter_phone">Enter phone</string>
     <string name="enter_email">Enter email</string>

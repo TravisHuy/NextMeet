@@ -4,7 +4,9 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -40,6 +42,7 @@ import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.ui.AddNoteActivity
 import com.nhathuy.nextmeet.ui.GoogleMapActivity
 import com.nhathuy.nextmeet.ui.NavigationMapActivity
+import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
 import com.nhathuy.nextmeet.viewmodel.AppointmentViewModel
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
@@ -79,6 +82,7 @@ class AppointmentMapFragment : Fragment() {
     private var currentSearchQuery: String? = null
     private var showFavoriteOnly: Boolean = false
 
+    private var isLocationFromMap: Boolean = false
 
     private val mapPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -88,15 +92,19 @@ class AppointmentMapFragment : Fragment() {
                 location = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
                 latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
                 longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
+                isLocationFromMap = true
 
                 addAppointmentDialog?.findViewById<TextInputEditText>(
                     R.id.et_appointment_location
                 )
                     ?.let { addressEditText ->
-                        if (location != null) {
+                        if (!location.isNullOrEmpty()) {
                             addressEditText.setText(location)
+
                         } else {
                             addressEditText.setText(getString(R.string.no_location_selected))
+                            location = ""
+                            isLocationFromMap = false
                         }
                     }
             }
@@ -273,6 +281,7 @@ class AppointmentMapFragment : Fragment() {
     //chuyen sang tran hien thi ban do
     private fun handleNavigationMap(appointment: AppointmentPlus){
         val intent = Intent(requireContext(), NavigationMapActivity::class.java)
+        intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appointment.id)
         startActivity(intent)
     }
     //hien thi loading
@@ -336,6 +345,8 @@ class AppointmentMapFragment : Fragment() {
 
         setupContactDropdown(dialogBinding)
         setupColorPicker(dialogBinding)
+        setupLocationInput(dialogBinding)
+
 
         dialogBinding.btnCancel.setOnClickListener {
             dialog.dismiss()
@@ -433,6 +444,51 @@ class AppointmentMapFragment : Fragment() {
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
     }
 
+    // setup location input
+    private fun setupLocationInput(dialogBinding: DialogAddAppointmentBinding) {
+        dialogBinding.etAppointmentLocation.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val manualLocation = s?.toString()?.trim()
+
+                // Chỉ cập nhật location nếu người dùng đang nhập thủ công (không phải từ map picker)
+                if (!isLocationFromMap) {
+                    if (!manualLocation.isNullOrEmpty()) {
+                        location = manualLocation
+                        // Reset coordinates vì đây là input thủ công
+                        latitude = null
+                        longitude = null
+                    } else {
+                        location = null
+                        latitude = null
+                        longitude = null
+                    }
+                }
+
+                // Reset flag sau khi xử lý
+                if (isLocationFromMap) {
+                    isLocationFromMap = false
+                }
+            }
+        })
+        // Thêm hint cho EditText
+        dialogBinding.etAppointmentLocation.hint = "Nhập địa chỉ hoặc chọn từ bản đồ"
+
+        // Clear coordinates when user starts typing manually
+        dialogBinding.etAppointmentLocation.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && !isLocationFromMap) {
+                // User started typing manually, prepare to clear coordinates
+                val currentText = dialogBinding.etAppointmentLocation.text?.toString()?.trim()
+                if (currentText != location) {
+                    latitude = null
+                    longitude = null
+                }
+            }
+        }
+    }
     // hiển thị ra ngày ,tháng năm
     private fun showDateTimePicker(binding: DialogAddAppointmentBinding) {
 
@@ -496,7 +552,7 @@ class AppointmentMapFragment : Fragment() {
     private fun saveAppointment(dialogBinding: DialogAddAppointmentBinding){
         val title = dialogBinding.etAppointmentTitle.text?.toString()?.trim() ?: ""
         val notes = dialogBinding.etNotes.text?.toString()?.trim() ?: ""
-        val appointmentLocation = dialogBinding.etAppointmentLocation.text?.toString()?.trim() ?: ""
+        val appointmentLocation = location ?: ""
         val isPinned = dialogBinding.cbFavorite.isChecked
 
         // Validation
@@ -544,6 +600,7 @@ class AppointmentMapFragment : Fragment() {
         longitude = null
         reminderTime = null
         selectedColorName = "color_white"
+        isLocationFromMap = false
     }
 
     private fun isToday(calendar: Calendar): Boolean {
@@ -556,5 +613,11 @@ class AppointmentMapFragment : Fragment() {
         val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
         val formattedDate = formatter.format(Date(reminderTime!!))
         binding.tvReminderTime.text = formattedDate
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        addAppointmentDialog?.dismiss()
+        _binding = null
     }
 }
