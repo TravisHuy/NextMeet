@@ -31,28 +31,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/button_close"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:layout_marginBottom="@dimen/margin_medium"
-                android:contentDescription="@string/close"
-                android:elevation="4dp"
-                android:insetLeft="0dp"
-                android:insetTop="0dp"
-                android:insetRight="0dp"
-                android:insetBottom="0dp"
-                app:backgroundTint="@color/white"
-                app:cornerRadius="28dp"
-                app:elevation="4dp"
-                app:icon="@drawable/ic_cancel"
-                app:iconGravity="textStart"
-                app:iconPadding="0dp"
-                app:iconSize="24dp"
-                app:iconTint="@color/red"
-                app:rippleColor="@color/gray_light"
-                app:strokeColor="@color/gray_light"
-                app:strokeWidth="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_my_location"
@@ -125,28 +103,32 @@
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_start_navigation"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="0dp"
+            android:id="@+id/button_arrow_back"
+            android:layout_width="56dp"
             android:layout_height="56dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="@dimen/margin_large"
-            android:layout_weight="1"
-            android:fontFamily="@font/inter_bold"
-            android:text="Bắt đầu chỉ đường"
-            android:textColor="@color/gray_dark"
-            android:textSize="16sp"
-            android:textStyle="bold"
+            android:contentDescription="@string/close"
+            android:elevation="4dp"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
             app:backgroundTint="@color/white"
-            app:cornerRadius="12dp"
-            app:icon="@drawable/ic_navigation"
+            app:cornerRadius="28dp"
+            app:elevation="4dp"
+            app:icon="@drawable/ic_arrow_back"
             app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="24dp"
             app:iconTint="@null"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="@dimen/margin_large"
+            android:layout_marginStart="@dimen/margin_large"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:rippleColor="@color/gray_light"
             app:strokeColor="@color/gray_light"
-            app:strokeWidth="1dp" />
+            app:strokeWidth="1dp"
+            tools:layout_editor_absoluteX="0dp" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout
@@ -340,99 +322,99 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-            </LinearLayout>
-
-            <!-- Route Information -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-
+                <!-- Route Information -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
 
-                    <TextView
-                        android:id="@+id/tv_travel_time"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/blue"
-                        tools:text="15 phút" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:id="@+id/tv_travel_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/blue"
+                            tools:text="15 phút" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Thời gian"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/darker_gray" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="40dp"
+                        android:background="@android:color/darker_gray"
+                        android:layout_gravity="center_vertical" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Thời gian"
-                        android:textSize="12sp"
-                        android:textColor="@android:color/darker_gray" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
 
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/tv_distance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/green"
+                            tools:text="5.2 km" />
 
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="40dp"
-                    android:background="@android:color/darker_gray"
-                    android:layout_gravity="center_vertical" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Khoảng cách"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/darker_gray" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                    </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tv_distance"
-                        android:layout_width="wrap_content"
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="40dp"
+                        android:background="@android:color/darker_gray"
+                        android:layout_gravity="center_vertical" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/green"
-                        tools:text="5.2 km" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Khoảng cách"
-                        android:textSize="12sp"
-                        android:textColor="@android:color/darker_gray" />
+                        <TextView
+                            android:id="@+id/tv_arrival_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/color_orange"
+                            tools:text="14:15" />
 
-                </LinearLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Đến nơi"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/darker_gray" />
 
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="40dp"
-                    android:background="@android:color/darker_gray"
-                    android:layout_gravity="center_vertical" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:id="@+id/tv_arrival_time"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_orange"
-                        tools:text="14:15" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Đến nơi"
-                        android:textSize="12sp"
-                        android:textColor="@android:color/darker_gray" />
+                    </LinearLayout>
 
                 </LinearLayout>
 

@@ -46,5 +46,7 @@
     <color name="color_brown">#E6C9A8</color>
     <color name="color_gray">#E8EAED</color>
 
+    <color name="gray_light">#E0E0E0</color>
+    <color name="gray_dark">#424242</color>
 
 </resources>

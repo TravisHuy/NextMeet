@@ -57,7 +57,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_geo"
-                    app:tint="@color/color_red" />
+                    />
 
                 <TextView
                     android:id="@+id/appointment_location"
@@ -98,7 +98,6 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_pin"
-                app:tint="@color/color_red"
                 android:visibility="gone"
                 tools:visibility="visible"
                 app:layout_constraintTop_toTopOf="parent"

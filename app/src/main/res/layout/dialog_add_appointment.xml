@@ -81,7 +81,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/til_contact_name"
-        app:placeholderText="Nhap dia chi muon den...">
+        >
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_appointment_location"

@@ -108,4 +108,7 @@
     <string name="no_location_selected">No location selected</string>
     <string name="meet">Meet</string>
     <string name="add_contact_hint">%1$s</string>
+    <string name="close">Close</string>
+    <string name="mute">Mute</string>
+    <string name="recenter">Recenter</string>
 </resources>

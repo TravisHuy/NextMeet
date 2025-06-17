@@ -84,17 +84,15 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-        // Initialize BottomSheetBehavior early
-        bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
-        // Hide expandable content by default
-        binding.expandableContent.visibility = View.GONE
-
         val appointmentId = intent.getIntExtra(Constant.EXTRA_APPOINTMENT_ID, -1)
         if (appointmentId == -1) {
             throw IllegalStateException("Appointment ID not found")
         }
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+
+        // Initialize bottom sheet behavior
+        setupBottomSheet()
 
         lifecycleScope.launch {
             appointmentViewModel.appointmentUiState.collect { state ->
@@ -120,26 +118,29 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         setupClickListener()
     }
 
-    // set up giao dien
+    // Setup UI với thông tin appointment
     private fun setupUI() {
         appointment?.let { appt ->
             binding.apply {
-                tvAppointmentTime.text = formatAppointmentTime(appointment!!)
+                tvAppointmentTime.text = formatAppointmentTime(appt)
                 tvAppointmentTitle.text = appt.title
                 tvDestinationAddress.text = appt.location
                 Log.d("NavigationMapActivity", "Appointment: ${appt.location}")
             }
         }
+
+        // Mặc định chọn phương tiện lái xe
+        updateTransportModeUI(TransportMode.DRIVING)
     }
 
-    // khoi tao map
+    // Khởi tạo map
     private fun setupMap() {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
 
-    // khoi tao recycler view
+    // Khởi tạo recycler view
     private fun setupRecyclerView() {
         routeStepAdapter = RouteStepAdapter()
         binding.rvRouteSteps.apply {
@@ -148,53 +149,97 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // xu ly su kien click
-    private fun setupClickListener() {
-        binding.apply {
-            // Set callback for Bottom Sheet
+    // Setup BottomSheet behavior theo layout design
+    private fun setupBottomSheet() {
+        try {
+            bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
+
+            // Thiết lập behavior theo layout - peek height = 110dp, không hideable
+            bottomSheetBehavior.apply {
+                peekHeight = resources.getDimensionPixelSize(R.dimen.bottom_sheet_peek_height) // 110dp
+                isHideable = false
+                isFitToContents = false // vi tri trung gian
+                halfExpandedRatio = 0.4f // vi tri 40% chieu cao man hinh
+                state = BottomSheetBehavior.STATE_COLLAPSED
+            }
+
+            // Ẩn expandable content khi collapsed
+            binding.expandableContent.visibility = View.GONE
+
+            // Setup callback để handle state changes
             bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     when (newState) {
                         BottomSheetBehavior.STATE_EXPANDED -> {
-                            expandableContent.visibility = View.VISIBLE
+                            binding.expandableContent.visibility = View.VISIBLE
                         }
                         BottomSheetBehavior.STATE_COLLAPSED -> {
-                            expandableContent.visibility = View.GONE
+                            binding.expandableContent.visibility = View.GONE
+                        }
+                        BottomSheetBehavior.STATE_DRAGGING -> {
+                            // User đang kéo bottom sheet
+                        }
+                        BottomSheetBehavior.STATE_SETTLING -> {
+                            // Bottom sheet đang settle vào vị trí cuối
                         }
                         else -> {}
                     }
                 }
 
                 override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                    // Optional: animate expandableContent alpha if desired
+                    // Có thể thêm animation cho expandable content dựa trên slideOffset
+                    // slideOffset: 0 = collapsed, 1 = expanded
+                    binding.expandableContent.alpha = slideOffset
                 }
             })
 
-            // Only expand/collapse when clicking the peek area, not the whole sheet
+        } catch (e: Exception) {
+            Log.e("NavigationMapActivity", "Error setting up BottomSheet", e)
+        }
+    }
+
+    // Xử lý sự kiện click
+    private fun setupClickListener() {
+        binding.apply {
+            // Click vào peek content để expand/collapse bottom sheet
             peekContent.setOnClickListener {
-                if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-                } else if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                }
+                toggleBottomSheet()
             }
 
-            // Mode chon phuong tien
+            // Chọn phương tiện di chuyển
             cardDriving.setOnClickListener { selectTransportMode(TransportMode.DRIVING) }
             cardWalking.setOnClickListener { selectTransportMode(TransportMode.WALKING) }
             cardTransit.setOnClickListener { selectTransportMode(TransportMode.TRANSIT) }
 
-            //xu ly action button
+            // Action buttons
             btnStartNavigation.setOnClickListener { startNavigation() }
-            btnShareLocation.setOnClickListener { shareLocation() }
+            buttonShare.setOnClickListener { shareLocation() }
 
-            //Fab
-            fabMyLocation.setOnClickListener { moveToCurrentLocation() }
-            fabClose.setOnClickListener { finish() }
+            // FAB buttons - Fix tên theo layout
+            buttonMyLocation.setOnClickListener { moveToCurrentLocation() }
+            buttonClose.setOnClickListener { finish() }
         }
     }
 
-    //format thoi gian cua cuoc hen
+    // Toggle bottom sheet state
+    private fun toggleBottomSheet() {
+        if (::bottomSheetBehavior.isInitialized) {
+            when (bottomSheetBehavior.state) {
+                BottomSheetBehavior.STATE_COLLAPSED -> {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
+                BottomSheetBehavior.STATE_EXPANDED -> {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                }
+                else -> {
+                    // Nếu đang dragging hoặc settling, set về collapsed
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                }
+            }
+        }
+    }
+
+    // Format thời gian của cuộc hẹn
     private fun formatAppointmentTime(appointment: AppointmentPlus): String {
         val startTime = SimpleDateFormat("HH:mm", Locale.getDefault())
             .format(Date(appointment.startDateTime))
@@ -208,16 +253,16 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         googleMap.uiSettings.apply {
-            isZoomControlsEnabled = true
-            isCompassEnabled = true
-            isMyLocationButtonEnabled = false
+            isZoomControlsEnabled = false // Tắt zoom controls vì có FAB buttons
+            isCompassEnabled = false // Tắt compass vì có compass button riêng
+            isMyLocationButtonEnabled = false // Tắt vì có FAB my location riêng
         }
         checkLocationPermission()
     }
 
     private fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == android.content.pm.PackageManager.PERMISSION_GRANTED
+            == PackageManager.PERMISSION_GRANTED
         ) {
             enableMyLocation()
         } else {
@@ -241,14 +286,14 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             location?.let {
                 currentLocation = it
 
-                // lay vi tri hien tai cua nguoi dung
+                // Lấy vị trí hiện tại của người dùng
                 val currentLatLng = LatLng(it.latitude, it.longitude)
 
                 appointment?.let { appointment ->
-                    //lay toa do diem hen cua contact
+                    // Lấy tọa độ điểm hẹn
                     val destinationLatLng = LatLng(appointment.latitude, appointment.longitude)
 
-                    //them market cho diem den
+                    // Thêm marker cho điểm đến
                     googleMap.addMarker(
                         MarkerOptions().position(destinationLatLng)
                             .title(appointment.title)
@@ -256,25 +301,29 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
                     )
 
-                    // tinh toan duong di
+                    // Tính toán đường đi
                     calculateRoute(currentLatLng, destinationLatLng)
 
-                    // tạo một khoảng bao chứa cả điểm đêến và điểm đi
+                    // Tạo bounds chứa cả hai điểm
                     val boundsBuilder = LatLngBounds.Builder()
                     boundsBuilder.include(currentLatLng)
                     boundsBuilder.include(destinationLatLng)
                     val bounds = boundsBuilder.build()
-                    googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100))
+
+//                    // Padding để tránh che bởi bottom sheet (110dp peek height)
+//                    val padding = resources.getDimensionPixelSize(R.dimen.map_padding) // ~150dp
+//                    googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
                 }
             }
         }
     }
 
-    // cho phuong tien di chuyen
+    // Chọn phương tiện di chuyển
     private fun selectTransportMode(mode: TransportMode) {
         selectedTransportMode = mode
         updateTransportModeUI(mode)
 
+        // Tính lại route với phương tiện mới
         val currentLatLng = currentLocation?.let { LatLng(it.latitude, it.longitude) }
         val destinationLatLng = appointment?.let { LatLng(it.latitude, it.longitude) }
 
@@ -290,7 +339,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             cardWalking.strokeWidth = 0
             cardTransit.strokeWidth = 0
 
-            // Highlight phương tiện được chọn
+            // Highlight phương tiện được chọn với stroke color blue
             when (mode) {
                 TransportMode.DRIVING -> cardDriving.strokeWidth = 2
                 TransportMode.WALKING -> cardWalking.strokeWidth = 2
@@ -307,6 +356,8 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     if (result != null) {
                         displayRoute(result)
                         updateRouteInfo(result)
+                        // Tự động expand bottom sheet khi có thông tin route
+                        expandBottomSheetWithRouteInfo()
                     } else {
                         showError("Không thể tính toán tuyến đường")
                     }
@@ -316,6 +367,16 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     showError("Lỗi khi tính toán tuyến đường: ${e.message}")
                 }
             }
+        }
+    }
+
+    // Expand bottom sheet khi có thông tin route
+    private fun expandBottomSheetWithRouteInfo() {
+        if (::bottomSheetBehavior.isInitialized) {
+            // Delay một chút để đảm bảo UI đã update
+            binding.root.postDelayed({
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }, 300)
         }
     }
 
@@ -419,7 +480,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                                 instruction = instruction,
                                 distance = stepDistance,
                                 duration = stepDuration,
-                                iconResId = R.drawable.ic_straight
+                                iconResId = getDirectionIcon(instruction)
                             ))
                         }
                     }
@@ -447,8 +508,22 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             0
         }
     }
+    //them method de xu ly icon directions
+    private fun getDirectionIcon(instruction:String):Int{
+        return when {
+            instruction.contains("rẽ trái", ignoreCase = true) ||
+                    instruction.contains("turn left", ignoreCase = true) -> R.drawable.ic_turn_left
+            instruction.contains("rẽ phải", ignoreCase = true) ||
+                    instruction.contains("turn right", ignoreCase = true) -> R.drawable.ic_turn_right
+            instruction.contains("nhẹ trái", ignoreCase = true) ||
+                    instruction.contains("slight left", ignoreCase = true) -> R.drawable.ic_turn_slight_left
+            instruction.contains("nhẹ phải", ignoreCase = true) ||
+                    instruction.contains("slight right", ignoreCase = true) -> R.drawable.ic_turn_slight_right
+            else -> R.drawable.ic_straight
+        }
+    }
 
-    // hien thị route
+    // Hiển thị route trên map
     private fun displayRoute(routeResult: RouteResult) {
         // Xóa các polyline trước đó
         googleMap.clear()
@@ -471,13 +546,14 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             .addAll(path)
             .width(8f)
             .color(ContextCompat.getColor(this, R.color.blue))
+            .geodesic(true)
         googleMap.addPolyline(polylineOptions)
 
         // Cập nhật danh sách bước đi
         routeStepAdapter.updateSteps(routeResult.steps)
     }
 
-    // cap nhat thong tin buoc di
+    // Cập nhật thông tin route
     private fun updateRouteInfo(routeResult: RouteResult) {
         binding.apply {
             tvTravelTime.text = "${routeResult.duration} phút"
@@ -487,45 +563,17 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             val arrivalTime = System.currentTimeMillis() + (routeResult.duration * 60 * 1000)
             tvArrivalTime.text = SimpleDateFormat("HH:mm", Locale.getDefault())
                 .format(Date(arrivalTime))
-
-            // Hiển thị bottom sheet khi có thông tin route
-            showRouteInfo()
         }
     }
 
-    // Thêm phương thức để hiển thị thông tin route khi có dữ liệu
-    private fun showRouteInfo() {
-        // Khi có thông tin route, tự động mở rộng bottom sheet
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-        // Đảm bảo expandable content hiển thị khi mở rộng
-        binding.expandableContent.visibility = View.VISIBLE
-    }
-
-    /**
-     * bat dau dieu huong
-     */
+    // Bắt đầu điều hướng
     private fun startNavigation() {
         appointment?.let { appt ->
-            // Start Google Maps navigation
-            val uri = "google.navigation:q=${appt.latitude},${appt.longitude}&mode=${getNavigationMode()}"
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
-            intent.setPackage("com.google.android.apps.maps")
-
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-                updateAppointmentNavigationStatus()
-            } else {
-                showError("Google Maps không được cài đặt")
-            }
-        }
-    }
-
-    // lay navigation mode
-    private fun getNavigationMode(): String {
-        return when (selectedTransportMode) {
-            TransportMode.DRIVING -> "d"
-            TransportMode.WALKING -> "w"
-            TransportMode.TRANSIT -> "r"
+            // Start TurnByTurnNavigationActivity instead of Google Maps
+            val intent = Intent(this, TurnByTurnNavigationActivity::class.java)
+            intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appt.id)
+            startActivity(intent)
+            updateAppointmentNavigationStatus()
         }
     }
 
@@ -536,7 +584,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    //chia se vi tri location
+    // Chia sẻ vị trí location
     private fun shareLocation() {
         val shareText = appointment?.let {
             "Tôi đang đi đến: ${it.location}\n" +
@@ -554,17 +602,19 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         startActivity(Intent.createChooser(shareIntent, "Chia sẻ vị trí"))
     }
 
-    // di chuyen toi vi tri hien tai
+    // Di chuyển tới vị trí hiện tại
     private fun moveToCurrentLocation() {
         currentLocation?.let { location ->
             val currentLatLng = LatLng(location.latitude, location.longitude)
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
+        } ?: run {
+            showError("Không thể xác định vị trí hiện tại")
         }
     }
 
     /**
-     * giai ma chuoi polyline da duoc encode thanh danh sach cac diem latlng
-     * dung thuat toan polyline encoding
+     * Giải mã chuỗi polyline đã được encode thành danh sách các điểm LatLng
+     * sử dụng thuật toán polyline encoding
      */
     private fun decodePolyline(encoded: String): List<LatLng> {
         val poly = mutableListOf<LatLng>()
@@ -605,10 +655,10 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         return poly
     }
 
-    //hien thi thong bao loi
+    // Hiển thị thông báo lỗi
     private fun showError(message: String) {
-        Snackbar.make(binding.root, message, Toast.LENGTH_LONG).show()
-        Log.d("NavigationMapActivity", message)
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+        Log.e("NavigationMapActivity", message)
     }
 
     override fun onRequestPermissionsResult(
