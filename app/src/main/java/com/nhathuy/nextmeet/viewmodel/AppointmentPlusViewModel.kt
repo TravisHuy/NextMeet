@@ -24,35 +24,25 @@ class AppointmentPlusViewModel @Inject constructor(
      * Tạo cuộc hẹn mới
      */
     fun createAppointment(
-        userId: Int,
-        contactId: Int,
-        title: String = "",
-        description: String = "",
-        startDateTime: Long? = null,
-        endDateTime: Long? = null,
-        location: String = "",
-        latitude: Double = 0.0,
-        longitude: Double = 0.0,
-        status: AppointmentStatus = AppointmentStatus.SCHEDULED,
-        travelTimeMinutes: Int = 0,
-        isPinned: Boolean = false
+        appointment: AppointmentPlus
     ) {
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
                 val result = appointmentRepository.createAppointment(
-                    userId = userId,
-                    contactId = contactId,
-                    title = title,
-                    description = description,
-                    startDateTime = startDateTime,
-                    endDateTime = endDateTime,
-                    location = location,
-                    latitude = latitude,
-                    longitude = longitude,
-                    status = status,
-                    travelTimeMinutes = travelTimeMinutes,
-                    isPinned = isPinned
+                    userId = appointment.userId,
+                    contactId = appointment.contactId,
+                    title = appointment.title,
+                    description = appointment.description,
+                    startDateTime = appointment.startDateTime,
+                    endDateTime = appointment.endDateTime,
+                    location = appointment.location,
+                    latitude = appointment.latitude,
+                    longitude = appointment.longitude,
+                    status = appointment.status,
+                    color = appointment.color,
+                    travelTimeMinutes = appointment.travelTimeMinutes,
+                    isPinned = appointment.isPinned
                 )
 
                 if (result.isSuccess) {

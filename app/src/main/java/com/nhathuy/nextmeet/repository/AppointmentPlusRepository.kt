@@ -105,6 +105,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         latitude: Double = 0.0,
         longitude: Double = 0.0,
         status: AppointmentStatus = AppointmentStatus.SCHEDULED,
+        color: String = "color_white",
         travelTimeMinutes: Int = 0,
         isPinned: Boolean = false
     ): Result<Long> {
@@ -125,6 +126,11 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             )
         }
 
+        if (!isValidHexColor(color)) {
+            return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
+        }
+
+
         val appointment = AppointmentPlus(
             id = 0, // Auto-generated
             userId = userId,
@@ -138,6 +144,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             longitude = longitude,
             status = status,
             travelTimeMinutes = travelTimeMinutes,
+            color = color,
             navigationStarted = false,
             isPinned = isPinned,
             createdAt = System.currentTimeMillis(),
@@ -182,6 +189,22 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
 
         return Result.success(Unit)
     }
+
+    /**
+     * Kiểm tra hex color format hoặc tên màu hợp lệ
+     */
+    private fun isValidHexColor(color: String): Boolean {
+        // Chấp nhận tên màu resource hoặc mã hex
+        val allowedColorNames = setOf(
+            "color_white", "color_red", "color_orange", "color_yellow", "color_green",
+            "color_teal", "color_blue", "color_dark_blue", "color_purple", "color_pink",
+            "color_brown", "color_gray"
+        )
+        return color.matches(Regex("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")) || allowedColorNames.contains(
+            color
+        )
+    }
+
 
     /**
      * Cập nhật trạng thái cuộc hẹn.

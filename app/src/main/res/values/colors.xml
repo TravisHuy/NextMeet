@@ -5,7 +5,7 @@
     <color name="red">#DC0505</color>
     <color name="gray">#EAEAEA</color>
     <color name="green">#23B329</color>
-
+    <color name="blue">#3374ff</color>
     <color name="background_primary">#FEFEFE</color>
     <color name="text_primary">#1F2937</color>
 
@@ -46,5 +46,7 @@
     <color name="color_brown">#E6C9A8</color>
     <color name="color_gray">#E8EAED</color>
 
+    <color name="gray_light">#E0E0E0</color>
+    <color name="gray_dark">#424242</color>
 
 </resources>
