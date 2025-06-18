@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.inputmethod.EditorInfo
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
@@ -21,9 +22,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.search.SearchView
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -32,11 +36,14 @@ import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.AppointmentPlusAdapter
 import com.nhathuy.nextmeet.adapter.ColorPickerAdapter
 import com.nhathuy.nextmeet.adapter.ContactsAdapter
+import com.nhathuy.nextmeet.adapter.SearchSuggestionsAdapter
 import com.nhathuy.nextmeet.databinding.DialogAddAppointmentBinding
 import com.nhathuy.nextmeet.databinding.FragmentAppointmentMapBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.ContactNameId
+import com.nhathuy.nextmeet.model.SearchSuggestion
+import com.nhathuy.nextmeet.model.SearchSuggestionType
 import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.ui.AddNoteActivity
@@ -49,6 +56,7 @@ import com.nhathuy.nextmeet.viewmodel.ContactViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -76,13 +84,19 @@ class AppointmentMapFragment : Fragment() {
     private val contactMap = mutableMapOf<String, ContactNameId>()
 
     private lateinit var appointmentAdapter: AppointmentPlusAdapter
+    private lateinit var searchSuggestionsAdapter: SearchSuggestionsAdapter
+    private var allAppointments: List<AppointmentPlus> = emptyList()
+    private var searchHistory: MutableList<String> = mutableListOf()
+
     private lateinit var colorAdapter: ColorPickerAdapter
     private var selectedColorName: String = "color_white"
 
     private var currentSearchQuery: String? = null
-    private var showFavoriteOnly: Boolean = false
+    private var showPinedOnly: Boolean = false
 
     private var isLocationFromMap: Boolean = false
+
+    private var isSelectionMode: Boolean = false
 
     private val mapPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -164,6 +178,7 @@ class AppointmentMapFragment : Fragment() {
         setupObserver()
         setupFabMenu()
         setupSelectionToolbar()
+        setupSearchFeature()
         setupAppointmentObserver()
     }
 
@@ -183,8 +198,8 @@ class AppointmentMapFragment : Fragment() {
             onClickListener = { appointment ->
                 handleAppointmentClick(appointment)
             },
-            onLongClickListener = { appointment ->
-                handleAppointmentLongClick(appointment)
+            onLongClickListener = { appointment, position ->
+                handleAppointmentLongClick(appointment, position)
             },
             onPinClickListener = { appointment ->
                 togglePinned(appointment)
@@ -193,7 +208,7 @@ class AppointmentMapFragment : Fragment() {
                 handleNavigationMap(appointment)
             },
             onSelectionChanged = { count ->
-
+                updateSelectedCount(count)
             }
         )
         binding.recyclerViewAppointments.apply {
@@ -227,22 +242,48 @@ class AppointmentMapFragment : Fragment() {
     }
 
     private fun setupSelectionToolbar() {
+        binding.selectionToolbar.visibility = View.GONE
 
+        binding.btnClose.setOnClickListener {
+            closeSelectionMode()
+        }
+        binding.btnPin.setOnClickListener {
+            handlePinAction()
+        }
+        binding.btnShare.setOnClickListener {
+            handleShareAction()
+        }
+
+        binding.btnDelete.setOnClickListener {
+            handleDeleteAction()
+        }
+
+        binding.btnMore.setOnClickListener {
+            handleMoreAction()
+        }
     }
 
-    private fun setupAppointmentObserver(){
+    private fun setupSearchFeature() {
+        setupSearchBar()
+        setupSearchView()
+        setupSearchSuggestions()
+        loadSearchHistory()
+    }
+
+    private fun setupAppointmentObserver() {
         viewLifecycleOwner.lifecycleScope.launch {
-            appointmentViewModel.appointmentUiState.collect {
-                state ->
-                when(state){
+            appointmentViewModel.appointmentUiState.collect { state ->
+                when (state) {
                     is AppointmentUiState.Loading -> {
                         showLoading()
                     }
+
                     is AppointmentUiState.AppointmentsLoaded -> {
                         hideLoading()
                         appointmentAdapter.updateAppointments(state.appointments)
                         updateEmptyState(state.appointments.isEmpty())
                     }
+
                     is AppointmentUiState.AppointmentCreated -> {
                         hideLoading()
                         Snackbar.make(binding.root, state.message, Toast.LENGTH_SHORT).show()
@@ -251,39 +292,228 @@ class AppointmentMapFragment : Fragment() {
                         loadAppointments()
                         appointmentViewModel.resetUiState()
                     }
+
                     is AppointmentUiState.Error -> {
                         hideLoading()
                         Snackbar.make(binding.root, state.message, Toast.LENGTH_LONG).show()
                         appointmentViewModel.resetUiState()
                     }
+
                     is AppointmentUiState.PinToggled -> {
 //                        showMessage(state.message)
 //                        loadAppointments()
                     }
+
                     else -> {}
                 }
             }
         }
     }
 
-    private fun handleAppointmentClick(appointment: AppointmentPlus){
+
+    private fun setupSearchBar() {
+        binding.searchBar.setOnClickListener {
+            binding.searchView.show()
+        }
+
+        binding.searchBar.inflateMenu(R.menu.search_filter_menu)
+        binding.searchBar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_filter_pinned -> {
+                    showPinedOnly = !showPinedOnly
+                    menuItem.isChecked = showPinedOnly
+                    loadAppointments()
+                    true
+                }
+
+                R.id.action_filter_today -> {
+                    filterTodayAppointments()
+                    true
+                }
+
+                R.id.action_filter_upcoming -> {
+                    filterUpcomingAppointments()
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    // thiết lập search view
+    private fun setupSearchView() {
+        val searchRecyclerView = RecyclerView(requireContext())
+        searchRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        binding.searchView.addView(searchRecyclerView)
+
+        binding.searchView.editText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
+                handleSearchInput(query)
+            }
+        })
+
+        binding.searchView.editText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val query = binding.searchView.editText.text?.toString()?.trim() ?: ""
+                performSearch(query)
+                true
+            } else {
+                false
+            }
+        }
+
+        // handle search view hide/show
+        binding.searchView.addTransitionListener { searchView, previousState, newState ->
+            when (newState) {
+                SearchView.TransitionState.SHOWING -> {
+                    generateSearchSuggestions("")
+                }
+
+                SearchView.TransitionState.HIDDEN -> {
+                    clearSearchResults()
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    // thiết lập gợi ý tìm kiếm
+    private fun setupSearchSuggestions() {
+        searchSuggestionsAdapter = SearchSuggestionsAdapter(
+            onSuggestionClick = { suggestion ->
+                performSearch(suggestion)
+                binding.searchView.hide()
+            },
+            onDeleteSuggestion = { suggestion ->
+                removeFromSearchHistory(suggestion)
+            }
+        )
+    }
+
+    // xử lý input tìm kiếm
+    private fun handleSearchInput(query: String) {
+        if (query.isEmpty()) {
+            generateSearchSuggestions("")
+        } else {
+            generateSearchSuggestions(query)
+            performRealTimeSearch(query)
+        }
+    }
+
+    //tạo lịch sử đề xuất
+    private fun generateSearchSuggestions(query: String) {
+        val suggestions = mutableListOf<SearchSuggestion>()
+
+        //1.search history suggestions
+        if (query.isEmpty()) {
+            searchHistory.take(5).forEach { historyItem ->
+                suggestions.add(
+                    SearchSuggestion(
+                        text = historyItem,
+                        type = SearchSuggestionType.HISTORY,
+                        icon = R.drawable.ic_history
+                    )
+                )
+            }
+        } else {
+            // Filtered history
+            searchHistory.filter { it.contains(query, ignoreCase = true) }
+                .take(3).forEach { historyItem ->
+                    suggestions.add(
+                        SearchSuggestion(
+                            text = historyItem,
+                            type = SearchSuggestionType.HISTORY,
+                            icon = R.drawable.ic_history
+                        )
+                    )
+                }
+        }
+        // 2. Auto-complete suggestions based on appointment data
+        val autocompleteSuggestions = generateAutocompleteSuggestions(query)
+        suggestions.addAll(autocompleteSuggestions)
+
+        // 3. Quick filter suggestions
+        if (query.isEmpty()) {
+            suggestions.addAll(getQuickFilterSuggestions())
+        }
+
+        searchSuggestionsAdapter.updateSuggestions(suggestions)
 
     }
-    private fun handleAppointmentLongClick(appointment: AppointmentPlus){
 
+    // load lịch sử tìm kiếm
+    private fun loadSearchHistory() {
+
+    }
+
+    // lọc theo ngày hẹn
+    private fun filterTodayAppointments() {
+
+    }
+
+    // lọc cuộn hẹn trong sắp tới
+    private fun filterUpcomingAppointments() {
+
+    }
+
+    private fun handleAppointmentClick(appointment: AppointmentPlus) {
+
+    }
+
+    private fun handleAppointmentLongClick(appointment: AppointmentPlus, position: Int) {
+        if (!appointmentAdapter.isMultiSelectMode()) {
+            appointmentAdapter.setMultiSelectionMode(true)
+        }
+    }
+
+    private fun updateSelectedCount(count: Int) {
+        binding.tvSelectionCount.text = if (count > 1) {
+            "$count selected contants"
+        } else {
+            "$count selected contant"
+        }
+        if (count == 0 && isSelectionMode) {
+            closeSelectionMode()
+        } else if (count > 0 && !isSelectionMode) {
+            enterSelectionMode()
+        }
+    }
+
+    // đóng chế độ chọn
+    private fun closeSelectionMode() {
+        isSelectionMode = false
+        binding.selectionToolbar.visibility = View.GONE
+        binding.appBarLayout.visibility = View.VISIBLE
+        appointmentAdapter.setMultiSelectionMode(false)
+        appointmentAdapter.clearSelection()
+    }
+
+    // vào chế độ chọn
+    private fun enterSelectionMode() {
+        isLocationFromMap = true
+        binding.selectionToolbar.visibility = View.VISIBLE
+        binding.appBarLayout.visibility = View.GONE
     }
 
     //toggle pinned
-    private fun togglePinned(appointment: AppointmentPlus){
+    private fun togglePinned(appointment: AppointmentPlus) {
         appointmentViewModel.togglePin(appointment.id)
     }
 
     //chuyen sang tran hien thi ban do
-    private fun handleNavigationMap(appointment: AppointmentPlus){
+    private fun handleNavigationMap(appointment: AppointmentPlus) {
         val intent = Intent(requireContext(), NavigationMapActivity::class.java)
         intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appointment.id)
         startActivity(intent)
     }
+
     //hien thi loading
     private fun showLoading() {
         binding.swipeRefreshAppointments.isRefreshing = true
@@ -319,7 +549,7 @@ class AppointmentMapFragment : Fragment() {
             appointmentViewModel.getAllAppointments(
                 userId = currentUserId,
                 searchQuery = currentSearchQuery ?: "",
-                showPinnedOnly = showFavoriteOnly,
+                showPinnedOnly = showPinedOnly,
                 status = AppointmentStatus.SCHEDULED
             )
         }
@@ -474,8 +704,8 @@ class AppointmentMapFragment : Fragment() {
                 }
             }
         })
-        // Thêm hint cho EditText
-        dialogBinding.etAppointmentLocation.hint = "Nhập địa chỉ hoặc chọn từ bản đồ"
+//        // Thêm hint cho EditText
+//        dialogBinding.etAppointmentLocation.hint = ""
 
         // Clear coordinates when user starts typing manually
         dialogBinding.etAppointmentLocation.setOnFocusChangeListener { _, hasFocus ->
@@ -489,6 +719,7 @@ class AppointmentMapFragment : Fragment() {
             }
         }
     }
+
     // hiển thị ra ngày ,tháng năm
     private fun showDateTimePicker(binding: DialogAddAppointmentBinding) {
 
@@ -505,14 +736,14 @@ class AppointmentMapFragment : Fragment() {
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = selectedDate
 
-            showTimePicker(calendar,binding)
+            showTimePicker(calendar, binding)
         }
 
         datePicker.show(childFragmentManager, "date_picker")
     }
 
     // hiển thị thời gian chọn
-    private fun showTimePicker(calendar: Calendar,binding: DialogAddAppointmentBinding) {
+    private fun showTimePicker(calendar: Calendar, binding: DialogAddAppointmentBinding) {
         val now = Calendar.getInstance()
 
         val timePicker = MaterialTimePicker.Builder()
@@ -532,7 +763,11 @@ class AppointmentMapFragment : Fragment() {
                         Calendar.MINUTE
                     )
                 ) {
-                    Toast.makeText(requireContext(), "Please select a future time", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Please select a future time",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@addOnPositiveButtonClickListener
                 }
             }
@@ -549,7 +784,7 @@ class AppointmentMapFragment : Fragment() {
         timePicker.show(childFragmentManager, "time_picker")
     }
 
-    private fun saveAppointment(dialogBinding: DialogAddAppointmentBinding){
+    private fun saveAppointment(dialogBinding: DialogAddAppointmentBinding) {
         val title = dialogBinding.etAppointmentTitle.text?.toString()?.trim() ?: ""
         val notes = dialogBinding.etNotes.text?.toString()?.trim() ?: ""
         val appointmentLocation = location ?: ""
@@ -569,13 +804,15 @@ class AppointmentMapFragment : Fragment() {
         }
 
         if (reminderTime == null) {
-            Toast.makeText(requireContext(), "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
         val endTime = reminderTime!! + (60 * 60 * 1000) // Add 1 hour
 
-        val appointment = AppointmentPlus(userId = currentUserId,
+        val appointment = AppointmentPlus(
+            userId = currentUserId,
             contactId = currentContactId,
             title = title,
             description = notes,
@@ -587,7 +824,8 @@ class AppointmentMapFragment : Fragment() {
             status = AppointmentStatus.SCHEDULED,
             color = selectedColorName,
             travelTimeMinutes = 0,
-            isPinned = isPinned)
+            isPinned = isPinned
+        )
 
         // tạo cuoc hẹn
         appointmentViewModel.createAppointment(appointment)
@@ -613,6 +851,70 @@ class AppointmentMapFragment : Fragment() {
         val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
         val formattedDate = formatter.format(Date(reminderTime!!))
         binding.tvReminderTime.text = formattedDate
+    }
+
+    // xu ly action pin
+    private fun handlePinAction() {
+        val selectedAppointments = appointmentAdapter.getSelectedAppointments()
+        selectedAppointments.forEach {
+            appointmentViewModel.togglePin(it.id)
+        }
+        showMessage("Đã cập nhật trạng thái ghim cho ${selectedAppointments.size} cuộc hẹn")
+        closeSelectionMode()
+    }
+
+    // xu ly action share
+    private fun handleShareAction() {
+        val selectedContacts = appointmentAdapter.getSelectedAppointments()
+        if (selectedContacts.isNotEmpty()) {
+            val shareText = buildString {
+                append("Thông tin cuộc hẹn:\n\n")
+                selectedContacts.forEach { appointment ->
+                    append("Tiêu đề: ${appointment.title}\n")
+                    append("Nội dung: ${appointment.description}\n")
+                    append("Địa chỉ: ${appointment.location}\n")
+                    append("\n")
+                }
+            }
+
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, shareText)
+            }
+
+            startActivity(Intent.createChooser(shareIntent, "Chia sẻ cuộn hẹn"))
+        }
+        closeSelectionMode()
+    }
+
+    // xử lý delete
+    private fun handleDeleteAction() {
+        val selectedAppointments = appointmentAdapter.getSelectedAppointments()
+        if (selectedAppointments.isNotEmpty()) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Xóa cuộc hẹn")
+                .setMessage("Bạn có chắc chắn muốn xóa ${selectedAppointments.size} cuộc hẹn đã chọn?")
+                .setPositiveButton("Xóa") { dialog, _ ->
+                    selectedAppointments.forEach { appointment ->
+                        appointmentViewModel.deleteAppointment(appointment.id)
+                    }
+                    showMessage("Đã xóa ${selectedAppointments.size} cuộc hẹn")
+                    closeSelectionMode()
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Hủy") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+        } else {
+            closeSelectionMode()
+        }
+    }
+
+    // xử lý action more
+    private fun handleMoreAction() {
+
     }
 
     override fun onDestroyView() {

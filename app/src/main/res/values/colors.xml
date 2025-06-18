@@ -48,5 +48,8 @@
 
     <color name="gray_light">#E0E0E0</color>
     <color name="gray_dark">#424242</color>
+    <color name="selection_border_color">#075898</color>
+
+
 
 </resources>

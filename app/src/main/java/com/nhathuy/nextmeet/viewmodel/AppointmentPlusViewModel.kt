@@ -9,7 +9,9 @@ import com.nhathuy.nextmeet.resource.AppointmentUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,6 +21,17 @@ class AppointmentPlusViewModel @Inject constructor(
 
     private val _appointmentUiState = MutableStateFlow<AppointmentUiState>(AppointmentUiState.Idle)
     val appointmentUiState: StateFlow<AppointmentUiState> = _appointmentUiState
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery : StateFlow<String>  = _searchQuery.asStateFlow()
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
+
+    private val _searchSuggestions = MutableStateFlow<List<String>>(emptyList())
+    val searchSuggestion:StateFlow<List<String>> = _searchSuggestions.asStateFlow()
+
+    private var allAppointments : List<AppointmentPlus> = emptyList()
 
     /**
      * Tạo cuộc hẹn mới
@@ -238,9 +251,245 @@ class AppointmentPlusViewModel @Inject constructor(
     }
 
     /**
+     * Tìm kiếm cuộc hẹn với từ khóa
+     */
+    fun searchAppointments(
+        userId: Int,
+        query: String,
+        searchInTitle: Boolean = true,
+        searchInDescription: Boolean = true,
+        searchInLocation: Boolean = true,
+        searchInContactName: Boolean = true
+    ) {
+        _searchQuery.value = query
+        _isSearching.value = query.isNotEmpty()
+
+        if (query.isEmpty()) {
+            // Nếu query rỗng, hiển thị tất cả appointments
+            _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(allAppointments)
+            return
+        }
+
+        viewModelScope.launch {
+            _appointmentUiState.value = AppointmentUiState.Loading
+            try {
+                appointmentRepository.searchAppointments(
+                    userId = userId,
+                    query = query,
+                    searchInTitle = searchInTitle,
+                    searchInDescription = searchInDescription,
+                    searchInLocation = searchInLocation,
+                    searchInContactName = searchInContactName
+                ).collect { appointments ->
+                    _appointmentUiState.value = AppointmentUiState.SearchResults(query,appointments)
+                }
+            } catch (e: Exception) {
+                _appointmentUiState.value = AppointmentUiState.NoSearchResults(
+                    e.message ?: "Lỗi khi tìm kiếm cuộc hẹn"
+                )
+            }
+        }
+    }
+
+    /**
+     * Lấy goi ý tìm kiếm
+     */
+
+    fun getSearchSuggestions(currentUserId:Int,query: String){
+        viewModelScope.launch {
+            try {
+                val suggestions = appointmentRepository.getSearchSuggestions(currentUserId,query)
+                _searchSuggestions.value = suggestions
+            }
+            catch (e:Exception){
+                _searchSuggestions.value = emptyList()
+            }
+        }
+    }
+
+    /**
+     * Lọc cuộn hẹn theo ngày hôm nay
+     */
+    fun getTodayAppointments(){
+        viewModelScope.launch {
+            _appointmentUiState.value = AppointmentUiState.Loading
+            try {
+                val startOfDay = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY,0)
+                    set(Calendar.MINUTE,0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                val endOfDay = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }.timeInMillis
+
+                val todayAppointments = allAppointments.filter { appointment ->
+                    appointment.startDateTime >= startOfDay && appointment.startDateTime <= endOfDay
+                }.sortedBy { it.startDateTime }
+
+                _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(todayAppointments)
+            }
+            catch (e:Exception){
+
+            }
+        }
+    }
+
+    /**
+     * Lọc cuộc hẹn sắp tới(từ bây giờ trở đi)
+     */
+    fun getUpcomingAppointments(){
+        viewModelScope.launch {
+            _appointmentUiState.value = AppointmentUiState.Loading
+
+            try {
+                val now = System.currentTimeMillis()
+                val upcommingAppointments = allAppointments.filter { appointment ->
+                    appointment.startDateTime > now
+                }.sortedBy { it.startDateTime }
+                _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(upcommingAppointments)
+            }
+            catch (e:Exception){
+                _appointmentUiState.value = AppointmentUiState.Error(
+                    e.message ?: "Lỗi khi lọc cuộc hẹn sắp tới"
+                )
+            }
+        }
+    }
+
+    /**
+     * Lọc cuộc hẹn trong tuần này
+     */
+    fun getThisWeekAppointments() {
+
+        viewModelScope.launch {
+            _appointmentUiState.value = AppointmentUiState.Loading
+            try {
+                val startOfWeek = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                val endOfWeek = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }.timeInMillis
+
+                val thisWeekAppointments = allAppointments.filter { appointment ->
+                    appointment.startDateTime >= startOfWeek && appointment.startDateTime <= endOfWeek
+                }.sortedBy { it.startDateTime }
+
+                _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(thisWeekAppointments)
+            } catch (e: Exception) {
+                _appointmentUiState.value = AppointmentUiState.Error(
+                    e.message ?: "Lỗi khi lọc cuộc hẹn tuần này"
+                )
+            }
+        }
+    }
+
+    /**
+     * Lọc cuộc hẹn đã ghim
+     */
+    fun getPinnedAppointments() {
+
+        viewModelScope.launch {
+            _appointmentUiState.value = AppointmentUiState.Loading
+            try {
+                val pinnedAppointments = allAppointments.filter { it.isPinned }
+                    .sortedBy { it.startDateTime }
+
+                _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(pinnedAppointments)
+            } catch (e: Exception) {
+                _appointmentUiState.value = AppointmentUiState.Error(
+                    e.message ?: "Lỗi khi lọc cuộc hẹn đã ghim"
+                )
+            }
+        }
+    }
+
+    /**
+     * Lọc cuộc hẹn theo trạng thái
+     */
+    fun getAppointmentsByStatus(status: AppointmentStatus) {
+
+        viewModelScope.launch {
+            _appointmentUiState.value = AppointmentUiState.Loading
+            try {
+                val filteredAppointments = allAppointments.filter {
+                    it.status == status
+                }.sortedBy { it.startDateTime }
+
+                _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(filteredAppointments)
+            } catch (e: Exception) {
+                _appointmentUiState.value = AppointmentUiState.Error(
+                    e.message ?: "Lỗi khi lọc cuộc hẹn theo trạng thái"
+                )
+            }
+        }
+    }
+
+    /**
+     * Lấy gợi ý tìm kiếm
+     */
+
+    /**
      * Reset UI state về Idle
      */
     fun resetUiState() {
         _appointmentUiState.value = AppointmentUiState.Idle
+    }
+
+    /**
+     * Clear search query và reset về danh sách ban đầu
+     */
+    fun clearSearch(currentUserId: Int) {
+        _searchQuery.value = ""
+        _isSearching.value = false
+        if (currentUserId != -1) {
+            _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(allAppointments)
+        }
+    }
+
+    /**
+     * Lấy số lượng cuộc hẹn theo các tiêu chi
+     */
+    fun getAppointmentCounts() : Map<String,Int> {
+        val now = System.currentTimeMillis()
+        val startOfToday = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val endOfToday = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }.timeInMillis
+
+        return mapOf(
+            "total" to allAppointments.size,
+            "today" to allAppointments.count {
+                it.startDateTime >= startOfToday && it.startDateTime <= endOfToday
+            },
+            "upcoming" to allAppointments.count { it.startDateTime > now },
+            "pinned" to allAppointments.count { it.isPinned },
+            "completed" to allAppointments.count { it.status == AppointmentStatus.COMPLETED },
+            "cancelled" to allAppointments.count { it.status == AppointmentStatus.CANCELLED }
+        )
     }
 }
