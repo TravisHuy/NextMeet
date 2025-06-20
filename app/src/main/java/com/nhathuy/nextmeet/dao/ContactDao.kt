@@ -22,7 +22,7 @@ interface ContactDao {
      * Lấy liên hệ theo ID
      */
     @Query("SELECT * FROM contacts WHERE id =:contactId")
-    suspend fun getContactById(contactId: Int) : Contact?
+    suspend fun getContactById(contactId: Int): Contact?
 
     /**
      * Lấy tất cả liên hệ cua người dùng, sắp xếp theo thời gian và yêu thích.
@@ -39,22 +39,30 @@ interface ContactDao {
     /**
      * Lấy contact yeu thich
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM contacts
         WHERE user_id =:userId AND is_favorite =1
         ORDER BY updated_at DESC
-    """)
+    """
+    )
     fun getFavoriteContacts(userId: Int): Flow<List<Contact>>
 
     /**
      * Cập nhật trạng thái favorite
      */
-    @Query("""
+    @Query(
+        """
         UPDATE contacts
         SET is_favorite = :isFavorited , updated_at =:updatedAt
         WHERE id = :contactId
-    """)
-    suspend fun updateFavoriteStatus(contactId:Int, isFavorited:Boolean, updatedAt: Long = System.currentTimeMillis())
+    """
+    )
+    suspend fun updateFavoriteStatus(
+        contactId: Int,
+        isFavorited: Boolean,
+        updatedAt: Long = System.currentTimeMillis()
+    )
 
     /**
      * Xoa liên hệ theo Id
@@ -67,10 +75,55 @@ interface ContactDao {
      * @param userId ID của người dùng
      * @return Flow chứa danh sách các đối tượng ContactNameId
      */
-    @Query("""
+    @Query(
+        """
         SELECT id, name FROM contacts
         WHERE user_id = :userId
         ORDER BY name ASC
-    """)
+    """
+    )
     fun getContactNamesAndIds(userId: Int): Flow<List<ContactNameId>>
+
+
+    /**
+     * tìm kiếm liên hệ theo tên, số điện thoại, email, địa chỉ, vai trò và ghi chú
+     */
+    @Query(
+        """
+        SELECT * FROM contacts
+        WHERE user_id = :userId
+        AND (name LIKE '%' || :query || '%' OR phone LIKE '%' || :query || '%'
+            OR email LIKE '%' || :query || '%' 
+             OR address LIKE '%' || :query || '%'
+             OR role LIKE '%' || :query || '%'
+             OR notes LIKE '%' || :query || '%')
+        ORDER BY 
+        CASE WHEN is_favorite = 1 THEN 0 ELSE 1 END,
+         CASE 
+        WHEN name LIKE :query || '%' THEN 1
+        WHEN name LIKE '%' || :query || '%' THEN 2
+        ELSE 3 END,
+        name ASC
+        """
+    )
+    fun searchContacts(userId: Int, query: String): Flow<List<Contact>>
+
+    /**
+     * Lấy liên hệ đề xuất tối đa theo tên
+     */
+    @Query("SELECT DISTINCT name FROM contacts WHERE user_id = :userId AND name LIKE :query || '%' ORDER BY name LIMIT :limit")
+    fun getNameSuggestions(userId: Int, query:String, limit : Int =  5): Flow<List<String>>
+
+    /**
+     * Lấy liên hệ đề xuất tối đa theo địa chỉ
+     */
+    @Query("SELECT DISTINCT address FROM contacts WHERE user_id = :userId AND address != '' AND address LIKE :query || '%' ORDER BY address LIMIT :limit")
+    fun getAddressSuggestions(userId: Int, query: String, limit: Int = 5): Flow<List<String>>
+
+    /**
+     * Lấy liện hệ đề xuất tối đa theo vai trò
+     */
+    @Query("SELECT DISTINCT role FROM contacts WHERE user_id = :userId AND role != '' AND role LIKE :query || '%' ORDER BY role LIMIT :limit")
+    fun getRoleSuggestions(userId: Int, query: String, limit: Int = 5): Flow<List<String>>
+
 }

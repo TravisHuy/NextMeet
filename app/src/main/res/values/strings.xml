@@ -1,26 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App Info -->
     <string name="app_name">TravisHuy</string>
+
+    <!-- Common -->
     <string name="error">Error</string>
-    <string name="error_password">Password must greater than 5 character</string>
-    <string name="register_successfull">Register Successfull</string>
-    <string name="login_failed">Login failed. invalid phone or password</string>
+    <string name="notification">Notification</string>
+    <string name="search">Search</string>
+    <string name="close">Close</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+
+    <!-- Authentication -->
+    <string name="error_password">Password must be greater than 5 characters</string>
+    <string name="register_successful">Registration Successful</string>
+    <string name="login_failed">Login failed. Invalid phone or password</string>
     <string name="login_successfully">Login Successfully</string>
     <string name="all_fields_are_required">All fields are required</string>
     <string name="error_phone">The phone number must have 10 digits</string>
     <string name="error_name">Name must not exceed 25 characters</string>
-    <string name="notification">Notification</string>
-    <string name="search">Search</string>
+    <string name="email_invalid">Email invalid</string>
+    <string name="invalid_password">Incorrect password</string>
+    <string name="user_not_found">Account does not exist</string>
+    <string name="password_update_success">Password updated successfully</string>
+    <string name="password_update_failed">Password update failed</string>
+    <string name="registration_failed">Registration failed</string>
+    <string name="logout">Logout</string>
+    <string name="logout_confirmation_title">Confirm Logout</string>
+    <string name="logout_confirmation_message">Are you sure you want to logout?</string>
+    <string name="logout_success">Logout successful</string>
+    <string name="logout_failed">Logout failed</string>
+
+    <!-- Navigation -->
     <string name="home">Home</string>
     <string name="transaction">Transaction</string>
     <string name="alarm">Alarm</string>
     <string name="about">About</string>
 
+    <!-- Input Fields -->
+    <string name="enter_name">Enter Name</string>
+    <string name="enter_phone">Enter Phone</string>
+    <string name="enter_email">Enter Email</string>
+    <string name="enter_address">Enter Address</string>
+    <string name="enter_group">Enter Group</string>
+    <string name="enter_notes">Enter Notes</string>
+    <string name="enter_password">Enter Password</string>
 
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="pick_date_amp_time"><![CDATA[Pick date & time]]></string>
+    <!-- Date & Time -->
+    <string name="pick_date_amp_time"><![CDATA[Pick Date & Time]]></string>
     <string name="pick_place">Pick Place</string>
+    <string name="custom_time_format">Custom (%s)</string>
 
+    <!-- Location -->
+    <string name="add_address">Add Address</string>
+    <string name="address_not_found">Address not found</string>
+    <string name="location_not_found">Location not found</string>
+    <string name="please_select_location">Please select location</string>
+    <string name="no_location_selected">No location selected</string>
+    <string name="map_type_normal">Normal</string>
+    <string name="map_type_satellite">Satellite</string>
+    <string name="recenter">Recenter</string>
 
+    <!-- User Info -->
+    <string name="user_information">User Information</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="remember_me_status">Remember Me: %s</string>
+    <string name="location_format">Location: Lat: %1$s, Long: %2$s</string>
+    <string name="login_time_format">Login time: %s</string>
+    <string name="welcome_message">Welcome to NextMeet!\nYou have successfully logged in.</string>
+
+    <!-- Appointments & Notes -->
+    <string name="appointment_for_today">Appointments for Today</string>
+    <string name="view_all">View All</string>
+    <string name="notes">Notes</string>
+    <string name="contact">Contact</string>
+    <string name="notes_for_recent">Recent Notes</string>
+    <string name="map_for_appointment">Appointment Map</string>
+    <string name="appointment">Appointment</string>
+    <string name="title_appointment">Appointment Title</string>
+    <string name="title_note">Note Title</string>
+    <string name="reminder">Reminder</string>
+    <string name="meet">Meet</string>
+    <string name="call">Call</string>
+    <string name="mute">Mute</string>
+
+    <!-- Content Types -->
+    <string name="delete_image">Delete Image</string>
+    <string name="image_note">Image Note</string>
+    <string name="pin_unpin">Pin/Unpin</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="text">Text</string>
+    <string name="checklist">Checklist</string>
+    <string name="check_list">Checklist</string>
+    <string name="image">Image</string>
+
+    <!-- Contacts -->
+    <string name="search_contacts">Search contacts...</string>
+    <string name="add_contact">Add Contact</string>
+    <string name="add_contact_hint">%1$s</string>
+    <string name="name_contact">Contact Name</string>
+    <string name="address">Address</string>
+    <string name="favorite">Favorite</string>
+    <string name="have_phone_number">Has Phone Number</string>
+    <string name="have_email">Has Email</string>
+    <string name="have_address">Has Address</string>
+
+    <!-- Search & History -->
+    <string name="search_recent">Recent Search</string>
+    <string name="search_history">Search History</string>
+    <string name="search_trending">Trending (%1$d times)</string>
+
+    <!-- Categories -->
+    <string name="upcoming">Upcoming</string>
+    <string name="pinned">Pinned</string>
+    <string name="weekend">This Week</string>
+    <string name="recent">Recent</string>
+
+    <!-- Fragment -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- API Key (Keep as is) -->
+    <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
+
+    <!-- String Arrays -->
     <string-array name="day_options">
         <item>Today</item>
         <item>Tomorrow</item>
@@ -44,71 +151,4 @@
         <item>Repeat yearly</item>
         <item>Custom...</item>
     </string-array>
-
-    <string name="custom_time_format">Custom (%s)</string>
-    <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
-    <string name="enter_name">Enter Name</string>
-    <string name="enter_phone">Enter phone</string>
-    <string name="enter_email">Enter email</string>
-    <string name="email_invalid">Email invalid</string>
-    <string name="enter_address">Enter Address</string>
-    <string name="enter_group">Enter Group</string>
-    <string name="enter_notes">Enter Notes</string>
-    <string name="enter_password">Enter password</string>
-    <string name="add_address">Add address</string>
-    <string name="address_not_found">Address not found</string>
-    <string name="location_not_found">Location not found</string>
-    <string name="please_select_location">Please select location</string>
-    <string name="map_type_normal">Normal</string>
-    <string name="map_type_statellite">Satellite</string>
-
-    <string name="user_information">Thông tin người dùng</string>
-    <string name="enabled">Đã bật</string>
-    <string name="disabled">Đã tắt</string>
-    <string name="remember_me_status">Remember Me: %s</string>
-    <string name="location_format">Vị trí: Lat: %1$s, Long: %2$s</string>
-    <string name="login_time_format">Thời gian đăng nhập: %s</string>
-    <string name="welcome_message">Chào mừng bạn đến với NextMeet!\nBạn đã đăng nhập thành công.</string>
-    <string name="logout">Đăng xuất</string>
-    <string name="logout_confirmation_title">Xác nhận đăng xuất</string>
-    <string name="logout_confirmation_message">Bạn có chắc chắn muốn đăng xuất?</string>
-    <string name="yes">Có</string>
-    <string name="no">Không</string>
-    <string name="logout_success">Đăng xuất thành công</string>
-    <string name="logout_failed">Đăng xuất thất bại</string>
-
-
-    <string name="invalid_password">Mật khẩu không chính xác</string>
-    <string name="user_not_found">Tài khoản không tồn tại</string>
-    <string name="password_update_success">Cập nhật mật khẩu thành công</string>
-    <string name="password_update_failed">Cập nhật mật khẩu thất bại</string>
-    <string name="registration_failed">Đăng ký thất bại</string>
-    <string name="today">Today</string>
-    <string name="appointment_for_today">Appointment for today</string>
-    <string name="view_all">View All</string>
-    <string name="notes">Notes</string>
-    <string name="contact">Contact</string>
-    <string name="notes_for_recent">Notes for Recent</string>
-    <string name="map_for_appointment">Map for appointment</string>
-    <string name="delete_image">Delete Image</string>
-    <string name="image_note">Image Note</string>
-    <string name="reminder">Reminder</string>
-    <string name="delete">Delete</string>
-    <string name="share">Share</string>
-    <string name="pin_unpin">Pin/Unpin</string>
-    <string name="duplicate">Duplicate</string>
-    <string name="text">Text</string>
-    <string name="checklist">Checklist</string>
-    <string name="image">Image</string>
-    <string name="tomorrow">Tomorrow</string>
-    <string name="search_contacts">Search contacts....</string>
-    <string name="add_contact">Add contact</string>
-    <string name="appointment">Appointment</string>
-    <string name="call">Call</string>
-    <string name="no_location_selected">No location selected</string>
-    <string name="meet">Meet</string>
-    <string name="add_contact_hint">%1$s</string>
-    <string name="close">Close</string>
-    <string name="mute">Mute</string>
-    <string name="recenter">Recenter</string>
 </resources>

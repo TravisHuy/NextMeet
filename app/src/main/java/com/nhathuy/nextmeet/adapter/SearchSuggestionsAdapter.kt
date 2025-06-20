@@ -8,14 +8,14 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.ItemSearchSuggestionBinding
+import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchSuggestionType
 
 class SearchSuggestionsAdapter(
     private val onSuggestionClick: (String) -> Unit,
     private val onDeleteSuggestion: (String) -> Unit
-) : ListAdapter<SearchSuggestion, SearchSuggestionsAdapter.SuggestionViewHolder>(DiffCallback()) {
-
+) : ListAdapter<SearchSuggestion, SearchSuggestionsAdapter.SuggestionViewHolder>(DiffCallback) {
 
     inner class SuggestionViewHolder(
         private val binding: ItemSearchSuggestionBinding
@@ -44,17 +44,26 @@ class SearchSuggestionsAdapter(
 
                 root.setOnClickListener { onSuggestionClick(suggestion.text) }
 
-                when(suggestion.type){
+                if (suggestion.resultCount > 0) {
+                    binding.tvResultCount.text = "${suggestion.resultCount} results"
+                    binding.tvResultCount.visibility = View.VISIBLE
+                } else {
+                    binding.tvResultCount.visibility = View.GONE
+                }
+
+                when (suggestion.type) {
                     SearchSuggestionType.HISTORY -> {
                         tvSuggestionText.setTextColor(
-                            root.context.getColor(R.color.light_on_secondary)
+                            root.context.getColor(R.color.black)
                         )
                     }
+
                     SearchSuggestionType.QUICK_FILTER -> {
                         tvSuggestionText.setTextColor(
                             root.context.getColor(R.color.light_primary)
                         )
                     }
+
                     else -> {
                         tvSuggestionText.setTextColor(
                             root.context.getColor(R.color.text_primary)
@@ -79,26 +88,17 @@ class SearchSuggestionsAdapter(
         return SuggestionViewHolder(binding)
     }
 
-    override fun onBindViewHolder(
-        holder: SearchSuggestionsAdapter.SuggestionViewHolder,
-        position: Int
-    ) {
+
+    override fun onBindViewHolder(holder: SuggestionViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-
-    private class DiffCallback : DiffUtil.ItemCallback<SearchSuggestion>() {
-        override fun areItemsTheSame(
-            oldItem: SearchSuggestion,
-            newItem: SearchSuggestion
-        ): Boolean {
+    companion object DiffCallback : DiffUtil.ItemCallback<SearchSuggestion>() {
+        override fun areItemsTheSame(oldItem: SearchSuggestion, newItem: SearchSuggestion): Boolean {
             return oldItem.text == newItem.text && oldItem.type == newItem.type
         }
 
-        override fun areContentsTheSame(
-            oldItem: SearchSuggestion,
-            newItem: SearchSuggestion
-        ): Boolean {
+        override fun areContentsTheSame(oldItem: SearchSuggestion, newItem: SearchSuggestion): Boolean {
             return oldItem == newItem
         }
     }

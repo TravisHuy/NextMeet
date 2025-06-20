@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Info -->
+    <string name="app_name">TravisHuy</string>
+
+    <!-- Common -->
+    <string name="error">Lỗi</string>
+    <string name="notification">Thông báo</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="close">Đóng</string>
+    <string name="delete">Xóa</string>
+    <string name="share">Chia sẻ</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="today">Hôm nay</string>
+    <string name="tomorrow">Ngày mai</string>
+
+    <!-- Authentication -->
+    <string name="error_password">Mật khẩu phải có nhiều hơn 5 ký tự</string>
+    <string name="register_successful">Đăng ký thành công</string>
+    <string name="login_failed">Đăng nhập thất bại. Số điện thoại hoặc mật khẩu không hợp lệ</string>
+    <string name="login_successfully">Đăng nhập thành công</string>
+    <string name="all_fields_are_required">Tất cả các trường đều bắt buộc</string>
+    <string name="error_phone">Số điện thoại phải có 10 chữ số</string>
+    <string name="error_name">Tên không được vượt quá 25 ký tự</string>
+    <string name="email_invalid">Email không hợp lệ</string>
+    <string name="invalid_password">Mật khẩu không chính xác</string>
+    <string name="user_not_found">Tài khoản không tồn tại</string>
+    <string name="password_update_success">Cập nhật mật khẩu thành công</string>
+    <string name="password_update_failed">Cập nhật mật khẩu thất bại</string>
+    <string name="registration_failed">Đăng ký thất bại</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="logout_confirmation_title">Xác nhận đăng xuất</string>
+    <string name="logout_confirmation_message">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="logout_success">Đăng xuất thành công</string>
+    <string name="logout_failed">Đăng xuất thất bại</string>
+
+    <!-- Navigation -->
+    <string name="home">Trang chủ</string>
+    <string name="transaction">Giao dịch</string>
+    <string name="alarm">Báo thức</string>
+    <string name="about">Giới thiệu</string>
+
+    <!-- Input Fields -->
+    <string name="enter_name">Nhập tên</string>
+    <string name="enter_phone">Nhập số điện thoại</string>
+    <string name="enter_email">Nhập email</string>
+    <string name="enter_address">Nhập địa chỉ</string>
+    <string name="enter_group">Nhập nhóm</string>
+    <string name="enter_notes">Nhập ghi chú</string>
+    <string name="enter_password">Nhập mật khẩu</string>
+
+    <!-- Date & Time -->
+    <string name="pick_date_amp_time"><![CDATA[Chọn ngày & giờ]]></string>
+    <string name="pick_place">Chọn địa điểm</string>
+    <string name="custom_time_format">Tùy chỉnh (%s)</string>
+
+    <!-- Location -->
+    <string name="add_address">Thêm địa chỉ</string>
+    <string name="address_not_found">Không tìm thấy địa chỉ</string>
+    <string name="location_not_found">Không tìm thấy vị trí</string>
+    <string name="please_select_location">Vui lòng chọn vị trí</string>
+    <string name="no_location_selected">Chưa chọn vị trí</string>
+    <string name="map_type_normal">Bình thường</string>
+    <string name="map_type_satellite">Vệ tinh</string>
+    <string name="recenter">Căn giữa</string>
+
+    <!-- User Info -->
+    <string name="user_information">Thông tin người dùng</string>
+    <string name="enabled">Đã bật</string>
+    <string name="disabled">Đã tắt</string>
+    <string name="remember_me_status">Ghi nhớ đăng nhập: %s</string>
+    <string name="location_format">Vị trí: Lat: %1$s, Long: %2$s</string>
+    <string name="login_time_format">Thời gian đăng nhập: %s</string>
+    <string name="welcome_message">Chào mừng bạn đến với NextMeet!\nBạn đã đăng nhập thành công.</string>
+
+    <!-- Appointments & Notes -->
+    <string name="appointment_for_today">Cuộc hẹn hôm nay</string>
+    <string name="view_all">Xem tất cả</string>
+    <string name="notes">Ghi chú</string>
+    <string name="contact">Liên hệ</string>
+    <string name="notes_for_recent">Ghi chú gần đây</string>
+    <string name="map_for_appointment">Bản đồ cuộc hẹn</string>
+    <string name="appointment">Cuộc hẹn</string>
+    <string name="title_appointment">Tiêu đề cuộc hẹn</string>
+    <string name="title_note">Tiêu đề ghi chú</string>
+    <string name="reminder">Nhắc nhở</string>
+    <string name="meet">Gặp mặt</string>
+    <string name="call">Gọi điện</string>
+    <string name="mute">Tắt âm</string>
+
+    <!-- Content Types -->
+    <string name="delete_image">Xóa hình ảnh</string>
+    <string name="image_note">Ghi chú hình ảnh</string>
+    <string name="pin_unpin">Ghim/Bỏ ghim</string>
+    <string name="duplicate">Sao chép</string>
+    <string name="text">Văn bản</string>
+    <string name="checklist">Danh sách kiểm tra</string>
+    <string name="check_list">Danh sách kiểm tra</string>
+    <string name="image">Hình ảnh</string>
+
+    <!-- Contacts -->
+    <string name="search_contacts">Tìm kiếm liên hệ...</string>
+    <string name="add_contact">Thêm liên hệ</string>
+    <string name="add_contact_hint">%1$s</string>
+    <string name="name_contact">Tên liên hệ</string>
+    <string name="address">Địa chỉ</string>
+    <string name="favorite">Yêu thích</string>
+    <string name="have_phone_number">Có số điện thoại</string>
+    <string name="have_email">Có email</string>
+    <string name="have_address">Có địa chỉ</string>
+
+    <!-- Search & History -->
+    <string name="search_recent">Tìm kiếm gần đây</string>
+    <string name="search_history">Lịch sử tìm kiếm</string>
+    <string name="search_trending">Phổ biến (%1$d lần)</string>
+
+    <!-- Categories -->
+    <string name="upcoming">Sắp tới</string>
+    <string name="pinned">Đã ghim</string>
+    <string name="weekend">Tuần này</string>
+    <string name="recent">Gần đây</string>
+
+    <!-- Fragment -->
+    <string name="hello_blank_fragment">Xin chào fragment trống</string>
+
+    <!-- API Key (Keep as is) -->
+    <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
+
+    <!-- String Arrays -->
+    <string-array name="day_options">
+        <item>Hôm nay</item>
+        <item>Ngày mai</item>
+        <item>Tuần tới</item>
+        <item>Chọn ngày...</item>
+    </string-array>
+
+    <string-array name="hour_options">
+        <item>Sáng (8:00)</item>
+        <item>Chiều (13:00)</item>
+        <item>Tối (18:00)</item>
+        <item>Đêm (20:00)</item>
+        <item>Chọn giờ...</item>
+    </string-array>
+
+    <string-array name="repeat_options">
+        <item>Không lặp lại</item>
+        <item>Lặp lại hàng ngày</item>
+        <item>Lặp lại hàng tuần</item>
+        <item>Lặp lại hàng tháng</item>
+        <item>Lặp lại hàng năm</item>
+        <item>Tùy chỉnh...</item>
+    </string-array>
+</resources>

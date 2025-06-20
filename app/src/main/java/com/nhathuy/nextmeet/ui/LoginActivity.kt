@@ -246,7 +246,7 @@ class LoginActivity : AppCompatActivity() {
                             activeDialog?.dismiss()
                             Toast.makeText(
                                 this@LoginActivity,
-                                getString(R.string.register_successfull),
+                                getString(R.string.register_successful),
                                 Toast.LENGTH_LONG
                             )
                                 .show()
