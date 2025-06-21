@@ -115,7 +115,7 @@ class RegisterModalBottomSheet : BottomSheetDialogFragment() {
                         if (result.data == true) {
                             Toast.makeText(
                                 requireContext(),
-                                getString(R.string.register_successfull),
+                                getString(R.string.register_successful),
                                 Toast.LENGTH_LONG
                             ).show()
                             dismiss()

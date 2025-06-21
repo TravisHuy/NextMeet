@@ -6,5 +6,5 @@
         />
     <item
         android:id="@+id/map_type_satellite"
-        android:title="@string/map_type_statellite"/>
+        android:title="@string/map_type_satellite"/>
 </menu>

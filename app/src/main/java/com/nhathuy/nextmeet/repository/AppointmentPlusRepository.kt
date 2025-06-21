@@ -1,10 +1,13 @@
 package com.nhathuy.nextmeet.repository
 
 import com.nhathuy.nextmeet.dao.AppointmentPlusDao
+import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.utils.ValidationUtils
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -20,7 +23,8 @@ import javax.inject.Singleton
  * @version 2.0
  */
 @Singleton
-class AppointmentPlusRepository @Inject constructor(private val appointmentPlusDao: AppointmentPlusDao) {
+class AppointmentPlusRepository @Inject constructor(private val appointmentPlusDao: AppointmentPlusDao,
+    private val contactDao: ContactDao) {
 
     /**
      * Lấy tất cả cuộc hẹn theo userId, cho phép tìm kiếm và lọc theo trạng thái.
@@ -46,9 +50,13 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
                         .map { appointments ->
                             appointments.filter { appointment ->
                                 appointment.title.contains(searchQuery, ignoreCase = true) ||
-                                        appointment.description.contains(searchQuery, ignoreCase = true)
+                                        appointment.description.contains(
+                                            searchQuery,
+                                            ignoreCase = true
+                                        )
                             }
                         }
+
                     else -> appointmentPlusDao.getAllAppointmentsByUser(userId)
                 }
 
@@ -209,7 +217,10 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
     /**
      * Cập nhật trạng thái cuộc hẹn.
      */
-    suspend fun updateAppointmentStatus(appointmentId: Int, status: AppointmentStatus): Result<Unit> {
+    suspend fun updateAppointmentStatus(
+        appointmentId: Int,
+        status: AppointmentStatus
+    ): Result<Unit> {
         return try {
             val appointment = appointmentPlusDao.getAppointmentById(appointmentId)
                 ?: return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
@@ -268,7 +279,8 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             if (validationResult.isFailure) {
                 return Result.failure(
                     IllegalArgumentException(
-                        validationResult.exceptionOrNull()?.message ?: "Dữ liệu đầu vào không hợp lệ"
+                        validationResult.exceptionOrNull()?.message
+                            ?: "Dữ liệu đầu vào không hợp lệ"
                     )
                 )
             }
@@ -304,5 +316,92 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Tìm kiếm cuộc hẹn theo từ khóa.
+     */
+
+    /**
+     * Tìm kiếm các cuộc hẹn theo từ khóa.
+     * Cho phép tìm kiếm trong tiêu đề, mô tả, địa điểm, và tên liên hệ.
+     *
+     * @param userId ID của người dùng.
+     * @param query Từ khóa tìm kiếm.
+     * @param searchInTitle Có tìm kiếm trong tiêu đề hay không.
+     * @param searchInDescription Có tìm kiếm trong mô tả hay không.
+     * @param searchInLocation Có tìm kiếm trong địa điểm hay không.
+     * @param searchInContactName Có tìm kiếm trong tên liên hệ hay không.
+     * @return Flow danh sách các cuộc hẹn phù hợp với từ khóa.
+     */
+    suspend fun searchAppointments(
+        userId: Int,
+        query: String,
+        searchInTitle: Boolean = true,
+        searchInDescription: Boolean = true,
+        searchInLocation: Boolean = true,
+        searchInContactName: Boolean = true
+    ): Flow<List<AppointmentPlus>> = flow {
+        val appointments = appointmentPlusDao.getAllAppointmentsByUser(userId).first()
+
+        val filteredAppointments = appointments.filter { appointment ->
+            var matchFound = false
+
+            if (searchInTitle && appointment.title.contains(query, ignoreCase = true)) {
+                matchFound = true
+            }
+
+            if (searchInDescription && appointment.description.contains(query, ignoreCase = true)) {
+                matchFound = true
+            }
+
+            if (searchInLocation && appointment.location.contains(query, ignoreCase = true)) {
+                matchFound = true
+            }
+
+            if(searchInContactName){
+                try {
+                    val contact = contactDao.getContactById(appointment.contactId)
+                    if (contact?.name?.contains(query, ignoreCase = true) == true) {
+                        matchFound = true
+                    }
+                } catch (e: Exception) {
+                    // Liên hệ có thể không tồn tại.
+                }
+            }
+            matchFound
+        }
+
+        emit(filteredAppointments.sortedBy { it.startDateTime })
+    }
+
+    /**
+     * Lấy gợi ý tìm kiếm dựa trên dữ liệu các cuộc hẹn hiện có.
+     * Phương thức này sẽ kiểm tra tiêu đề và địa điểm của các cuộc hẹn,
+     * sau đó trả về danh sách gợi ý phù hợp với từ khóa tìm kiếm.
+     *
+     * @param userId ID của người dùng.
+     * @param query Từ khóa tìm kiếm.
+     * @return Danh sách tối đa 10 gợi ý tìm kiếm.
+     */
+    suspend fun getSearchSuggestions(userId:Int, query: String) : List<String> {
+        if(query.isBlank()){
+            return emptyList()
+        }
+
+        val appointments = appointmentPlusDao.getAllAppointmentsByUser(userId).first()
+        val suggestions = mutableSetOf<String>()
+
+        appointments.forEach { appointment ->
+            if(appointment.title.contains(query, ignoreCase = true) && appointment.title.isNotEmpty()){
+                suggestions.add(appointment.title)
+            }
+
+            if (appointment.location.contains(query, ignoreCase = true) && appointment.location.isNotEmpty()) {
+                suggestions.add(appointment.location)
+            }
+        }
+
+        return suggestions.take(10).toList()
     }
 }

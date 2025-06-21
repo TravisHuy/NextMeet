@@ -16,13 +16,61 @@ import java.util.Locale
 class AppointmentPlusAdapter(
     private val appointments: MutableList<AppointmentPlus>,
     private val onClickListener: (AppointmentPlus) -> Unit,
-    private val onLongClickListener: (AppointmentPlus) -> Unit,
+    private val onLongClickListener: (AppointmentPlus,Int) -> Unit,
     private val onPinClickListener: (AppointmentPlus) -> Unit,
     private val navigationMap: (AppointmentPlus) -> Unit,
-    private val onSelectionChanged: (Int) -> Unit = { }
-) :
-    RecyclerView.Adapter<AppointmentPlusAdapter.AppointmentPlusViewHolder>() {
+    private val onSelectionChanged: (Int) -> Unit = {}
+) : RecyclerView.Adapter<AppointmentPlusAdapter.AppointmentPlusViewHolder>() {
 
+    private var multiSelectMode = false
+    private val selectedAppointments = mutableSetOf<Int>()
+
+    fun setMultiSelectionMode(enabled: Boolean) {
+        multiSelectMode = enabled
+        if (!enabled) {
+            selectedAppointments.clear()
+            onSelectionChanged(0)
+        }
+        notifyDataSetChanged()
+    }
+
+    fun isMultiSelectMode(): Boolean = multiSelectMode
+
+    fun isSelected(appointmentId:Int) : Boolean = selectedAppointments.contains(appointmentId)
+
+    fun toggleSelection(appointmentId:Int){
+        if(selectedAppointments.contains(appointmentId)){
+            selectedAppointments.remove(appointmentId)
+        }
+        else{
+            selectedAppointments.add(appointmentId)
+        }
+        onSelectionChanged(selectedAppointments.size)
+
+        val position = appointments.indexOfFirst {
+            it.id == appointmentId
+        }
+
+        if(position !=-1 ){
+            notifyItemChanged(position)
+        }
+    }
+
+    fun getSelectedAppointments(): List<AppointmentPlus> {
+        return appointments.filter { selectedAppointments.contains(it.id) }
+    }
+
+    fun clearSelection() {
+        selectedAppointments.clear()
+        onSelectionChanged(0)
+        notifyDataSetChanged()
+    }
+    fun selectAll(){
+        selectedAppointments.clear()
+        selectedAppointments.addAll(appointments.map { it.id })
+        onSelectionChanged(selectedAppointments.size)
+        notifyDataSetChanged()
+    }
     inner class AppointmentPlusViewHolder(val binding: ItemAppointmentLayoutBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(appointment: AppointmentPlus) {
@@ -32,25 +80,56 @@ class AppointmentPlusAdapter(
                 appointmentDescription.text = appointment.description
                 appointmentStartTime.text = formatTime(appointment.startDateTime)
 
-                root.setOnClickListener {
-                    onClickListener(appointment)
-                }
-
-                root.setOnLongClickListener {
-                    onLongClickListener(appointment)
-                    true
-                }
-
                 ivPin.visibility = if (appointment.isPinned) View.VISIBLE else View.GONE
+
                 ivPin.setOnClickListener { onPinClickListener(appointment) }
 
                 setupBackgroundColor(appointment.color)
 
+                //click
+                setupClickListeners(appointment)
+
+
+                if (multiSelectMode) {
+                    if (selectedAppointments.contains(appointment.id)) {
+                        cardAppointmentLayout.apply {
+                            strokeWidth = 6
+                            strokeColor = ContextCompat.getColor(itemView.context, R.color.selection_border_color)
+                            alpha = 0.8f
+                        }
+                    } else {
+                        cardAppointmentLayout.apply {
+                            strokeWidth = 1
+                            strokeColor = ContextCompat.getColor(itemView.context, R.color.gray_light) // hoặc màu mặc định
+                            alpha = 1.0f
+                        }
+                    }
+                } else {
+                    cardAppointmentLayout.apply {
+                        strokeWidth = 1
+                        strokeColor = ContextCompat.getColor(itemView.context, R.color.gray_light) // hoặc màu mặc định
+                        alpha = 1.0f
+                    }
+                }
+
+            }
+        }
+
+        private fun setupClickListeners(appointment: AppointmentPlus){
+            binding.apply {
+                // Click listener for the appointment card
                 ivNavigationMap.setOnClickListener {
                     navigationMap(appointment)
                 }
+
+
+                ivPin.setOnClickListener {
+                    onPinClickListener(appointment)
+                }
+
             }
         }
+
         private fun formatTime(time: Long?): String {
             val formatter = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
             val formattedDate = formatter.format(Date(time!!))
@@ -100,7 +179,29 @@ class AppointmentPlusAdapter(
         holder: AppointmentPlusAdapter.AppointmentPlusViewHolder,
         position: Int
     ) {
-        holder.bind(appointments[position])
+        val appointment = appointments[position]
+        holder.bind(appointment)
+
+        holder.binding.apply {
+            root.setOnClickListener(null)
+            root.setOnLongClickListener(null)
+
+            root.setOnLongClickListener {
+                if(!multiSelectMode){
+                    setMultiSelectionMode(true)
+                }
+                toggleSelection(appointment.id)
+                onLongClickListener(appointment,position)
+                true
+            }
+            root.setOnClickListener {
+                if(multiSelectMode){
+                    toggleSelection(appointment.id)
+                } else {
+                    onClickListener(appointment)
+                }
+            }
+        }
     }
 
     override fun getItemCount(): Int = appointments.size

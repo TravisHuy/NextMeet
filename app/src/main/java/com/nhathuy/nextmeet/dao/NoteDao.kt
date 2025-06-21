@@ -174,4 +174,35 @@ interface NoteDao {
         LIMIT :limit
     """)
     suspend fun getRecentNotes(userId: Int,limit:Int=10):List<Note>
+
+    /**
+     * Tìm kiếm ghi chú với ưu tiên kết quả
+     * - Kết quả pin sẽ được ưu tiên hàng đầu
+     * - Kết quả bắt đầu bằng từ khóa sẽ được ưu tiên hơn kết quả chứa từ khóa
+     */
+    @Query("""
+        SELECT * FROM notes 
+        WHERE user_id = :userId 
+        AND (title LIKE '%' || :query || '%' 
+             OR content LIKE '%' || :query || '%')
+        ORDER BY 
+            CASE WHEN is_pinned = 1 THEN 0 ELSE 1 END,
+            CASE 
+                WHEN title LIKE :query || '%' THEN 1
+                WHEN title LIKE '%' || :query || '%' THEN 2
+                ELSE 3
+            END,
+            updated_at DESC
+    """)
+    fun searchNotePlus(userId: Int, query: String): Flow<List<Note>>
+
+    /**
+     * Lấy danh sách gợi ý tiêu đề ghi chú dựa trên từ khóa
+     * @param userId ID người dùng
+     * @param query Từ khóa để tìm kiếm tiêu đề
+     * @param limit Số lượng gợi ý tối đa (mặc định là 5)
+     * @return Danh sách các tiêu đề ghi chú phù hợp
+     */
+    @Query("SELECT DISTINCT title FROM notes WHERE user_id = :userId AND title != '' AND title LIKE :query || '%' ORDER BY title LIMIT :limit")
+    fun getTitleSuggestions(userId: Int, query: String, limit: Int = 5): Flow<List<String>>
 }

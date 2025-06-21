@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".fragment.AppointmentMapFragment">
 
+    <!-- Selection toolbar for multi-select mode -->
     <LinearLayout
         android:id="@+id/selectionToolbar"
         android:layout_width="match_parent"
@@ -16,15 +17,16 @@
         android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:visibility="gone"
-        tools:visibility="visible">          <!-- Close button -->
+        android:visibility="gone">
+
         <ImageView
             android:id="@+id/btnClose"
             android:layout_width="32dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close selection"
-            android:src="@drawable/ic_cancel" />          <!-- Selection count -->
+            android:src="@drawable/ic_cancel" />
+
         <TextView
             android:id="@+id/tvSelectionCount"
             android:layout_width="0dp"
@@ -34,7 +36,8 @@
             android:textColor="@android:color/black"
             android:textSize="18sp"
             android:textStyle="bold"
-            tools:text="1 liên hệ được chọn" />          <!-- Action buttons -->
+            tools:text="1 selected appointment" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -44,8 +47,8 @@
                 android:id="@+id/btnPin"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:contentDescription="Pin contacts"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Pin appointments"
                 android:src="@drawable/ic_pin" />
 
             <ImageButton
@@ -53,7 +56,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Share contacts"
+                android:contentDescription="Share appointments"
                 android:src="@drawable/ic_share"
                 app:tint="@android:color/black" />
 
@@ -62,7 +65,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Delete contacts"
+                android:contentDescription="Delete appointments"
                 android:src="@drawable/ic_remove"
                 app:tint="@android:color/black" />
 
@@ -77,39 +80,151 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- AppBar with SearchBar -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:elevation="0dp"
-        app:elevation="0dp">
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white">
 
         <com.google.android.material.search.SearchBar
             android:id="@+id/searchBar"
-            style="@style/Widget.Material3.SearchBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/search_contacts"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_margin="12dp"
+            android:backgroundTint="@color/color_gray"
+            android:hint="Search appointments..."
+            android:contentDescription="Search appointments"
+            app:navigationIconTint="?attr/colorOnSurfaceVariant"
+            app:endIconDrawable="@drawable/ic_cancel"
+            app:endIconTint="?attr/colorOnSurfaceVariant"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp" />
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- Fullscreen SearchView -->
+    <com.google.android.material.search.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:hint="Search appointments..."
+        app:layout_anchor="@id/searchBar"
+        app:layout_anchorGravity="top"
+        android:contentDescription="Search appointments interface">
+
+        <!-- Search suggestions list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_search_suggestions"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="16dp"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:scrollbarStyle="outsideOverlay" />
+
+
+    </com.google.android.material.search.SearchView>
+
+
+    <!-- Empty state view for search -->
+    <LinearLayout
+        android:id="@+id/search_empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        tools:visibility="gone">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginBottom="24dp"
+            android:contentDescription="No results found"
+            android:src="@drawable/ic_search_empty"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No appointments found"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Try different search terms"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+
+    <!-- Main content with appointments list -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshAppointments"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:padding="8dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewAppointments"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipToPadding="false" />
+            android:clipToPadding="false"
+            android:padding="8dp"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:scrollbarStyle="outsideOverlay" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+    <!-- Empty state for no appointments -->
+    <LinearLayout
+        android:id="@+id/empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:visibility="visible">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginBottom="24dp"
+            android:contentDescription="No appointments"
+            android:src="@drawable/ic_today"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No appointments yet"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Tap + to add a new appointment"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Add appointment FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddAppointment"
         android:layout_width="wrap_content"

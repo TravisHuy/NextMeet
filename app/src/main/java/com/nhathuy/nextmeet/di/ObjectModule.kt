@@ -8,6 +8,7 @@ import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.dao.CustomerDao
 import com.nhathuy.nextmeet.dao.NoteDao
 import com.nhathuy.nextmeet.dao.NoteImageDao
+import com.nhathuy.nextmeet.dao.SearchHistoryDao
 import com.nhathuy.nextmeet.dao.TransactionDao
 import com.nhathuy.nextmeet.dao.UserDao
 import com.nhathuy.nextmeet.repository.AlarmHistoryRepository
@@ -16,9 +17,11 @@ import com.nhathuy.nextmeet.repository.AppointmentRepository
 import com.nhathuy.nextmeet.repository.ContactRepository
 import com.nhathuy.nextmeet.repository.CustomerRepository
 import com.nhathuy.nextmeet.repository.NoteRepository
+import com.nhathuy.nextmeet.repository.SearchRepository
 import com.nhathuy.nextmeet.repository.TransactionRepository
 import com.nhathuy.nextmeet.repository.UserRepository
 import com.nhathuy.nextmeet.utils.SessionManager
+import com.nhathuy.nextmeet.utils.UniversalSearchManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,14 +35,14 @@ object ObjectModule {
 
     @Provides
     @Singleton
-    fun provideSessionManager(@ApplicationContext context: Context):SessionManager{
+    fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
         return SessionManager(context)
     }
 
     @Singleton
     @Provides
-    fun provideUserRepository(userDao: UserDao,sessionManager: SessionManager): UserRepository {
-        return UserRepository(userDao,sessionManager)
+    fun provideUserRepository(userDao: UserDao, sessionManager: SessionManager): UserRepository {
+        return UserRepository(userDao, sessionManager)
     }
 
     @Singleton
@@ -50,37 +53,60 @@ object ObjectModule {
 
     @Singleton
     @Provides
-    fun providerAppointmentRepository(appointmentDao: AppointmentDao) : AppointmentRepository {
+    fun providerAppointmentRepository(appointmentDao: AppointmentDao): AppointmentRepository {
         return AppointmentRepository(appointmentDao)
     }
 
     @Singleton
     @Provides
-    fun providerTransactionRepository(transactionDao: TransactionDao) : TransactionRepository {
+    fun providerTransactionRepository(transactionDao: TransactionDao): TransactionRepository {
         return TransactionRepository(transactionDao)
     }
 
     @Singleton
     @Provides
-    fun providerAlarmHistoryRepository(alarmHistoryDao: AlarmHistoryDao) : AlarmHistoryRepository{
+    fun providerAlarmHistoryRepository(alarmHistoryDao: AlarmHistoryDao): AlarmHistoryRepository {
         return AlarmHistoryRepository(alarmHistoryDao)
     }
 
     @Singleton
     @Provides
-    fun providerNoteRepository(noteDao:NoteDao,noteImageDao: NoteImageDao) : NoteRepository {
-        return NoteRepository(noteDao,noteImageDao)
+    fun providerNoteRepository(noteDao: NoteDao, noteImageDao: NoteImageDao): NoteRepository {
+        return NoteRepository(noteDao, noteImageDao)
     }
 
     @Singleton
     @Provides
-    fun providerContactRepository(contactDao: ContactDao) : ContactRepository{
+    fun providerContactRepository(contactDao: ContactDao): ContactRepository {
         return ContactRepository(contactDao)
     }
 
     @Singleton
     @Provides
-    fun providerAppointmentPlusRepository(appointmentDao: AppointmentPlusDao) : AppointmentPlusRepository {
-        return AppointmentPlusRepository(appointmentDao)
+    fun providerAppointmentPlusRepository(
+        appointmentDao: AppointmentPlusDao,
+        contactDao: ContactDao
+    ): AppointmentPlusRepository {
+        return AppointmentPlusRepository(appointmentDao, contactDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providerSearchHistoryRepository(
+        @ApplicationContext context: Context,
+        searchHistoryDao: SearchHistoryDao,
+        contactDao: ContactDao,
+        appointmentDao: AppointmentPlusDao,
+        noteDao: NoteDao
+    ): SearchRepository {
+        return SearchRepository(context, searchHistoryDao, contactDao, appointmentDao, noteDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providerUniversalManager(
+        searchRepository: SearchRepository
+    ): UniversalSearchManager {
+        return UniversalSearchManager(searchRepository)
     }
 }

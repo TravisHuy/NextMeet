@@ -76,6 +76,26 @@ sealed class AppointmentUiState {
     data class NavigationStarted(val message: String) : AppointmentUiState()
 
     /**
+     * Trạng thái tìm kiếm cuộc hẹn
+     * @param query Từ khóa tìm kiếm
+     * @param results Kết quả tìm kiếm
+     */
+    data class SearchResults(
+        val query: String,
+        val results: List<AppointmentPlus>
+    ) : AppointmentUiState()
+
+    /**
+     * Trạng thái không tìm thấy kết quả
+     * @param query Từ khóa tìm kiếm
+     */
+    data class NoSearchResults(
+        val query: String
+    ) : AppointmentUiState()
+
+
+
+    /**
      * Trạng thái có lỗi xảy ra.
      * @param message Thông báo lỗi
      */

@@ -37,7 +37,7 @@ interface AppointmentPlusDao {
      */
     @Query("SELECT * FROM appointments WHERE id = :id")
     suspend fun getAppointmentById(id: Int): AppointmentPlus?
-    
+
 
     /**
      * Lấy tất cả cuộc hẹn của một user, sắp xếp theo trạng thái ghim và thời gian cập nhật.
@@ -134,4 +134,69 @@ interface AppointmentPlusDao {
      */
     @Query("SELECT * FROM appointments WHERE user_id = :userId ORDER BY is_pinned DESC, updated_at DESC")
     fun getAllAppointmentsByUser(userId: Int): Flow<List<AppointmentPlus>>
+
+    /**
+     * Lấy tìm kiếm cuộc hẹn theo từ khóa.
+     */
+    @Query(
+        """
+        SELECT * FROM appointments 
+        WHERE user_id = :userId 
+        AND (title LIKE '%' || :query || '%' 
+             OR description LIKE '%' || :query || '%' 
+             OR location LIKE '%' || :query || '%')
+        ORDER BY 
+            CASE WHEN is_pinned = 1 THEN 0 ELSE 1 END,
+            CASE 
+                WHEN title LIKE :query || '%' THEN 1
+                WHEN title LIKE '%' || :query || '%' THEN 2
+                ELSE 3
+            END,
+            start_date_time ASC
+    """
+    )
+    fun searchAppointments(userId: Int, query: String): Flow<List<AppointmentPlus>>
+
+    /**
+     * Lấy danh sách gợi ý tiêu đề cuộc hẹn dựa trên từ khóa.
+     */
+    @Query("SELECT DISTINCT title FROM appointments WHERE user_id = :userId AND title LIKE :query || '%' ORDER BY title LIMIT :limit")
+    fun getTitleSuggestions(userId: Int, query: String, limit: Int = 5): Flow<List<String>>
+
+    /**
+     * Lấy danh sách gợi ý địa điểm cuộc hẹn dựa trên từ khóa.
+     */
+    @Query("SELECT DISTINCT location FROM appointments WHERE user_id = :userId AND location != '' AND location LIKE :query || '%' ORDER BY location LIMIT :limit")
+    fun getLocationSuggestions(userId: Int, query: String, limit: Int = 5): Flow<List<String>>
+
+    /**
+     * Lấy cuôc hẹn trong ngày hôm nay
+     */
+    @Query("SELECT * FROM appointments WHERE user_id = :userId AND start_date_time >= :startTime AND end_date_time <= :endTime AND status = :status ORDER BY start_date_time ASC")
+    fun getTodayAppointments(
+        userId: Int,
+        startTime: Long,
+        endTime: Long,
+        status: String
+    ): Flow<List<AppointmentPlus>>
+
+    /**
+     * Lấy cuộn hẹn trong tuần này
+     */
+    @Query("""
+    SELECT * FROM appointments 
+    WHERE user_id = :userId 
+      AND end_date_time >= :startTime 
+      AND start_date_time <= :endTime 
+      AND status = :status 
+    ORDER BY start_date_time ASC
+""")
+    fun getThisWeekAppointments(
+        userId: Int,
+        startTime: Long,
+        endTime: Long,
+        status: String
+    ): Flow<List<AppointmentPlus>>
+
+
 }
