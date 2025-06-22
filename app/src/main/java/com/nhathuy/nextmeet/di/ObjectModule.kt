@@ -105,8 +105,9 @@ object ObjectModule {
     @Provides
     @Singleton
     fun providerUniversalManager(
-        searchRepository: SearchRepository
+        searchRepository: SearchRepository,
+        @ApplicationContext context: Context
     ): UniversalSearchManager {
-        return UniversalSearchManager(searchRepository)
+        return UniversalSearchManager(searchRepository,context)
     }
 }

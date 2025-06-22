@@ -126,4 +126,45 @@ interface ContactDao {
     @Query("SELECT DISTINCT role FROM contacts WHERE user_id = :userId AND role != '' AND role LIKE :query || '%' ORDER BY role LIMIT :limit")
     fun getRoleSuggestions(userId: Int, query: String, limit: Int = 5): Flow<List<String>>
 
+
+    /**
+     * Lấy liên hệ có số điện thoại
+     */
+    @Query("""
+        SELECT * FROM contacts
+        WHERE user_id = :userId AND phone != '' AND phone IS NOT NULL
+        ORDER BY is_favorite DESC, updated_at DESC
+    """)
+    fun getContactsWithPhone(userId: Int): Flow<List<Contact>>
+
+    /**
+     * Lấy liên hệ có email
+     */
+    @Query("""
+        SELECT * FROM contacts
+        WHERE user_id = :userId AND email != '' AND email IS NOT NULL
+        ORDER BY is_favorite DESC, updated_at DESC
+    """)
+    fun getContactsWithEmail(userId: Int): Flow<List<Contact>>
+
+    /**
+     * Lấy liên hệ có địa chỉ
+     */
+    @Query("""
+        SELECT * FROM contacts
+        WHERE user_id = :userId AND address != '' AND address IS NOT NULL
+        ORDER BY is_favorite DESC, updated_at DESC
+    """)
+    fun getContactsWithAddress(userId: Int): Flow<List<Contact>>
+
+    /**
+     * Lấy liên hệ gần đây (được tạo hoặc cập nhật gần đây)
+     */
+    @Query("""
+        SELECT * FROM contacts
+        WHERE user_id = :userId
+        ORDER BY updated_at DESC
+        LIMIT :limit
+    """)
+    suspend fun getRecentContacts(userId: Int, limit: Int = 10): List<Contact>
 }

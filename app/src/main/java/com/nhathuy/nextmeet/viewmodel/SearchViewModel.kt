@@ -164,14 +164,39 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
         }
     }
 
+    /**
+     * Áp dụng quick filter cho tất cả search types
+     */
+    fun applyQuickFilter(filterText: String, searchType: SearchType = _currentSearchType.value) {
+        _currentQuery.value = filterText
+        _currentSearchType.value = searchType
+        _isSearching.value = true
+        _uiState.value = SearchUiState.Loading
 
+        searchManager.performQuickFilterSearch(
+            userId = currentUserId,
+            filterText = filterText,
+            searchType = searchType,
+            onResult = { result ->
+                _isSearching.value = false
+                _searchResults.value = result
+                _uiState.value = SearchUiState.SearchResultsLoaded(
+                    results = result,
+                    query = filterText,
+                    searchType = searchType
+                )
+            },
+            onError = { error ->
+                _isSearching.value = false
+                _uiState.value = SearchUiState.Error(error)
+            }
+        )
+    }
     /**
      * Handle quick filter suggestions
      */
     private fun handleQuickFilter(suggestion: SearchSuggestion) {
-        // For now, we'll treat quick filters as search queries
-        // You can implement more specific filter logic here
-        searchImmediate(suggestion.text, suggestion.searchType)
+        applyQuickFilter(suggestion.text, suggestion.searchType)
     }
 
 
@@ -230,6 +255,8 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
         // Generate suggestions for query changes
         generateSuggestions(query)
     }
+
+
 
     /**
      * Get current search state info

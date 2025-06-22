@@ -67,7 +67,6 @@ import com.nhathuy.nextmeet.viewmodel.SearchViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -82,74 +81,45 @@ class AppointmentMapFragment : Fragment() {
     private lateinit var userViewModel: UserViewModel
     private lateinit var contactViewModel: ContactViewModel
     private lateinit var appointmentViewModel: AppointmentPlusViewModel
-    private lateinit var searchViewModel:SearchViewModel
+    private lateinit var searchViewModel: SearchViewModel
 
     private var addAppointmentDialog: Dialog? = null
     private var currentUserId: Int = 0
     private var currentContactId: Int = 0
 
+    // Location and appointment data
     private var location: String? = null
     private var latitude: Double? = null
     private var longitude: Double? = null
     private var reminderTime: Long? = null
-
     private val contactMap = mutableMapOf<String, ContactNameId>()
-
-    private lateinit var appointmentAdapter: AppointmentPlusAdapter
-    private lateinit var searchSuggestionsAdapter: SearchSuggestionsAdapter
-
-    private lateinit var colorAdapter: ColorPickerAdapter
     private var selectedColorName: String = "color_white"
 
+    // Search state - simplified
     private var currentSearchQuery: String? = null
-    private var showPinedOnly: Boolean = false
-
-    private var isLocationFromMap: Boolean = false
-    private var isSelectionMode: Boolean = false
     private var isSearchMode: Boolean = false
-    private var isSearchViewExpanded:Boolean = true
+    private var isSearchViewExpanded: Boolean = false
+
+    // Selection state
+    private var isSelectionMode: Boolean = false
+
+    // Adapters
+    private lateinit var appointmentAdapter: AppointmentPlusAdapter
+    private lateinit var searchSuggestionsAdapter: SearchSuggestionsAdapter
+    private lateinit var colorAdapter: ColorPickerAdapter
 
     private val mapPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.let { data ->
-                location = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
-                latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
-                longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
-                isLocationFromMap = true
-
-                addAppointmentDialog?.findViewById<TextInputEditText>(
-                    R.id.et_appointment_location
-                )
-                    ?.let { addressEditText ->
-                        if (!location.isNullOrEmpty()) {
-                            addressEditText.setText(location)
-
-                        } else {
-                            addressEditText.setText(getString(R.string.no_location_selected))
-                            location = ""
-                            isLocationFromMap = false
-                        }
-                    }
-            }
-        }
+        handleMapPickerResult(result)
     }
 
     companion object {
         val listColor = listOf(
-            R.color.color_white,
-            R.color.color_red,
-            R.color.color_orange,
-            R.color.color_yellow,
-            R.color.color_green,
-            R.color.color_teal,
-            R.color.color_blue,
-            R.color.color_dark_blue,
-            R.color.color_purple,
-            R.color.color_pink,
-            R.color.color_brown,
-            R.color.color_gray
+            R.color.color_white, R.color.color_red, R.color.color_orange,
+            R.color.color_yellow, R.color.color_green, R.color.color_teal,
+            R.color.color_blue, R.color.color_dark_blue, R.color.color_purple,
+            R.color.color_pink, R.color.color_brown, R.color.color_gray
         )
 
         val colorSourceNames = mapOf(
@@ -166,58 +136,54 @@ class AppointmentMapFragment : Fragment() {
             R.color.color_brown to "color_brown",
             R.color.color_gray to "color_gray"
         )
-
-        private const val FILTER_TODAY = "Today"
-        private const val FILTER_PINNED = "Pinned"
-        private const val FILTER_WEEK = "This Week"
-        private const val FILTER_UPCOMING = "Upcoming"
-
-        fun getFilterKeyFormText(text:String ,context: Context):String? {
-            return when(text){
-                context.getString(R.string.today)  -> FILTER_TODAY
-                context.getString(R.string.pinned) -> FILTER_PINNED
-                context.getString(R.string.weekend) -> FILTER_WEEK
-                context.getString(R.string.upcoming) -> FILTER_UPCOMING
-                else -> null
-            }
-        }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentAppointmentMapBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initializeViewModels()
+        setupUI()
+        observeData()
+    }
 
+    private fun initializeViewModels() {
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
         contactViewModel = ViewModelProvider(this)[ContactViewModel::class.java]
         appointmentViewModel = ViewModelProvider(this)[AppointmentPlusViewModel::class.java]
         searchViewModel = ViewModelProvider(this)[SearchViewModel::class.java]
+    }
 
-
+    private fun setupUI() {
         setupUserInfo()
         setupRecyclerView()
         setupSwipeRefresh()
-        setupObserver()
         setupFabMenu()
         setupSelectionToolbar()
         setupSearchFeature()
-        setupAppointmentObserver()
-        setupSearchObserver()
     }
+
+    private fun observeData() {
+        observeUserData()
+        observeContactData()
+        observeAppointmentData()
+        observeSearchData()
+    }
+
+    // MARK: - Setup Methods
 
     private fun setupUserInfo() {
         userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->
             user?.let {
                 currentUserId = user.id
-                searchViewModel.initializeSearch(currentUserId)
-                loadAppointments()
-                contactViewModel.getContactNamesAndIds(currentUserId)
+                initializeSearchForUser()
+                loadInitialData()
             }
         }
     }
@@ -225,22 +191,13 @@ class AppointmentMapFragment : Fragment() {
     private fun setupRecyclerView() {
         appointmentAdapter = AppointmentPlusAdapter(
             appointments = mutableListOf(),
-            onClickListener = { appointment ->
-                handleAppointmentClick(appointment)
-            },
-            onLongClickListener = { appointment, position ->
-                handleAppointmentLongClick(appointment, position)
-            },
-            onPinClickListener = { appointment ->
-                togglePinned(appointment)
-            },
-            navigationMap = { appointment ->
-                handleNavigationMap(appointment)
-            },
-            onSelectionChanged = { count ->
-                updateSelectedCount(count)
-            }
+            onClickListener = ::handleAppointmentClick,
+            onLongClickListener = ::handleAppointmentLongClick,
+            onPinClickListener = ::togglePinned,
+            navigationMap = ::handleNavigationMap,
+            onSelectionChanged = ::updateSelectedCount
         )
+
         binding.recyclerViewAppointments.apply {
             adapter = appointmentAdapter
             layoutManager = LinearLayoutManager(requireContext())
@@ -250,18 +207,7 @@ class AppointmentMapFragment : Fragment() {
 
     private fun setupSwipeRefresh() {
         binding.swipeRefreshAppointments.setOnRefreshListener {
-            loadAppointments()
-        }
-    }
-
-    private fun setupObserver() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            contactViewModel.contactNamesAndIds.collect { contacts ->
-                contactMap.clear()
-                contacts.forEach { contact ->
-                    contactMap[contact.name] = contact
-                }
-            }
+            refreshData()
         }
     }
 
@@ -274,369 +220,434 @@ class AppointmentMapFragment : Fragment() {
     private fun setupSelectionToolbar() {
         binding.selectionToolbar.visibility = View.GONE
 
-        binding.btnClose.setOnClickListener {
-            closeSelectionMode()
-        }
-        binding.btnPin.setOnClickListener {
-            handlePinAction()
-        }
-        binding.btnShare.setOnClickListener {
-            handleShareAction()
-        }
-
-        binding.btnDelete.setOnClickListener {
-            handleDeleteAction()
-        }
-
-        binding.btnMore.setOnClickListener {
-            handleMoreAction()
-        }
+        binding.btnClose.setOnClickListener { exitSelectionMode() }
+        binding.btnPin.setOnClickListener { handlePinAction() }
+        binding.btnShare.setOnClickListener { handleShareAction() }
+        binding.btnDelete.setOnClickListener { handleDeleteAction() }
+        binding.btnMore.setOnClickListener { handleMoreAction() }
     }
 
+    // MARK: - Search Setup (Optimized)
 
-    private fun setupAppointmentObserver() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            appointmentViewModel.appointmentUiState.collect { state ->
-                when (state) {
-                    is AppointmentUiState.Loading -> {
-                        showLoading()
-                    }
-
-                    is AppointmentUiState.AppointmentsLoaded -> {
-                        hideLoading()
-                        appointmentAdapter.updateAppointments(state.appointments)
-                        updateEmptyState(state.appointments.isEmpty())
-                    }
-
-                    is AppointmentUiState.AppointmentCreated -> {
-                        hideLoading()
-                        Snackbar.make(binding.root, state.message, Toast.LENGTH_SHORT).show()
-                        addAppointmentDialog?.dismiss()
-                        resetDialogData()
-                        loadAppointments()
-                        appointmentViewModel.resetUiState()
-                    }
-
-                    is AppointmentUiState.Error -> {
-                        hideLoading()
-                        Snackbar.make(binding.root, state.message, Toast.LENGTH_LONG).show()
-                        appointmentViewModel.resetUiState()
-                    }
-
-                    is AppointmentUiState.PinToggled -> {
-//                        showMessage(state.message)
-//                        loadAppointments()
-                    }
-
-                    else -> {}
-                }
-            }
-        }
-    }
-
-    // setup tìm kiếm
-    private fun setupSearchFeature(){
-
-        binding.emptyState.visibility = View.GONE
-        binding.searchEmptyState.visibility = View.GONE
-
-        binding.searchBar.setOnMenuItemClickListener {
-            menuItem ->
-            when (menuItem.itemId) {
-                else -> false
-            }
-        }
-
-        //nút xóa tìm kiếm
-        setupClearSearchButton()
-
-        //setup search view
-        binding.searchView.setupWithSearchBar(binding.searchBar)
-
-        // setup searchAdapter
+    private fun setupSearchFeature() {
+        setupSearchBar()
+        setupSearchView()
         setupSearchAdapter()
-        //xử lý tìm kiếm khi người dùng nhập
-        handleSearchInput()
-        //xử lý khi người dùng nhấn nút tìm kiếm
-        handleClickSearch()
-        // xử lý search view khi trạng thái thay đổi
-        handleSearchChangeState()
-        //xử lý back button in search
-        handleSearchBack()
+        setupSearchListeners()
     }
 
-    //
-    private fun setupClearSearchButton(){
-
-        binding.searchBar.menu.clear()
-        binding.searchBar.inflateMenu(R.menu.search_menu)
-
-        binding.searchBar.setOnMenuItemClickListener {
-            menuItem ->
-            when (menuItem.itemId) {
-                R.id.action_clear_search -> {
-                    clearSearchAndReset()
-                    true
+    private fun setupSearchBar() {
+        binding.searchBar.apply {
+            setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.action_clear_search -> {
+                        clearSearch()
+                        true
+                    }
+                    else -> false
                 }
-                else -> false
+            }
+            setNavigationOnClickListener {
+                handleSearchBarNavigation()
             }
         }
-        updateClearButtonVisibility()
+        updateSearchBarMenu()
     }
 
-    // Method để clear search và reset
-    private fun clearSearchAndReset() {
-        resetSearchResults()
-        updateClearButtonVisibility()
-    }
+    private fun setupSearchView() {
+        binding.searchView.apply {
+            setupWithSearchBar(binding.searchBar)
 
-    // Method để update visibility của nút clear
-    private fun updateClearButtonVisibility() {
-        val clearMenuItem = binding.searchBar.menu.findItem(R.id.action_clear_search)
-        clearMenuItem?.isVisible = !currentSearchQuery.isNullOrBlank()
-    }
+            editText.apply {
+                doOnTextChanged { text, _, _, _ ->
+                    val query = text?.toString()?.trim() ?: ""
+                    searchViewModel.updateQuery(query)
+                }
 
-    private fun setupSearchAdapter(){
-        searchSuggestionsAdapter = SearchSuggestionsAdapter(
-            onSuggestionClick = { suggestionText ->
-                handleSuggestionClick(suggestionText)
-            },
-            onDeleteSuggestion = { suggestionText ->
-                handleDeleteSuggestion(suggestionText)
+                setOnEditorActionListener { _, actionId, _ ->
+                    if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                        val query = text.toString()
+                        if (query.isNotBlank()) {
+                            performSearch(query)
+                            hideSearchView()
+                        }
+                        true
+                    } else false
+                }
             }
+
+            addTransitionListener { _, _, newState ->
+                handleSearchViewStateChange(newState)
+            }
+        }
+    }
+
+    private fun setupSearchAdapter() {
+        searchSuggestionsAdapter = SearchSuggestionsAdapter(
+            onSuggestionClick = ::handleSuggestionClick,
+            onDeleteSuggestion = ::handleDeleteSuggestion
         )
+
         binding.rvSearchSuggestions.apply {
             adapter = searchSuggestionsAdapter
-            layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
+            layoutManager = LinearLayoutManager(requireContext())
             setHasFixedSize(true)
         }
     }
-    private fun handleSearchInput(){
-        binding.searchView.editText.doOnTextChanged{text,_,_,_ ->
-            val query = text?.toString()?.trim()?:""
-            searchViewModel.updateQuery(query)
-        }
 
-        //
-        binding.searchView.addTransitionListener {
-            _, previousState,newState ->
-            if(newState == SearchView.TransitionState.SHOWING && !binding.searchView.text.isNullOrBlank()){
-                val query = binding.searchView.text.toString().trim()
-                if(query.isNotBlank()){
-                    performSearch(query)
-                }
-            }
-        }
+    private fun setupSearchListeners() {
+        // All search listeners are now set up in their respective setup methods
     }
 
-    private fun handleClickSearch(){
-        binding.searchView.editText.setOnEditorActionListener { _, actionId, _ ->
-            if(actionId == EditorInfo.IME_ACTION_SEARCH){
-                val query = binding.searchView.text.toString()
-                if(query.isNotBlank()){
-                    performSearch(query)
-                    hideKeyboard()
-                    binding.searchView.hide()
-                    binding.searchBar.setText("\"$query\"")
-                    return@setOnEditorActionListener true
-                }
-                true
-            }
-            else{
-                false
-            }
-        }
+    // MARK: - Search Logic (Simplified)
+
+    private fun initializeSearchForUser() {
+        searchViewModel.initializeSearch(currentUserId)
+        searchViewModel.setSearchType(SearchType.APPOINTMENT)
     }
 
-    private fun handleSearchChangeState(){
-        binding.searchView.addTransitionListener {_,_,newState ->
-            when(newState){
-                SearchView.TransitionState.SHOWING -> {
-                    isSearchViewExpanded = true
-                    isSearchMode = true
-
-                    binding.fabAddAppointment.hide()
-                    hideBottomNavigation()
-                    binding.emptyState.visibility = View.GONE
-                    binding.searchEmptyState.visibility = View.GONE
-                    searchViewModel.initializeSearch(currentUserId)
-                    searchViewModel.generateSuggestions("")
-                }
-                SearchView.TransitionState.HIDDEN -> {
-                    isSearchViewExpanded = false
-                    isSearchMode =  !currentSearchQuery.isNullOrBlank()
-
-                    binding.fabAddAppointment.show()
-
-                    showBottomNavigation()
-                    if (!currentSearchQuery.isNullOrBlank() && appointmentAdapter.itemCount == 0) {
-                        binding.searchEmptyState.visibility = View.VISIBLE
-                        binding.recyclerViewAppointments.visibility = View.GONE
-                        binding.emptyState.visibility = View.GONE
-                    } else if (currentSearchQuery.isNullOrBlank()) {
-                        // No search, show normal empty state if needed
-                        resetSearchResults()
-                    } else {
-                        // Has results, show recycler view
-                        binding.searchEmptyState.visibility = View.GONE
-                        binding.recyclerViewAppointments.visibility = View.VISIBLE
-                        binding.emptyState.visibility = View.GONE
-                    }
-
-                }
-                else -> {}
-            }
-        }
-    }
-
-    private fun hideBottomNavigation(){
-        val bottomNav = (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)
-        bottomNav?.visibility = View.GONE
-    }
-    private fun showBottomNavigation(){
-        val bottomNav = (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)
-        bottomNav?.visibility = View.VISIBLE
-    }
-    private fun handleSearchBack(){
-        binding.searchBar.setNavigationOnClickListener {
-            when {
-                binding.searchView.isShowing -> {
-                    binding.searchView.hide()
-                }
-                !currentSearchQuery.isNullOrBlank() -> {
-                    resetSearchResults()
-                }
-                else -> {
-                    requireActivity().onBackPressedDispatcher.onBackPressed()
-                }
-            }
-        }
-    }
-    // Thực hiện tìm kiếm
     private fun performSearch(query: String) {
         if (query.isBlank()) {
-            resetSearchResults()
+            clearSearch()
             return
         }
+
         currentSearchQuery = query
+        isSearchMode = true
+
         searchViewModel.searchImmediate(query, SearchType.APPOINTMENT)
-        Log.d("AppointmentSearch", "Performing search for: $query")
+        updateSearchBarMenu()
         hideKeyboard()
-        binding.swipeRefreshAppointments.isRefreshing = true
-        updateClearButtonVisibility()
+        showLoading()
+
+        Log.d("AppointmentSearch", "Performing search for: $query")
     }
-    // set lại kết quả tìm kiếm
-    private fun resetSearchResults(){
+
+    private fun performQuickFilter(filterText: String) {
+        currentSearchQuery = filterText
+        isSearchMode = true
+
+        searchViewModel.applyQuickFilter(filterText, SearchType.APPOINTMENT)
+        updateSearchBar(filterText)
+        updateSearchBarMenu()
+        hideKeyboard()
+        showLoading()
+
+        Log.d("AppointmentQuickFilter", "Applying quick filter: $filterText")
+    }
+
+    private fun clearSearch() {
         currentSearchQuery = null
         isSearchMode = false
-        binding.searchBar.setText("")
-        binding.searchView.editText.setText("")
-        binding.searchEmptyState.visibility = View.GONE
-        loadAppointments()
+        isSearchViewExpanded = false
+
+        updateSearchBar("")
         searchViewModel.clearSearch()
-        updateClearButtonVisibility()
+        updateSearchBarMenu()
+        loadAppointments()
+        updateUIState()
     }
 
-    // ẩn bàn phím
-    private fun hideKeyboard() {
-        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(binding.searchView.windowToken, 0)
-    }
-    private fun setupSearchObserver(){
-        viewLifecycleOwner.lifecycleScope.launch {
-            searchViewModel.uiState.collect {
-                state ->
-                when(state){
-                    is SearchUiState.Idle -> {
-
-                    }
-                    is SearchUiState.LoadingSuggestions -> {}
-                    is SearchUiState.SuggestionsLoaded -> {
-                        updateSearchSuggestions(state.suggestions)
-                    }
-                    is SearchUiState.Loading -> {
-                        showSearchLoading()
-                    }
-                    is SearchUiState.SearchResultsLoaded -> {
-                        hideSearchLoading()
-                        updateAppointmentsFromSearch(state.results.appointments)
-//                        updateSearchResultsCount(state.results.appointments.size, state.query)
-                        binding.searchBar.setText("${state.query}")
-                    }
-                    is SearchUiState.Error -> {
-                        hideSearchLoading()
-                        showMessage(state.message)
-                    }
-                    is SearchUiState.SearchHistoryDeleted -> {
-                        showMessage(state.message)
-                    }
-
-                    is SearchUiState.SearchHistoryCleared -> {
-                        showMessage(state.message)
-                    }
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            searchViewModel.searchResults.collect {
-                results ->
-                if(results.isNotEmpty()){
-                    updateAppointmentsFromSearch(results.appointments)
-                }
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            searchViewModel.suggestions.collect {
-                suggestions ->
-                updateSearchSuggestions(suggestions)
-            }
-        }
-    }
-    // Thêm các method hỗ trợ search
-    private fun handleSuggestionClick(suggestionText: String) {
-        // Set text to search bar
-        binding.searchView.editText.setText(suggestionText)
-        // Perform search
-        performSearch(suggestionText)
-        // Hide search view after selection
+    private fun hideSearchView() {
         binding.searchView.hide()
+        hideKeyboard()
     }
-    private fun handleDeleteSuggestion(suggestionText:String){
-        searchViewModel.suggestions.value.find {
-            it.text == suggestionText
-        }?.let {
-            suggestion ->
+
+    // MARK: - Search Event Handlers (Optimized)
+
+    private fun handleSearchViewStateChange(newState: SearchView.TransitionState) {
+        when (newState) {
+            SearchView.TransitionState.SHOWING -> {
+                isSearchViewExpanded = true
+                enterSearchMode()
+            }
+            SearchView.TransitionState.HIDDEN -> {
+                isSearchViewExpanded = false
+                exitSearchMode()
+            }
+            else -> {}
+        }
+    }
+
+    private fun handleSearchBarNavigation() {
+        when {
+            binding.searchView.isShowing -> binding.searchView.hide()
+            isSearchMode -> clearSearch()
+            else -> requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
+    }
+
+    private fun handleSuggestionClick(suggestion: SearchSuggestion) {
+        when (suggestion.type) {
+            SearchSuggestionType.QUICK_FILTER -> {
+                performQuickFilter(suggestion.text)
+                hideSearchView()
+            }
+            else -> {
+                binding.searchView.editText.setText(suggestion.text)
+                performSearch(suggestion.text)
+                hideSearchView()
+            }
+        }
+    }
+
+    private fun handleDeleteSuggestion(suggestion: SearchSuggestion) {
+        if (suggestion.type in listOf(SearchSuggestionType.HISTORY, SearchSuggestionType.RECENT)) {
             searchViewModel.deleteSearchHistory(suggestion)
         }
     }
 
-    private fun updateSearchSuggestions(suggestions: List<SearchSuggestion>) {
-        searchSuggestionsAdapter.submitList(suggestions)
+    // MARK: - UI State Management (Simplified)
+
+    private fun enterSearchMode() {
+        binding.fabAddAppointment.hide()
+        hideBottomNavigation()
+        hideEmptyStates()
+        searchViewModel.generateSuggestions("")
     }
 
+    private fun exitSearchMode() {
+        binding.fabAddAppointment.show()
+        showBottomNavigation()
+        updateUIState()
+    }
 
-    private fun updateSearchResultsCount(count: Int, query: String) {
-        // Có thể update title hoặc subtitle để hiển thị số kết quả
-        val message = if (count > 0) {
-            "Found $count appointments for '$query'"
-        } else {
-            "No appointments found for '$query'"
+    private fun updateUIState() {
+        when {
+            isSearchViewExpanded -> return // Don't update UI while search view is expanded
+
+            isSearchMode && appointmentAdapter.itemCount == 0 -> {
+                showSearchEmptyState()
+            }
+
+            !isSearchMode && appointmentAdapter.itemCount == 0 -> {
+                showRegularEmptyState()
+            }
+
+            else -> {
+                showAppointmentsList()
+                updateSearchBar(currentSearchQuery ?: "")
+            }
         }
-        // showMessage(message) // Uncomment nếu muốn hiển thị message
     }
 
-    private fun showSearchLoading() {
-        // Có thể hiển thị loading indicator cho search
+    private fun showSearchEmptyState() {
+        binding.apply {
+            searchEmptyState.visibility = View.VISIBLE
+            recyclerViewAppointments.visibility = View.GONE
+            emptyState.visibility = View.GONE
+            appBarLayout.visibility = View.VISIBLE
+        }
+
+        val message = getSearchEmptyMessage()
+        binding.searchEmptyState.findViewById<TextView>(R.id.tv_empty_message)?.text = message
+        updateSearchBar(currentSearchQuery ?: "")
+    }
+
+    private fun showRegularEmptyState() {
+        binding.apply {
+            searchEmptyState.visibility = View.GONE
+            recyclerViewAppointments.visibility = View.GONE
+            emptyState.visibility = View.VISIBLE
+            appBarLayout.visibility = View.VISIBLE
+        }
+    }
+
+    private fun showAppointmentsList() {
+        binding.apply {
+            searchEmptyState.visibility = View.GONE
+            recyclerViewAppointments.visibility = View.VISIBLE
+            emptyState.visibility = View.GONE
+            appBarLayout.visibility = View.VISIBLE
+        }
+    }
+
+    private fun hideEmptyStates() {
+        binding.apply {
+            emptyState.visibility = View.GONE
+            searchEmptyState.visibility = View.GONE
+        }
+    }
+
+    private fun updateSearchBar(text: String) {
+        binding.searchBar.setText(text)
+    }
+
+    private fun updateSearchBarMenu() {
+        binding.searchBar.menu.clear()
+        binding.searchBar.inflateMenu(R.menu.search_menu)
+
+        val clearMenuItem = binding.searchBar.menu.findItem(R.id.action_clear_search)
+        clearMenuItem?.isVisible = !currentSearchQuery.isNullOrBlank()
+    }
+
+    private fun getSearchEmptyMessage(): String {
+        return when (currentSearchQuery) {
+            "Today" -> "Không có cuộc hẹn nào hôm nay"
+            "Upcoming" -> "Không có cuộc hẹn sắp tới"
+            "Pinned" -> "Không có cuộc hẹn đã ghim"
+            "This Week" -> "Không có cuộc hẹn tuần này"
+            else -> "Không tìm thấy cuộc hẹn nào cho \"$currentSearchQuery\""
+        }
+    }
+
+    // MARK: - Data Observers (Optimized)
+
+    private fun observeUserData() {
+        // Already handled in setupUserInfo()
+    }
+
+    private fun observeContactData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            contactViewModel.contactNamesAndIds.collect { contacts ->
+                contactMap.clear()
+                contacts.forEach { contact ->
+                    contactMap[contact.name] = contact
+                }
+            }
+        }
+    }
+
+    private fun observeAppointmentData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            appointmentViewModel.appointmentUiState.collect { state ->
+                handleAppointmentUiState(state)
+            }
+        }
+    }
+
+    private fun observeSearchData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            searchViewModel.uiState.collect { state ->
+                handleSearchUiState(state)
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            searchViewModel.suggestions.collect { suggestions ->
+                searchSuggestionsAdapter.submitList(suggestions)
+            }
+        }
+    }
+
+    private fun handleAppointmentUiState(state: AppointmentUiState) {
+        when (state) {
+            is AppointmentUiState.Loading -> showLoading()
+
+            is AppointmentUiState.AppointmentsLoaded -> {
+                hideLoading()
+                updateAppointmentsList(state.appointments)
+            }
+
+            is AppointmentUiState.AppointmentCreated -> {
+                hideLoading()
+                showMessage(state.message)
+                dismissAddDialog()
+                refreshData()
+                appointmentViewModel.resetUiState()
+            }
+
+            is AppointmentUiState.Error -> {
+                hideLoading()
+                showMessage(state.message)
+                appointmentViewModel.resetUiState()
+            }
+
+            else -> {}
+        }
+    }
+
+    private fun handleSearchUiState(state: SearchUiState) {
+        when (state) {
+            is SearchUiState.Loading -> showLoading()
+
+            is SearchUiState.SearchResultsLoaded -> {
+                hideLoading()
+                updateAppointmentsList(state.results.appointments)
+                updateSearchBar(state.query)
+                updateUIState()
+            }
+
+            is SearchUiState.SuggestionsLoaded -> {
+                // Already handled by flow collection
+            }
+
+            is SearchUiState.Error -> {
+                hideLoading()
+                showMessage(state.message)
+            }
+
+            is SearchUiState.SearchHistoryDeleted -> {
+                showMessage(state.message)
+            }
+
+            else -> {}
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    private fun loadInitialData() {
+        contactViewModel.getContactNamesAndIds(currentUserId)
+        loadAppointments()
+    }
+
+    private fun refreshData() {
+        if (isSearchMode) {
+            currentSearchQuery?.let { query ->
+                performSearch(query)
+            }
+        } else {
+            loadAppointments()
+        }
+    }
+
+    private fun loadAppointments() {
+        if (currentUserId != 0) {
+            hideEmptyStates()
+            appointmentViewModel.getAllAppointments(
+                userId = currentUserId,
+                searchQuery = currentSearchQuery ?: "",
+                showPinnedOnly = false,
+                status = AppointmentStatus.SCHEDULED
+            )
+        }
+    }
+
+    private fun updateAppointmentsList(appointments: List<AppointmentPlus>) {
+        appointmentAdapter.updateAppointments(appointments)
+        updateUIState()
+    }
+
+    private fun showLoading() {
         binding.swipeRefreshAppointments.isRefreshing = true
     }
 
-    private fun hideSearchLoading() {
+    private fun hideLoading() {
         binding.swipeRefreshAppointments.isRefreshing = false
     }
 
-    private fun handleAppointmentClick(appointment: AppointmentPlus) {
+    private fun showMessage(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    }
 
+    private fun hideKeyboard() {
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.searchView.windowToken, 0)
+    }
+
+    private fun hideBottomNavigation() {
+        (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)?.visibility = View.GONE
+    }
+
+    private fun showBottomNavigation() {
+        (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)?.visibility = View.VISIBLE
+    }
+
+    // MARK: - Event Handlers
+
+    private fun handleAppointmentClick(appointment: AppointmentPlus) {
+        // Implement appointment click logic
     }
 
     private fun handleAppointmentLongClick(appointment: AppointmentPlus, position: Int) {
@@ -647,19 +658,24 @@ class AppointmentMapFragment : Fragment() {
 
     private fun updateSelectedCount(count: Int) {
         binding.tvSelectionCount.text = if (count > 1) {
-            "$count selected contants"
+            "$count selected appointments"
         } else {
-            "$count selected contant"
+            "$count selected appointment"
         }
-        if (count == 0 && isSelectionMode) {
-            closeSelectionMode()
-        } else if (count > 0 && !isSelectionMode) {
-            enterSelectionMode()
+
+        when {
+            count == 0 && isSelectionMode -> exitSelectionMode()
+            count > 0 && !isSelectionMode -> enterSelectionMode()
         }
     }
 
-    // đóng chế độ chọn
-    private fun closeSelectionMode() {
+    private fun enterSelectionMode() {
+        isSelectionMode = true
+        binding.selectionToolbar.visibility = View.VISIBLE
+        binding.appBarLayout.visibility = View.GONE
+    }
+
+    private fun exitSelectionMode() {
         isSelectionMode = false
         binding.selectionToolbar.visibility = View.GONE
         binding.appBarLayout.visibility = View.VISIBLE
@@ -667,119 +683,108 @@ class AppointmentMapFragment : Fragment() {
         appointmentAdapter.clearSelection()
     }
 
-    // vào chế độ chọn
-    private fun enterSelectionMode() {
-        isLocationFromMap = true
-        binding.selectionToolbar.visibility = View.VISIBLE
-        binding.appBarLayout.visibility = View.GONE
-    }
-
-    //toggle pinned
     private fun togglePinned(appointment: AppointmentPlus) {
         appointmentViewModel.togglePin(appointment.id)
     }
 
-    //chuyen sang tran hien thi ban do
     private fun handleNavigationMap(appointment: AppointmentPlus) {
         val intent = Intent(requireContext(), NavigationMapActivity::class.java)
         intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appointment.id)
         startActivity(intent)
     }
 
-    //hien thi loading
-    private fun showLoading() {
-        binding.swipeRefreshAppointments.isRefreshing = true
+    private fun handleMapPickerResult(result: androidx.activity.result.ActivityResult) {
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                location = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
+                latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
+                longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
+
+                addAppointmentDialog?.findViewById<TextInputEditText>(R.id.et_appointment_location)?.let { addressEditText ->
+                    if (!location.isNullOrEmpty()) {
+                        addressEditText.setText(location)
+                    } else {
+                        addressEditText.setText(getString(R.string.no_location_selected))
+                        location = ""
+                    }
+                }
+            }
+        }
     }
 
-    //an loading
-    private fun hideLoading() {
-        binding.swipeRefreshAppointments.isRefreshing = false
+    // MARK: - Selection Actions
+
+    private fun handlePinAction() {
+        val selectedAppointments = appointmentAdapter.getSelectedAppointments()
+        selectedAppointments.forEach {
+            appointmentViewModel.togglePin(it.id)
+        }
+        showMessage("Đã cập nhật trạng thái ghim cho ${selectedAppointments.size} cuộc hẹn")
+        exitSelectionMode()
     }
 
+    private fun handleShareAction() {
+        val selectedAppointments = appointmentAdapter.getSelectedAppointments()
+        if (selectedAppointments.isNotEmpty()) {
+            val shareText = buildString {
+                append("Thông tin cuộc hẹn:\n\n")
+                selectedAppointments.forEach { appointment ->
+                    append("Tiêu đề: ${appointment.title}\n")
+                    append("Nội dung: ${appointment.description}\n")
+                    append("Địa chỉ: ${appointment.location}\n\n")
+                }
+            }
 
-    // cập nhật trạng thái rỗng
-    private fun updateEmptyState(isEmpty: Boolean) {
-        val emptyStateView = view?.findViewById<View>(R.id.empty_state)
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, shareText)
+            }
 
-        if (isEmpty && !isSearchMode && currentSearchQuery.isNullOrEmpty()) {
-            emptyStateView?.visibility = View.VISIBLE
-            binding.recyclerViewAppointments.visibility = View.GONE
+            startActivity(Intent.createChooser(shareIntent, "Chia sẻ cuộc hẹn"))
+        }
+        exitSelectionMode()
+    }
+
+    private fun handleDeleteAction() {
+        val selectedAppointments = appointmentAdapter.getSelectedAppointments()
+        if (selectedAppointments.isNotEmpty()) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Xóa cuộc hẹn")
+                .setMessage("Bạn có chắc chắn muốn xóa ${selectedAppointments.size} cuộc hẹn đã chọn?")
+                .setPositiveButton("Xóa") { dialog, _ ->
+                    selectedAppointments.forEach { appointment ->
+                        appointmentViewModel.deleteAppointment(appointment.id)
+                    }
+                    showMessage("Đã xóa ${selectedAppointments.size} cuộc hẹn")
+                    exitSelectionMode()
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Hủy") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
         } else {
-            emptyStateView?.visibility = View.GONE
-            binding.recyclerViewAppointments.visibility = View.VISIBLE
-        }
-
-        updateSearchEmptyState(isEmpty && isSearchMode && !currentSearchQuery.isNullOrEmpty())
-    }
-
-    private fun updateSearchEmptyState(showSearchEmptyState: Boolean) {
-        val searchEmptyStateView = view?.findViewById<View>(R.id.search_empty_state)
-
-        if (showSearchEmptyState) {
-            searchEmptyStateView?.visibility = View.VISIBLE
-        } else {
-            searchEmptyStateView?.visibility = View.GONE
+            exitSelectionMode()
         }
     }
 
-
-
-    // Hiển thị message
-    private fun showMessage(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    private fun handleMoreAction() {
+        // Implement more actions
     }
 
-    // Hiển thị error
-    private fun showError(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
-    }
+    // MARK: - Add Appointment Dialog
 
-    //load cuộn hẹn
-    private fun loadAppointments() {
-        if (currentUserId != 0) {
-            binding.emptyState.visibility = View.GONE
-            binding.searchEmptyState.visibility = View.GONE
-            appointmentViewModel.getAllAppointments(
-                userId = currentUserId,
-                searchQuery = currentSearchQuery ?: "",
-                showPinnedOnly = showPinedOnly,
-                status = AppointmentStatus.SCHEDULED
-            )
-        }
-    }
-
-    //hiển thị dialog thêm cuộc hẹn
     private fun showAddAppointment() {
         val dialog = Dialog(requireContext())
         addAppointmentDialog = dialog
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
-        val dialogBinding =
-            DialogAddAppointmentBinding.inflate(LayoutInflater.from(requireContext()))
+        val dialogBinding = DialogAddAppointmentBinding.inflate(LayoutInflater.from(requireContext()))
         dialog.setContentView(dialogBinding.root)
 
-        // reset dialog
         resetDialogData()
-
-        dialogBinding.tilAppointmentLocation.setEndIconOnClickListener {
-            val intent = Intent(requireContext(), GoogleMapActivity::class.java)
-            mapPickerLauncher.launch(intent)
-        }
-
-        setupContactDropdown(dialogBinding)
-        setupColorPicker(dialogBinding)
-        setupLocationInput(dialogBinding)
-
-
-        dialogBinding.btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
-        dialogBinding.layoutReminder.setOnClickListener {
-            showDateTimePicker(dialogBinding)
-        }
-        dialogBinding.btnSave.setOnClickListener {
-            saveAppointment(dialogBinding)
-        }
+        setupAddAppointmentDialog(dialogBinding)
 
         dialog.show()
         dialog.window?.apply {
@@ -793,15 +798,42 @@ class AppointmentMapFragment : Fragment() {
         }
     }
 
-    //set up contact drop down với placeholder option
+    private fun setupAddAppointmentDialog(dialogBinding: DialogAddAppointmentBinding) {
+        dialogBinding.tilAppointmentLocation.setEndIconOnClickListener {
+            val intent = Intent(requireContext(), GoogleMapActivity::class.java)
+            mapPickerLauncher.launch(intent)
+        }
+
+        setupContactDropdown(dialogBinding)
+        setupColorPicker(dialogBinding)
+        setupLocationInput(dialogBinding)
+
+        dialogBinding.btnCancel.setOnClickListener {
+            dismissAddDialog()
+        }
+
+        dialogBinding.layoutReminder.setOnClickListener {
+            showDateTimePicker(dialogBinding)
+        }
+
+        dialogBinding.btnSave.setOnClickListener {
+            saveAppointment(dialogBinding)
+        }
+    }
+
+    private fun dismissAddDialog() {
+        addAppointmentDialog?.dismiss()
+        resetDialogData()
+    }
+
+    // MARK: - Dialog Setup Methods (keeping existing implementation)
+
     private fun setupContactDropdown(dialogAddAppointmentBinding: DialogAddAppointmentBinding) {
-        // Ngăn người dùng nhập trực tiếp vào dropdown
         dialogAddAppointmentBinding.autoContactName.inputType = InputType.TYPE_NULL
 
         viewLifecycleOwner.lifecycleScope.launch {
             contactViewModel.contactNamesAndIds.collect { contacts ->
                 if (contacts.isNotEmpty()) {
-                    // Thêm option placeholder ở đầu danh sách
                     val contactNames = mutableListOf("-- Chọn liên hệ --").apply {
                         addAll(contacts.map { it.name })
                     }.toTypedArray()
@@ -812,31 +844,20 @@ class AppointmentMapFragment : Fragment() {
                         contactNames
                     )
                     dialogAddAppointmentBinding.autoContactName.setAdapter(adapter)
-
-                    // Đặt text placeholder làm mặc định
                     dialogAddAppointmentBinding.autoContactName.setText(contactNames[0], false)
                     currentContactId = 0
 
                     dialogAddAppointmentBinding.autoContactName.setOnItemClickListener { _, _, position, _ ->
                         if (position == 0) {
-                            // Nếu chọn placeholder, reset currentContactId
                             currentContactId = 0
-                            dialogAddAppointmentBinding.autoContactName.setText(
-                                contactNames[0],
-                                false
-                            )
+                            dialogAddAppointmentBinding.autoContactName.setText(contactNames[0], false)
                         } else {
-                            // Nếu chọn contact thực, lấy thông tin contact (position - 1 vì có placeholder)
                             val selectedContactName = contacts[position - 1].name
                             currentContactId = contacts[position - 1].id
-                            dialogAddAppointmentBinding.autoContactName.setText(
-                                selectedContactName,
-                                false
-                            )
+                            dialogAddAppointmentBinding.autoContactName.setText(selectedContactName, false)
                         }
                     }
                 } else {
-                    // Nếu không có contact nào
                     val emptyArray = arrayOf("Chưa có liên hệ nào")
                     val adapter = ArrayAdapter(
                         requireContext(),
@@ -852,12 +873,8 @@ class AppointmentMapFragment : Fragment() {
     }
 
     private fun setupColorPicker(dialogBinding: DialogAddAppointmentBinding) {
-        colorAdapter = ColorPickerAdapter(
-            listColor,
-            colorSourceNames
-        ) { colorResId, colorName ->
+        colorAdapter = ColorPickerAdapter(listColor, colorSourceNames) { colorResId, colorName ->
             val color = ContextCompat.getColor(requireContext(), colorResId)
-
             dialogBinding.layoutAddAppointment.setBackgroundColor(color)
             selectedColorName = colorName
         }
@@ -867,21 +884,18 @@ class AppointmentMapFragment : Fragment() {
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
     }
 
-    // setup location input
     private fun setupLocationInput(dialogBinding: DialogAddAppointmentBinding) {
+        var isLocationFromMap = false
+
         dialogBinding.etAppointmentLocation.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
             override fun afterTextChanged(s: Editable?) {
                 val manualLocation = s?.toString()?.trim()
 
-                // Chỉ cập nhật location nếu người dùng đang nhập thủ công (không phải từ map picker)
                 if (!isLocationFromMap) {
                     if (!manualLocation.isNullOrEmpty()) {
                         location = manualLocation
-                        // Reset coordinates vì đây là input thủ công
                         latitude = null
                         longitude = null
                     } else {
@@ -891,19 +905,14 @@ class AppointmentMapFragment : Fragment() {
                     }
                 }
 
-                // Reset flag sau khi xử lý
                 if (isLocationFromMap) {
                     isLocationFromMap = false
                 }
             }
         })
-//        // Thêm hint cho EditText
-//        dialogBinding.etAppointmentLocation.hint = ""
 
-        // Clear coordinates when user starts typing manually
         dialogBinding.etAppointmentLocation.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus && !isLocationFromMap) {
-                // User started typing manually, prepare to clear coordinates
                 val currentText = dialogBinding.etAppointmentLocation.text?.toString()?.trim()
                 if (currentText != location) {
                     latitude = null
@@ -913,11 +922,8 @@ class AppointmentMapFragment : Fragment() {
         }
     }
 
-    // hiển thị ra ngày ,tháng năm
     private fun showDateTimePicker(binding: DialogAddAppointmentBinding) {
-
-        val constraintBuilder =
-            CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
+        val constraintBuilder = CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Select date")
@@ -928,14 +934,12 @@ class AppointmentMapFragment : Fragment() {
         datePicker.addOnPositiveButtonClickListener { selectedDate ->
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = selectedDate
-
             showTimePicker(calendar, binding)
         }
 
         datePicker.show(childFragmentManager, "date_picker")
     }
 
-    // hiển thị thời gian chọn
     private fun showTimePicker(calendar: Calendar, binding: DialogAddAppointmentBinding) {
         val now = Calendar.getInstance()
 
@@ -952,15 +956,9 @@ class AppointmentMapFragment : Fragment() {
 
             if (isToday(calendar)) {
                 if (selectedHour < now.get(Calendar.HOUR_OF_DAY) ||
-                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(
-                        Calendar.MINUTE
-                    )
+                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(Calendar.MINUTE)
                 ) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Please select a future time",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "Please select a future time", Toast.LENGTH_SHORT).show()
                     return@addOnPositiveButtonClickListener
                 }
             }
@@ -970,7 +968,6 @@ class AppointmentMapFragment : Fragment() {
             calendar.set(Calendar.SECOND, 0)
 
             reminderTime = calendar.timeInMillis
-
             updateReminderDisplay(binding)
         }
 
@@ -997,12 +994,11 @@ class AppointmentMapFragment : Fragment() {
         }
 
         if (reminderTime == null) {
-            Toast.makeText(requireContext(), "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(requireContext(), "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val endTime = reminderTime!! + (60 * 60 * 1000) // Add 1 hour
+        val endTime = reminderTime!! + (60 * 60 * 1000)
 
         val appointment = AppointmentPlus(
             userId = currentUserId,
@@ -1020,7 +1016,6 @@ class AppointmentMapFragment : Fragment() {
             isPinned = isPinned
         )
 
-        // tạo cuoc hẹn
         appointmentViewModel.createAppointment(appointment)
     }
 
@@ -1031,7 +1026,6 @@ class AppointmentMapFragment : Fragment() {
         longitude = null
         reminderTime = null
         selectedColorName = "color_white"
-        isLocationFromMap = false
     }
 
     private fun isToday(calendar: Calendar): Boolean {
@@ -1046,94 +1040,6 @@ class AppointmentMapFragment : Fragment() {
         binding.tvReminderTime.text = formattedDate
     }
 
-    // xu ly action pin
-    private fun handlePinAction() {
-        val selectedAppointments = appointmentAdapter.getSelectedAppointments()
-        selectedAppointments.forEach {
-            appointmentViewModel.togglePin(it.id)
-        }
-        showMessage("Đã cập nhật trạng thái ghim cho ${selectedAppointments.size} cuộc hẹn")
-        closeSelectionMode()
-    }
-
-    // xu ly action share
-    private fun handleShareAction() {
-        val selectedContacts = appointmentAdapter.getSelectedAppointments()
-        if (selectedContacts.isNotEmpty()) {
-            val shareText = buildString {
-                append("Thông tin cuộc hẹn:\n\n")
-                selectedContacts.forEach { appointment ->
-                    append("Tiêu đề: ${appointment.title}\n")
-                    append("Nội dung: ${appointment.description}\n")
-                    append("Địa chỉ: ${appointment.location}\n")
-                    append("\n")
-                }
-            }
-
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, shareText)
-            }
-
-            startActivity(Intent.createChooser(shareIntent, "Chia sẻ cuộn hẹn"))
-        }
-        closeSelectionMode()
-    }
-
-    // xử lý delete
-    private fun handleDeleteAction() {
-        val selectedAppointments = appointmentAdapter.getSelectedAppointments()
-        if (selectedAppointments.isNotEmpty()) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Xóa cuộc hẹn")
-                .setMessage("Bạn có chắc chắn muốn xóa ${selectedAppointments.size} cuộc hẹn đã chọn?")
-                .setPositiveButton("Xóa") { dialog, _ ->
-                    selectedAppointments.forEach { appointment ->
-                        appointmentViewModel.deleteAppointment(appointment.id)
-                    }
-                    showMessage("Đã xóa ${selectedAppointments.size} cuộc hẹn")
-                    closeSelectionMode()
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Hủy") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
-        } else {
-            closeSelectionMode()
-        }
-    }
-
-    // xử lý action more
-    private fun handleMoreAction() {
-
-    }
-
-
-    // cập nhật danh sách cuộc hẹn từ kết quả tìm kiếm
-    private fun updateAppointmentsFromSearch(appointments:List<AppointmentPlus>){
-        appointmentAdapter.updateAppointments(appointments)
-
-        val isEmpty = appointments.isEmpty()
-
-        // Update empty state with search context
-        if (isSearchViewExpanded) {
-            binding.searchEmptyState.visibility = View.GONE
-            return
-        }
-
-        // Only show empty state in fragment when search view is closed
-        if (isEmpty && isSearchMode && !currentSearchQuery.isNullOrEmpty()) {
-            binding.searchEmptyState.visibility = View.VISIBLE
-            binding.recyclerViewAppointments.visibility = View.GONE
-            binding.emptyState.visibility = View.GONE
-        } else {
-            binding.searchEmptyState.visibility = View.GONE
-            binding.recyclerViewAppointments.visibility = View.VISIBLE
-            binding.emptyState.visibility = View.GONE
-        }
-    }
     override fun onDestroyView() {
         super.onDestroyView()
         addAppointmentDialog?.dismiss()

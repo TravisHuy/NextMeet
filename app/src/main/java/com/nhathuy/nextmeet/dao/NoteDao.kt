@@ -205,4 +205,39 @@ interface NoteDao {
      */
     @Query("SELECT DISTINCT title FROM notes WHERE user_id = :userId AND title != '' AND title LIKE :query || '%' ORDER BY title LIMIT :limit")
     fun getTitleSuggestions(userId: Int, query: String, limit: Int = 5): Flow<List<String>>
+
+
+    /**
+     * Lấy ghi chú hôm nay
+     */
+    @Query("""
+        SELECT * FROM notes
+        WHERE user_id = :userId
+        AND DATE(created_at/1000, 'unixepoch') = DATE('now')
+        ORDER BY is_pinned DESC, updated_at DESC
+    """)
+    fun getTodayNotes(userId: Int): Flow<List<Note>>
+
+    /**
+     * Lấy ghi chú là checklist
+     */
+    @Query("""
+        SELECT * FROM notes
+        WHERE user_id = :userId 
+        AND note_type = "CHECKLIST"
+        ORDER BY is_pinned DESC, updated_at DESC
+    """)
+    fun getChecklistNotes(userId: Int): Flow<List<Note>>
+
+    /**
+     * Lấy ghi chú gần đây (Flow version)
+     */
+    @Query("""
+        SELECT * FROM notes
+        WHERE user_id = :userId
+        ORDER BY updated_at DESC
+        LIMIT :limit
+    """)
+    fun getRecentNotesFlow(userId: Int, limit: Int = 10): Flow<List<Note>>
+
 }

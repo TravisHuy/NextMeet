@@ -4,9 +4,7 @@ import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
-import com.nhathuy.nextmeet.utils.ValidationUtils
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -404,4 +402,6 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
 
         return suggestions.take(10).toList()
     }
+
+
 }
