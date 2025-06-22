@@ -214,7 +214,9 @@ class AppointmentPlusAdapter(
         appointments.addAll(newAppointments)
         diffResult.dispatchUpdatesTo(this)
     }
-
+    fun getCurrentAppointments(): List<AppointmentPlus> {
+        return appointments.toList()
+    }
     private class AppointmentDiffCallback(
         private val oldList: List<AppointmentPlus>,
         private val newList: List<AppointmentPlus>

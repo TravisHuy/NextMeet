@@ -102,70 +102,6 @@
             app:strokeWidth="1dp" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Fullscreen SearchView -->
-    <com.google.android.material.search.SearchView
-        android:id="@+id/searchView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:hint="Search appointments..."
-        app:layout_anchor="@id/searchBar"
-        app:layout_anchorGravity="top"
-        android:contentDescription="Search appointments interface">
-
-        <!-- Search suggestions list -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_search_suggestions"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:padding="16dp"
-            android:scrollbars="vertical"
-            android:fadeScrollbars="false"
-            android:scrollbarStyle="outsideOverlay" />
-
-
-    </com.google.android.material.search.SearchView>
-
-
-    <!-- Empty state view for search -->
-    <LinearLayout
-        android:id="@+id/search_empty_state"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:visibility="gone"
-        tools:visibility="gone">
-
-        <ImageView
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_marginBottom="24dp"
-            android:contentDescription="No results found"
-            android:src="@drawable/ic_search_empty"
-            app:tint="?attr/colorOnSurfaceVariant" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="No appointments found"
-            android:textAlignment="center"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Try different search terms"
-            android:textAlignment="center"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-
     <!-- Main content with appointments list -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshAppointments"
@@ -185,6 +121,47 @@
             android:scrollbarStyle="outsideOverlay" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+    <!-- Empty state view for search - THÊM layout_behavior -->
+    <LinearLayout
+        android:id="@+id/search_empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:background="@color/white"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:visibility="gone">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginBottom="24dp"
+            android:contentDescription="No results found"
+            android:src="@drawable/ic_search_empty"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/tv_empty_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No appointments found"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Try different search terms"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="16sp" />
+    </LinearLayout>
+
     <!-- Empty state for no appointments -->
     <LinearLayout
         android:id="@+id/empty_state"
@@ -194,6 +171,7 @@
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone"
+        android:background="@color/white"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:visibility="visible">
 
@@ -223,6 +201,29 @@
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="16sp" />
     </LinearLayout>
+
+    <!-- Fullscreen SearchView -->
+    <com.google.android.material.search.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:hint="Search appointments..."
+        app:layout_anchor="@id/searchBar"
+        app:layout_anchorGravity="top"
+        android:contentDescription="Search appointments interface">
+
+        <!-- Search suggestions list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_search_suggestions"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="16dp"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:scrollbarStyle="outsideOverlay" />
+
+    </com.google.android.material.search.SearchView>
 
     <!-- Add appointment FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

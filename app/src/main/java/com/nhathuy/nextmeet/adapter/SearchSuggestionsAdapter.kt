@@ -13,8 +13,8 @@ import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchSuggestionType
 
 class SearchSuggestionsAdapter(
-    private val onSuggestionClick: (String) -> Unit,
-    private val onDeleteSuggestion: (String) -> Unit
+    private val onSuggestionClick: (SearchSuggestion) -> Unit,
+    private val onDeleteSuggestion: (SearchSuggestion) -> Unit
 ) : ListAdapter<SearchSuggestion, SearchSuggestionsAdapter.SuggestionViewHolder>(DiffCallback) {
 
     inner class SuggestionViewHolder(
@@ -33,16 +33,16 @@ class SearchSuggestionsAdapter(
                 }
 
                 //show delete button only for history items
-                if (suggestion.type == SearchSuggestionType.HISTORY) {
+                if (suggestion.type == SearchSuggestionType.HISTORY || suggestion.type == SearchSuggestionType.RECENT) {
                     ivDeleteSuggestion.visibility = View.VISIBLE
                     ivDeleteSuggestion.setOnClickListener {
-                        onDeleteSuggestion(suggestion.text)
+                        onDeleteSuggestion(suggestion   )
                     }
                 } else {
                     ivDeleteSuggestion.visibility = View.GONE
                 }
 
-                root.setOnClickListener { onSuggestionClick(suggestion.text) }
+                root.setOnClickListener { onSuggestionClick(suggestion) }
 
                 if (suggestion.resultCount > 0) {
                     binding.tvResultCount.text = "${suggestion.resultCount} results"

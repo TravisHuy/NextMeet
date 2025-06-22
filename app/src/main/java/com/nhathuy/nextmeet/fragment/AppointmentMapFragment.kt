@@ -166,21 +166,6 @@ class AppointmentMapFragment : Fragment() {
             R.color.color_brown to "color_brown",
             R.color.color_gray to "color_gray"
         )
-
-        private const val FILTER_TODAY = "Today"
-        private const val FILTER_PINNED = "Pinned"
-        private const val FILTER_WEEK = "This Week"
-        private const val FILTER_UPCOMING = "Upcoming"
-
-        fun getFilterKeyFormText(text:String ,context: Context):String? {
-            return when(text){
-                context.getString(R.string.today)  -> FILTER_TODAY
-                context.getString(R.string.pinned) -> FILTER_PINNED
-                context.getString(R.string.weekend) -> FILTER_WEEK
-                context.getString(R.string.upcoming) -> FILTER_UPCOMING
-                else -> null
-            }
-        }
     }
 
     override fun onCreateView(
@@ -346,6 +331,8 @@ class AppointmentMapFragment : Fragment() {
                 else -> false
             }
         }
+        // thêm search type cho appointment
+        searchViewModel.setSearchType(SearchType.APPOINTMENT)
 
         //nút xóa tìm kiếm
         setupClearSearchButton()
@@ -398,11 +385,11 @@ class AppointmentMapFragment : Fragment() {
 
     private fun setupSearchAdapter(){
         searchSuggestionsAdapter = SearchSuggestionsAdapter(
-            onSuggestionClick = { suggestionText ->
-                handleSuggestionClick(suggestionText)
+            onSuggestionClick = { suggestion ->
+                handleSuggestionClick(suggestion)
             },
-            onDeleteSuggestion = { suggestionText ->
-                handleDeleteSuggestion(suggestionText)
+            onDeleteSuggestion = { suggestion ->
+                handleDeleteSuggestion(suggestion)
             }
         )
         binding.rvSearchSuggestions.apply {
@@ -460,6 +447,7 @@ class AppointmentMapFragment : Fragment() {
                     binding.emptyState.visibility = View.GONE
                     binding.searchEmptyState.visibility = View.GONE
                     searchViewModel.initializeSearch(currentUserId)
+                    searchViewModel.setSearchType(SearchType.APPOINTMENT)
                     searchViewModel.generateSuggestions("")
                 }
                 SearchView.TransitionState.HIDDEN -> {
@@ -469,10 +457,15 @@ class AppointmentMapFragment : Fragment() {
                     binding.fabAddAppointment.show()
 
                     showBottomNavigation()
+
+                    binding.appBarLayout.visibility = View.VISIBLE
+
                     if (!currentSearchQuery.isNullOrBlank() && appointmentAdapter.itemCount == 0) {
+                        binding.appBarLayout.visibility = View.VISIBLE
                         binding.searchEmptyState.visibility = View.VISIBLE
                         binding.recyclerViewAppointments.visibility = View.GONE
                         binding.emptyState.visibility = View.GONE
+                        binding.searchBar.setText(currentSearchQuery!!)
                     } else if (currentSearchQuery.isNullOrBlank()) {
                         // No search, show normal empty state if needed
                         resetSearchResults()
@@ -481,6 +474,7 @@ class AppointmentMapFragment : Fragment() {
                         binding.searchEmptyState.visibility = View.GONE
                         binding.recyclerViewAppointments.visibility = View.VISIBLE
                         binding.emptyState.visibility = View.GONE
+                        binding.searchBar.setText(currentSearchQuery!!)
                     }
 
                 }
@@ -525,6 +519,26 @@ class AppointmentMapFragment : Fragment() {
         binding.swipeRefreshAppointments.isRefreshing = true
         updateClearButtonVisibility()
     }
+
+    /**
+     * Thực hiện quick filter cho appointment
+     */
+    private fun performQuickFilter(filterText: String) {
+        currentSearchQuery = filterText
+        isSearchMode = true
+
+        // Cập nhật search bar để hiển thị filter đang áp dụng
+        binding.searchBar.setText(filterText)
+
+        // Gọi quick filter từ SearchViewModel
+        searchViewModel.applyQuickFilter(filterText, SearchType.APPOINTMENT)
+
+        Log.d("AppointmentQuickFilter", "Applying quick filter: $filterText")
+        hideKeyboard()
+        binding.swipeRefreshAppointments.isRefreshing = true
+        updateClearButtonVisibility()
+    }
+
     // set lại kết quả tìm kiếm
     private fun resetSearchResults(){
         currentSearchQuery = null
@@ -562,10 +576,12 @@ class AppointmentMapFragment : Fragment() {
                         updateAppointmentsFromSearch(state.results.appointments)
 //                        updateSearchResultsCount(state.results.appointments.size, state.query)
                         binding.searchBar.setText("${state.query}")
+                        binding.appBarLayout.visibility = View.VISIBLE
                     }
                     is SearchUiState.Error -> {
                         hideSearchLoading()
                         showMessage(state.message)
+
                     }
                     is SearchUiState.SearchHistoryDeleted -> {
                         showMessage(state.message)
@@ -594,19 +610,26 @@ class AppointmentMapFragment : Fragment() {
         }
     }
     // Thêm các method hỗ trợ search
-    private fun handleSuggestionClick(suggestionText: String) {
-        // Set text to search bar
-        binding.searchView.editText.setText(suggestionText)
-        // Perform search
-        performSearch(suggestionText)
-        // Hide search view after selection
-        binding.searchView.hide()
+    private fun handleSuggestionClick(suggestion: SearchSuggestion) {
+        when(suggestion.type){
+            SearchSuggestionType.QUICK_FILTER -> {
+                performQuickFilter(suggestion.text)
+                binding.searchView.hide()
+            }
+            else -> {
+                // set text cho search bar
+                binding.searchView.editText.setText(suggestion.text)
+                // Perform search
+                performSearch(suggestion.text)
+                // Hide search view after selection
+                binding.searchView.hide()
+            }
+        }
+
     }
-    private fun handleDeleteSuggestion(suggestionText:String){
-        searchViewModel.suggestions.value.find {
-            it.text == suggestionText
-        }?.let {
-            suggestion ->
+    private fun handleDeleteSuggestion(suggestion: SearchSuggestion){
+        if (suggestion.type == SearchSuggestionType.HISTORY ||
+            suggestion.type == SearchSuggestionType.RECENT) {
             searchViewModel.deleteSearchHistory(suggestion)
         }
     }
@@ -1110,7 +1133,6 @@ class AppointmentMapFragment : Fragment() {
 
     }
 
-
     // cập nhật danh sách cuộc hẹn từ kết quả tìm kiếm
     private fun updateAppointmentsFromSearch(appointments:List<AppointmentPlus>){
         appointmentAdapter.updateAppointments(appointments)
@@ -1125,13 +1147,45 @@ class AppointmentMapFragment : Fragment() {
 
         // Only show empty state in fragment when search view is closed
         if (isEmpty && isSearchMode && !currentSearchQuery.isNullOrEmpty()) {
+            val emptyMessage = when (currentSearchQuery) {
+                "Today" -> "Không có cuộc hẹn nào hôm nay"
+                "Upcoming" -> "Không có cuộc hẹn sắp tới"
+                "Pinned" -> "Không có cuộc hẹn đã ghim"
+                "This Week" -> "Không có cuộc hẹn tuần này"
+                else -> "Không tìm thấy cuộc hẹn nào cho \"$currentSearchQuery\""
+            }
+
+            // Cập nhật text cho empty state
+            binding.searchEmptyState.findViewById<TextView>(R.id.tv_empty_message)?.text = emptyMessage
             binding.searchEmptyState.visibility = View.VISIBLE
             binding.recyclerViewAppointments.visibility = View.GONE
             binding.emptyState.visibility = View.GONE
-        } else {
+
+            binding.appBarLayout.visibility = View.VISIBLE
+            if (!currentSearchQuery.isNullOrEmpty()) {
+                binding.searchBar.setText(currentSearchQuery)
+            }
+        }
+        else if (isEmpty && currentSearchQuery.isNullOrEmpty()) {
+            // Không có search, hiển thị empty state bình thường
+            binding.searchEmptyState.visibility = View.GONE
+            binding.recyclerViewAppointments.visibility = View.GONE
+            binding.emptyState.visibility = View.VISIBLE
+            binding.appBarLayout.visibility = View.VISIBLE
+        }
+
+        else {
             binding.searchEmptyState.visibility = View.GONE
             binding.recyclerViewAppointments.visibility = View.VISIBLE
             binding.emptyState.visibility = View.GONE
+
+            binding.appBarLayout.visibility = View.VISIBLE
+
+            // Cập nhật search bar text nếu có query
+            if (!currentSearchQuery.isNullOrEmpty()) {
+                binding.searchBar.setText(currentSearchQuery)
+            }
+
         }
     }
     override fun onDestroyView() {

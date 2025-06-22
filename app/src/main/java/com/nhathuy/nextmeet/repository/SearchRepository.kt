@@ -14,6 +14,7 @@ import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchSuggestionType
 import com.nhathuy.nextmeet.model.SearchType
 import com.nhathuy.nextmeet.model.UniversalSearchResult
+import com.nhathuy.nextmeet.utils.Constant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
+import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,7 +42,8 @@ class SearchRepository @Inject constructor(
     suspend fun performUniversalSearch(userId: Int, query: String): UniversalSearchResult {
         return coroutineScope {
             val contactsDeferred = async { contactDao.searchContacts(userId, query).first() }
-            val appointmentsDeferred = async { appointmentDao.searchAppointments(userId, query).first() }
+            val appointmentsDeferred =
+                async { appointmentDao.searchAppointments(userId, query).first() }
             val notesDeferred = async { noteDao.searchNotePlus(userId, query).first() }
 
             val contacts = contactsDeferred.await()
@@ -71,7 +74,8 @@ class SearchRepository @Inject constructor(
     /**
      * Tìm kiếm ghi chú
      */
-    suspend fun searchNotes(userId: Int, query: String) : Flow<List<Note>> = noteDao.searchNotePlus(userId, query)
+    suspend fun searchNotes(userId: Int, query: String): Flow<List<Note>> =
+        noteDao.searchNotePlus(userId, query)
 
     /**
      * tạo gợi ý tìm kiếm
@@ -119,7 +123,8 @@ class SearchRepository @Inject constructor(
 
         //2. autocomplete suggestions
         if (query.length >= 2) {
-            val autocompleteSuggestions = generateAutocompleteSuggestions(userId, query, searchType).first()
+            val autocompleteSuggestions =
+                generateAutocompleteSuggestions(userId, query, searchType).first()
             suggestions.addAll(autocompleteSuggestions)
         }
 
@@ -153,11 +158,10 @@ class SearchRepository @Inject constructor(
     ): Flow<List<SearchSuggestion>> = flow {
         val suggestions = mutableListOf<SearchSuggestion>()
 
-        when(searchType) {
+        when (searchType) {
             // tên gợi ý
             SearchType.CONTACT -> {
-                contactDao.getNameSuggestions(userId,query,5).first().forEach {
-                    name ->
+                contactDao.getNameSuggestions(userId, query, 5).first().forEach { name ->
                     suggestions.add(
                         SearchSuggestion(
                             text = name,
@@ -170,8 +174,7 @@ class SearchRepository @Inject constructor(
                 }
 
                 // Địa chỉ đề xuất
-                contactDao.getAddressSuggestions(userId,query,5).first().forEach {
-                        address ->
+                contactDao.getAddressSuggestions(userId, query, 5).first().forEach { address ->
                     suggestions.add(
                         SearchSuggestion(
                             text = address,
@@ -196,6 +199,7 @@ class SearchRepository @Inject constructor(
                     )
                 }
             }
+
             SearchType.APPOINTMENT -> {
                 // tiêu đề đề xuất
                 appointmentDao.getTitleSuggestions(userId, query, 5).first().forEach { title ->
@@ -211,18 +215,20 @@ class SearchRepository @Inject constructor(
                 }
 
                 // Địa chỉ đề xuất
-                appointmentDao.getLocationSuggestions(userId, query, 3).first().forEach { location ->
-                    suggestions.add(
-                        SearchSuggestion(
-                            text = location,
-                            type = SearchSuggestionType.AUTOCOMPLETE,
-                            searchType = searchType,
-                            icon = R.drawable.ic_geo,
-                            subtitle = context.getString(R.string.address)
+                appointmentDao.getLocationSuggestions(userId, query, 3).first()
+                    .forEach { location ->
+                        suggestions.add(
+                            SearchSuggestion(
+                                text = location,
+                                type = SearchSuggestionType.AUTOCOMPLETE,
+                                searchType = searchType,
+                                icon = R.drawable.ic_geo,
+                                subtitle = context.getString(R.string.address)
+                            )
                         )
-                    )
-                }
+                    }
             }
+
             SearchType.NOTE -> {
                 // Tiều đề gợi ý
                 noteDao.getTitleSuggestions(userId, query, 8).first().forEach { title ->
@@ -237,12 +243,31 @@ class SearchRepository @Inject constructor(
                     )
                 }
             }
+
             SearchType.ALL -> {
 
                 coroutineScope {
-                    val contactSuggestionsDeferred =  async { generateAutocompleteSuggestions(userId, query, SearchType.CONTACT).first() }
-                    val appointmentSuggestionsDeferred = async { generateAutocompleteSuggestions(userId, query, SearchType.APPOINTMENT).first() }
-                    val noteSuggestionsDeferred = async { generateAutocompleteSuggestions(userId, query, SearchType.NOTE).first() }
+                    val contactSuggestionsDeferred = async {
+                        generateAutocompleteSuggestions(
+                            userId,
+                            query,
+                            SearchType.CONTACT
+                        ).first()
+                    }
+                    val appointmentSuggestionsDeferred = async {
+                        generateAutocompleteSuggestions(
+                            userId,
+                            query,
+                            SearchType.APPOINTMENT
+                        ).first()
+                    }
+                    val noteSuggestionsDeferred = async {
+                        generateAutocompleteSuggestions(
+                            userId,
+                            query,
+                            SearchType.NOTE
+                        ).first()
+                    }
 
 
                     val contactSuggestions = contactSuggestionsDeferred.await().take(3)
@@ -271,48 +296,143 @@ class SearchRepository @Inject constructor(
     /**
      * lấy các gợi ý lọc nhanh
      */
-    private fun getQuickFilterSuggestions(searchType: SearchType) : List<SearchSuggestion>{
-        return when(searchType){
+    fun getQuickFilterSuggestions(searchType: SearchType): List<SearchSuggestion> {
+        return when (searchType) {
             SearchType.CONTACT -> listOf(
-                SearchSuggestion(context.getString(R.string.favorite), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_favorite_heart, "Liên hệ đã ghim"),
-                SearchSuggestion(context.getString(R.string.have_phone_number), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_phone, "Liên hệ có SĐT"),
-                SearchSuggestion(context.getString(R.string.have_email), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_email, "Liên hệ có email"),
-                SearchSuggestion(context.getString(R.string.have_address), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_geo, "Liên hệ có địa chỉ")
+                SearchSuggestion(
+                    context.getString(R.string.favorite),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_favorite_heart,
+                    "Liên hệ đã ghim"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.have_phone_number),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_phone,
+                    "Liên hệ có SĐT"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.have_email),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_email,
+                    "Liên hệ có email"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.have_address),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_geo,
+                    "Liên hệ có địa chỉ"
+                )
             )
 
             SearchType.APPOINTMENT -> listOf(
-                SearchSuggestion(context.getString(R.string.today), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_today, "Cuộc hẹn hôm nay"),
-                SearchSuggestion(context.getString(R.string.upcoming), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_upcoming, "Cuộc hẹn sắp tới"),
-                SearchSuggestion(context.getString(R.string.pinned), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_pin, "Cuộc hẹn đã ghim"),
-                SearchSuggestion(context.getString(R.string.weekend), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_week_calendar, "Cuộc hẹn tuần này")
+                SearchSuggestion(
+                    context.getString(R.string.today),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_today,
+                    "Cuộc hẹn hôm nay"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.upcoming),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_upcoming,
+                    "Cuộc hẹn sắp tới"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.pinned),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_pin,
+                    "Cuộc hẹn đã ghim"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.weekend),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_week_calendar,
+                    "Cuộc hẹn tuần này"
+                )
             )
 
             SearchType.NOTE -> listOf(
-                SearchSuggestion(context.getString(R.string.pinned), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_pin, "Ghi chú đã ghim"),
-                SearchSuggestion(context.getString(R.string.reminder), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_alarm, "Ghi chú có nhắc nhở"),
-                SearchSuggestion(context.getString(R.string.check_list), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_checklist, "Checklist"),
-                SearchSuggestion(context.getString(R.string.recent), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_history, "Ghi chú gần đây")
+                SearchSuggestion(
+                    context.getString(R.string.pinned),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_pin,
+                    "Ghi chú đã ghim"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.reminder),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_alarm,
+                    "Ghi chú có nhắc nhở"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.check_list),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_checklist,
+                    "Checklist"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.recent),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_history,
+                    "Ghi chú gần đây"
+                )
             )
 
             SearchType.ALL -> listOf(
-                SearchSuggestion(context.getString(R.string.favorite), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_favorite_heart, "Tất cả mục yêu thích"),
-                SearchSuggestion(context.getString(R.string.today), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_today, "Hoạt động hôm nay"),
-                SearchSuggestion(context.getString(R.string.recent), SearchSuggestionType.QUICK_FILTER, searchType, R.drawable.ic_history, "Được tạo gần đây")
+                SearchSuggestion(
+                    context.getString(R.string.favorite),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_favorite_heart,
+                    "Tất cả mục yêu thích"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.today),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_today,
+                    "Hoạt động hôm nay"
+                ),
+                SearchSuggestion(
+                    context.getString(R.string.recent),
+                    SearchSuggestionType.QUICK_FILTER,
+                    searchType,
+                    R.drawable.ic_history,
+                    "Được tạo gần đây"
+                )
             )
         }
     }
 
+
     /**
      *  Lưu lịch sử tìm kiếm
      */
-    suspend fun saveSearchHistory(userId: Int, query: String,searchType: SearchType,resultCount :Int){
+    suspend fun saveSearchHistory(
+        userId: Int,
+        query: String,
+        searchType: SearchType,
+        resultCount: Int
+    ) {
         val existingHistory = searchHistoryDao.getSearchHistory(userId, searchType)
-            .find { it.searchText.equals(query,ignoreCase = true) }
+            .find { it.searchText.equals(query, ignoreCase = true) }
 
-        if(existingHistory != null){
+        if (existingHistory != null) {
             searchHistoryDao.updateLastUsed(userId, query, searchType)
-        }
-        else{
+        } else {
             searchHistoryDao.insertSearchHistory(
                 SearchHistory(
                     userId = userId,
@@ -337,5 +457,178 @@ class SearchRepository @Inject constructor(
      */
     suspend fun clearSearchHistory(userId: Int, searchType: SearchType) {
         searchHistoryDao.clearSearchHistory(userId, searchType)
+    }
+
+
+    /**
+     * Lấy quick filter suggestions với counts cụ thể
+     */
+    suspend fun getQuickFilterSuggestionsWithCount(
+        userId: Int,
+        searchType: SearchType
+    ): List<SearchSuggestion> {
+        val baseSuggestions = getQuickFilterSuggestions(searchType)
+
+        return baseSuggestions.map { suggestion ->
+            val count = getQuickFilterCount(suggestion.text, searchType, userId)
+            suggestion.copy(
+                resultCount = count
+            )
+        }
+    }
+
+    /**
+     * Lấy số lượng kết quả cho quick filter
+     */
+    private suspend fun getQuickFilterCount(
+        filterText: String,
+        searchType: SearchType,
+        userId: Int
+    ): Int {
+        return try {
+            when (searchType) {
+                SearchType.CONTACT -> getContactsByQuickFilter(userId, filterText).first().size
+                SearchType.APPOINTMENT -> getAppointmentsByQuickFilter(
+                    userId,
+                    filterText
+                ).first().size
+                SearchType.NOTE -> getNotesByQuickFilter(userId, filterText).first().size
+                SearchType.ALL -> getAllItemsByQuickFilter(userId, filterText).totalCount
+                else -> 0
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    /**
+     * Áp dụng quick filter cho contacts
+     */
+    suspend fun getContactsByQuickFilter(userId: Int, filterText: String): Flow<List<Contact>> {
+        val filterKey = Constant.getFilterKeyFromText(filterText, context)
+        return when (filterKey) {
+            Constant.FILTER_FAVORITE -> contactDao.getFavoriteContacts(userId)
+            Constant.FILTER_HAVE_PHONE -> contactDao.getContactsWithPhone(userId)
+            Constant.FILTER_HAVE_EMAIL -> contactDao.getContactsWithEmail(userId)
+            Constant.FILTER_HAVE_ADDRESS -> contactDao.getContactsWithAddress(userId)
+            else -> contactDao.getAllContactsByUser(userId)
+        }
+    }
+
+    /**
+     * Lấy cuộn hẹn theo quick filter
+     */
+    suspend fun getAppointmentsByQuickFilter(
+        userId: Int,
+        filterType: String,
+        status: String = "SCHEDULED"
+    ): Flow<List<AppointmentPlus>> {
+        return when (filterType) {
+            Constant.FILTER_TODAY -> {
+                appointmentDao.getTodayAppointments(userId, status)
+            }
+
+            Constant.FILTER_WEEK -> {
+                val (weekStart, weekEnd) = getWeekRange()
+                appointmentDao.getThisWeekAppointments(userId, weekStart, weekEnd, status)
+            }
+
+            Constant.FILTER_PINNED -> {
+                appointmentDao.getPinnedAppointments(userId, status)
+            }
+
+            Constant.FILTER_UPCOMING -> {
+                appointmentDao.getUpcomingAppointments(userId, System.currentTimeMillis(), status)
+            }
+
+            else -> {
+                appointmentDao.getAllAppointmentsByUser(userId)
+            }
+        }
+    }
+
+
+    /**
+     * Áp dụng quick filter cho notes
+     */
+    suspend fun getNotesByQuickFilter(userId: Int, filterText: String): Flow<List<Note>> {
+        val filterKey = Constant.getFilterKeyFromText(filterText, context)
+        return when (filterKey) {
+            Constant.FILTER_PINNED -> noteDao.getPinnedNotes(userId)
+            Constant.FILTER_REMINDER -> noteDao.getNotesWithReminder(userId)
+            Constant.FILTER_CHECKLIST -> noteDao.getChecklistNotes(userId)
+            Constant.FILTER_RECENT -> noteDao.getRecentNotesFlow(userId)
+            else -> noteDao.getAllNotesByUser(userId)
+        }
+    }
+
+    /**
+     * Áp dụng quick filter cho tất cả loại (ALL)
+     */
+    suspend fun getAllItemsByQuickFilter(userId: Int, filterText: String): UniversalSearchResult {
+        val filterKey = Constant.getFilterKeyFromText(filterText, context)
+        return when (filterKey) {
+            Constant.FILTER_FAVORITE -> {
+                val contacts = contactDao.getFavoriteContacts(userId).first()
+                val appointments = appointmentDao.getPinnedAppointments(userId).first()
+                val notes = noteDao.getPinnedNotes(userId).first()
+                UniversalSearchResult(
+                    contacts = contacts,
+                    appointments = appointments,
+                    notes = notes,
+                    totalCount = contacts.size + appointments.size + notes.size
+                )
+            }
+
+            Constant.FILTER_TODAY -> {
+                val appointments = appointmentDao.getTodayAppointments(userId).first()
+                val notes = noteDao.getTodayNotes(userId).first()
+                UniversalSearchResult(
+                    appointments = appointments,
+                    notes = notes,
+                    totalCount = appointments.size + notes.size
+                )
+            }
+
+            Constant.FILTER_RECENT -> {
+                val contacts = contactDao.getRecentContacts(userId)
+                val appointments = appointmentDao.getTodayAppointments(userId).first()
+                val notes = noteDao.getRecentNotes(userId)
+                UniversalSearchResult(
+                    contacts = contacts,
+                    appointments = appointments,
+                    notes = notes,
+                    totalCount = contacts.size + appointments.size + notes.size
+                )
+            }
+
+            else -> UniversalSearchResult()
+        }
+    }
+
+
+    /**
+     * Lấy range của tuần hiện tại
+     */
+    private fun getWeekRange(): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+
+        // Đặt về đầu tuần (Chủ nhật)
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val weekStart = calendar.timeInMillis
+
+        // Đặt về cuối tuần (Thứ bảy)
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val weekEnd = calendar.timeInMillis
+
+        return Pair(weekStart, weekEnd)
     }
 }

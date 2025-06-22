@@ -172,12 +172,14 @@ interface AppointmentPlusDao {
     /**
      * Lấy cuôc hẹn trong ngày hôm nay
      */
-    @Query("SELECT * FROM appointments WHERE user_id = :userId AND start_date_time >= :startTime AND end_date_time <= :endTime AND status = :status ORDER BY start_date_time ASC")
+    @Query("SELECT * FROM appointments \n" +
+            "        WHERE user_id = :userId \n" +
+            "        AND DATE(start_date_time / 1000, 'unixepoch', 'localtime') = DATE('now', 'localtime')\n" +
+            "        AND status = :status\n" +
+            "        ORDER BY start_date_time ASC")
     fun getTodayAppointments(
         userId: Int,
-        startTime: Long,
-        endTime: Long,
-        status: String
+        status: String = "SCHEDULED",
     ): Flow<List<AppointmentPlus>>
 
     /**
@@ -186,17 +188,92 @@ interface AppointmentPlusDao {
     @Query("""
     SELECT * FROM appointments 
     WHERE user_id = :userId 
-      AND end_date_time >= :startTime 
-      AND start_date_time <= :endTime 
+      AND end_date_time >= :weekStart 
+      AND start_date_time <= :weekEnd 
       AND status = :status 
     ORDER BY start_date_time ASC
 """)
     fun getThisWeekAppointments(
         userId: Int,
-        startTime: Long,
-        endTime: Long,
+        weekStart: Long,
+        weekEnd: Long,
         status: String
     ): Flow<List<AppointmentPlus>>
 
+    /**
+     * Lấy cuộc hẹn sắp tới
+     */
+    @Query("""
+        SELECT * FROM appointments 
+        WHERE user_id = :userId 
+          AND start_date_time >= :currentTime 
+          AND status = :status 
+        ORDER BY start_date_time ASC
+        """)
+    fun getUpcomingAppointments(
+        userId :Int,
+        currentTime : Long = System.currentTimeMillis(),
+        status: String = "SCHEDULED"
+    ): Flow<List<AppointmentPlus>>
+
+    /**
+     * Lấy cuộc hẹn đã ghim
+     */
+    @Query("""
+        SELECT * FROM appointments 
+        WHERE user_id = :userId 
+        AND is_pinned = 1
+        AND status = :status
+        ORDER BY start_date_time ASC
+    """)
+    fun getPinnedAppointments(
+        userId: Int,
+        status: String = "SCHEDULED"
+    ): Flow<List<AppointmentPlus>>
+
+    /**
+     * Đếm số lượng cuộc hẹn cho mỗi filter
+     */
+    @Query("""
+        SELECT COUNT(*) FROM appointments 
+        WHERE user_id = :userId 
+        AND DATE(start_date_time / 1000, 'unixepoch', 'localtime') = DATE('now', 'localtime')
+        AND status = :status
+    """)
+    suspend fun getTodayAppointmentsCount(userId: Int, status: String = "SCHEDULED"): Int
+
+    @Query("""
+        SELECT COUNT(*) FROM appointments 
+        WHERE user_id = :userId 
+        AND start_date_time >= :weekStart 
+        AND start_date_time <= :weekEnd
+        AND status = :status
+    """)
+    suspend fun getThisWeekAppointmentsCount(
+        userId: Int,
+        weekStart: Long,
+        weekEnd: Long,
+        status: String = "SCHEDULED"
+    ): Int
+
+    @Query("""
+        SELECT COUNT(*) FROM appointments 
+        WHERE user_id = :userId 
+        AND start_date_time >= :currentTime
+        AND status = :status
+    """)
+    suspend fun getUpcomingAppointmentsCount(
+        userId: Int,
+        currentTime: Long = System.currentTimeMillis(),
+        status: String = "SCHEDULED"
+    ): Int
+
+    @Query("""
+        SELECT COUNT(*) FROM appointments 
+        WHERE user_id = :userId 
+        AND is_pinned = 1
+        AND status = :status
+    """)
+    suspend fun getPinnedAppointmentsCount(userId: Int, status: String = "SCHEDULED"): Int
 
 }
