@@ -70,6 +70,8 @@ class ContactsAdapter(
         notifyDataSetChanged()
     }
 
+    fun hasSelectableItems(): Boolean = contacts.isNotEmpty()
+
     inner class ContactsViewHolder(val binding: ItemContactLayoutBinding) :
         RecyclerView.ViewHolder(binding.root) {
 

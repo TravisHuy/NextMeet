@@ -17,7 +17,7 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:visibility="gone"
-        tools:visibility="visible">          <!-- Close button -->
+        tools:visibility="gone">          <!-- Close button -->
         <ImageView
             android:id="@+id/btnClose"
             android:layout_width="32dp"

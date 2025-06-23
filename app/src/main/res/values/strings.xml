@@ -127,6 +127,8 @@
     <!-- API Key (Keep as is) -->
     <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
     <string name="search_appointments">Search appointments...</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

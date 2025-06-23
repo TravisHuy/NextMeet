@@ -111,7 +111,7 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
     /**
      * Lấy danh sách đơn giản của các liên hệ (chỉ ID và tên)
      * Thường dùng cho các dropdown selector
-     * 
+     *
      * @param userId ID của người dùng
      */
     fun getContactNamesAndIds(userId: Int) {
@@ -121,7 +121,51 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                     _contactNamesAndIds.value = contacts
                 }
             } catch (e: Exception) {
-                _contactUiState.value = ContactUiState.Error(e.message ?: "Error loading contact names")
+                _contactUiState.value =
+                    ContactUiState.Error(e.message ?: "Error loading contact names")
+            }
+        }
+    }
+
+    /**
+     * Lay contact theo Id
+     */
+    fun getContactById(contactId: Int) {
+        viewModelScope.launch {
+            _contactUiState.value = ContactUiState.Loading
+            try {
+                contactRepository.getContactById(contactId).onSuccess { contact ->
+                    _contactUiState.value = ContactUiState.ContactsLoaded(listOf(contact))
+                }.onFailure { error ->
+                    _contactUiState.value = ContactUiState.Error(
+                        error.message ?: "Error loading contact"
+                    )
+                }
+            } catch (e: Exception) {
+                _contactUiState.value = ContactUiState.Error(e.message ?: "Error loading contact")
+            }
+        }
+    }
+
+    /**
+     * Cap nhat lai contact
+     */
+    fun updateContact(contact: Contact) {
+        viewModelScope.launch {
+            _contactUiState.value = ContactUiState.Loading
+            try {
+                contactRepository.updateContact(contact)
+                    .onSuccess {
+                        _contactUiState.value =
+                            ContactUiState.ContactUpdated("Contact updated successfully")
+                    }
+                    .onFailure { error ->
+                        _contactUiState.value = ContactUiState.Error(
+                            error.message ?: "Error updating contact"
+                        )
+                    }
+            } catch (e: Exception) {
+                _contactUiState.value = ContactUiState.Error(e.message ?: "Error updating contact")
             }
         }
     }

@@ -34,6 +34,20 @@ class ColorPickerAdapter(private val colorList: List<Int>,
             }
         }
     }
+
+    fun setSelectedColor(colorName: String) {
+        val colorResId = colorNames.entries.find { it.value == colorName }?.key
+        if (colorResId != null) {
+            val newPosition = colorList.indexOf(colorResId)
+            if (newPosition != -1) {
+                val previous = selectedPosition
+                selectedPosition = newPosition
+                notifyItemChanged(previous)
+                notifyItemChanged(selectedPosition)
+            }
+        }
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
