@@ -80,8 +80,7 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:elevation="0dp"
-        app:elevation="0dp"
+        android:backgroundTint="@color/white"
         >
 
         <com.google.android.material.search.SearchBar
@@ -89,18 +88,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="12dp"
-            android:hint="Enter address"
-            app:layout_constraintEnd_toStartOf="@+id/btn_filter"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:backgroundTint="@color/color_gray"
+            android:hint="@string/search_contacts"
+            app:navigationIconTint="?attr/colorOnSurfaceVariant"
+            app:endIconDrawable="@drawable/ic_cancel"
+            app:endIconTint="?attr/colorOnSurfaceVariant"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp" />
 
     </com.google.android.material.appbar.AppBarLayout>
-
-    <com.google.android.material.search.SearchView
-        android:id="@+id/searchView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
 
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -108,15 +104,122 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:padding="8dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewContacts"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipToPadding="false" />
+            android:clipToPadding="false"
+            android:padding="8dp"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:scrollbarStyle="outsideOverlay"
+            />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Empty state view for search-->
+    <LinearLayout
+        android:id="@+id/search_empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:background="@color/white"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:visibility="gone"
+        >
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginBottom="24dp"
+            android:contentDescription="No results found"
+            android:src="@drawable/ic_search_empty"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/tv_empty_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No contacts found"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Try different search terms"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+
+    <!-- Empty state for no appointments -->
+    <LinearLayout
+        android:id="@+id/empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:background="@color/white"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:visibility="visible">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginBottom="24dp"
+            android:contentDescription="No contacts"
+            android:src="@drawable/ic_today"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No contacts yet"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Tap + to add a new contact"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <com.google.android.material.search.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:hint="@string/search_contacts"
+        app:layout_anchor="@id/searchBar"
+        app:layout_anchorGravity="top"
+        android:contentDescription="Search contacts interface"
+        >
+        <!-- Search suggestions list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_search_suggestions"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="16dp"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:scrollbarStyle="outsideOverlay" />
+    </com.google.android.material.search.SearchView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddContact"

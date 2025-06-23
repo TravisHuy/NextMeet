@@ -105,28 +105,31 @@ class ContactsAdapter(
                 onContactAppointment(contact)
             }
 
-            // Hiển thị/ẩn checkbox dựa trên multiSelectMode
-            binding.checkboxSelect.visibility = if (multiSelectMode) View.VISIBLE else View.GONE
 
             if (multiSelectMode) {
                 // Cập nhật trạng thái checkbox
                 val isSelected = selectedContacts.contains(contact.id)
-                binding.checkboxSelect.setImageResource(
-                    if (isSelected) R.drawable.ic_check else R.drawable.ic_check_box_outline
-                )
-                binding.checkboxSelect.setColorFilter(
-                    ContextCompat.getColor(
-                        itemView.context,
-                        if (isSelected) R.color.green else R.color.gray
-                    )
-                )
-
-                // Set checkbox click listener
-                binding.checkboxSelect.setOnClickListener {
-                    toggleSelection(contact.id)
+                if(isSelected){
+                    binding.contactCard.apply {
+                        strokeWidth = 6
+                        strokeColor = ContextCompat.getColor(itemView.context, R.color.selection_border_color)
+                        alpha = 0.8f
+                    }
                 }
+                else{
+                    binding.contactCard.apply{
+                        strokeWidth = 1
+                        strokeColor = ContextCompat.getColor(itemView.context, R.color.gray_light)
+                        alpha = 1.0f
+                    }
+                }
+
             } else {
-                binding.checkboxSelect.setOnClickListener(null)
+                binding.contactCard.apply{
+                    strokeWidth = 1
+                    strokeColor = ContextCompat.getColor(itemView.context, R.color.gray_light)
+                    alpha = 1.0f
+                }
             }
         }
 
