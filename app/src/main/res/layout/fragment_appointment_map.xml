@@ -93,7 +93,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="12dp"
             android:backgroundTint="@color/color_gray"
-            android:hint="Search appointments..."
+            android:hint="@string/search_appointments"
             android:contentDescription="Search appointments"
             app:navigationIconTint="?attr/colorOnSurfaceVariant"
             app:endIconDrawable="@drawable/ic_cancel"

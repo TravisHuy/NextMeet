@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.repository.ContactRepository
+import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.NoteUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -123,5 +124,12 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                 _contactUiState.value = ContactUiState.Error(e.message ?: "Error loading contact names")
             }
         }
+    }
+
+    /**
+     * Reset Ui state ve Idle
+     */
+    fun resetUiState() {
+        _contactUiState.value = ContactUiState.Idle
     }
 }
