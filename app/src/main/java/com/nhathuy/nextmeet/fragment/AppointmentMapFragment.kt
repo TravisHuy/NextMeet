@@ -20,6 +20,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +38,7 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.search.SearchView
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -49,6 +51,7 @@ import com.nhathuy.nextmeet.databinding.DialogAddAppointmentBinding
 import com.nhathuy.nextmeet.databinding.FragmentAppointmentMapBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchSuggestionType
@@ -107,6 +110,14 @@ class AppointmentMapFragment : Fragment() {
     private lateinit var appointmentAdapter: AppointmentPlusAdapter
     private lateinit var searchSuggestionsAdapter: SearchSuggestionsAdapter
     private lateinit var colorAdapter: ColorPickerAdapter
+
+    // update contact
+    private var currentEditingAppointment: AppointmentPlus? = null
+    private var isEditMode: Boolean = false
+    private var isDialogShowing: Boolean = false
+    private var lastClickTime = 0L
+    private var CLICK_DELAY = 500L
+    private var shouldRestoreDialog = false
 
     private val mapPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -177,7 +188,6 @@ class AppointmentMapFragment : Fragment() {
     }
 
     // MARK: - Setup Methods
-
     private fun setupUserInfo() {
         userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->
             user?.let {
@@ -213,7 +223,18 @@ class AppointmentMapFragment : Fragment() {
 
     private fun setupFabMenu() {
         binding.fabAddAppointment.setOnClickListener {
-            showAddAppointment()
+            // kiểm tra double click
+            if (!canPerformClick()) {
+                return@setOnClickListener
+            }
+
+            // Kiểm tra nếu dialog đang hiển thị
+            if (isDialogShowing) {
+                return@setOnClickListener
+            }
+
+            // Mở dialog để thêm cuộc hẹn mới
+            showAppointmentDialog()
         }
     }
 
@@ -224,7 +245,7 @@ class AppointmentMapFragment : Fragment() {
         binding.btnPin.setOnClickListener { handlePinAction() }
         binding.btnShare.setOnClickListener { handleShareAction() }
         binding.btnDelete.setOnClickListener { handleDeleteAction() }
-        binding.btnMore.setOnClickListener { handleMoreAction() }
+        binding.btnMore.setOnClickListener { handleMoreAction(it) }
     }
 
     // MARK: - Search Setup (Optimized)
@@ -244,6 +265,7 @@ class AppointmentMapFragment : Fragment() {
                         clearSearch()
                         true
                     }
+
                     else -> false
                 }
             }
@@ -361,10 +383,12 @@ class AppointmentMapFragment : Fragment() {
                 isSearchViewExpanded = true
                 enterSearchMode()
             }
+
             SearchView.TransitionState.HIDDEN -> {
                 isSearchViewExpanded = false
                 exitSearchMode()
             }
+
             else -> {}
         }
     }
@@ -383,6 +407,7 @@ class AppointmentMapFragment : Fragment() {
                 performQuickFilter(suggestion.text)
                 hideSearchView()
             }
+
             else -> {
                 binding.searchView.editText.setText(suggestion.text)
                 performSearch(suggestion.text)
@@ -542,9 +567,17 @@ class AppointmentMapFragment : Fragment() {
             is AppointmentUiState.AppointmentCreated -> {
                 hideLoading()
                 showMessage(state.message)
-                dismissAddDialog()
+                dismissDialog()
                 refreshData()
                 appointmentViewModel.resetUiState()
+            }
+
+            is AppointmentUiState.AppointmentUpdated -> {
+                hideLoading()
+                showMessage(state.message)
+                refreshData()
+                contactViewModel.resetUiState()
+                dismissDialog()
             }
 
             is AppointmentUiState.Error -> {
@@ -632,16 +665,19 @@ class AppointmentMapFragment : Fragment() {
     }
 
     private fun hideKeyboard() {
-        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(binding.searchView.windowToken, 0)
     }
 
     private fun hideBottomNavigation() {
-        (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)?.visibility = View.GONE
+        (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)?.visibility =
+            View.GONE
     }
 
     private fun showBottomNavigation() {
-        (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)?.visibility = View.VISIBLE
+        (activity as? AppCompatActivity)?.findViewById<View>(R.id.nav_bottom_navigation)?.visibility =
+            View.VISIBLE
     }
 
     // MARK: - Event Handlers
@@ -700,13 +736,24 @@ class AppointmentMapFragment : Fragment() {
                 latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
                 longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
 
-                addAppointmentDialog?.findViewById<TextInputEditText>(R.id.et_appointment_location)?.let { addressEditText ->
-                    if (!location.isNullOrEmpty()) {
-                        addressEditText.setText(location)
-                    } else {
-                        addressEditText.setText(getString(R.string.no_location_selected))
-                        location = ""
+                addAppointmentDialog?.findViewById<TextInputEditText>(R.id.et_appointment_location)
+                    ?.let { addressEditText ->
+                        if (!location.isNullOrEmpty()) {
+                            addressEditText.setText(location)
+                        } else {
+                            addressEditText.setText(getString(R.string.no_location_selected))
+                            location = ""
+                        }
                     }
+            }
+        }
+        if (shouldRestoreDialog) {
+            shouldRestoreDialog = false
+            binding.root.post {
+                if (isEditMode && currentEditingAppointment != null) {
+                    showAppointmentDialog(currentEditingAppointment)
+                } else {
+                    showAppointmentDialog()
                 }
             }
         }
@@ -769,22 +816,78 @@ class AppointmentMapFragment : Fragment() {
         }
     }
 
-    private fun handleMoreAction() {
+    private fun handleMoreAction(view: View) {
         // Implement more actions
+        val popupMenu = PopupMenu(requireContext(), view)
+        popupMenu.menuInflater.inflate(R.menu.menu_selection_more, popupMenu.menu)
+
+        val selectAllItem = popupMenu.menu.findItem(R.id.action_select_all)
+        val deselectAllItem = popupMenu.menu.findItem(R.id.action_deselect_all)
+
+        val selectedCount = appointmentAdapter.getSelectedCount()
+        val totalCount = appointmentAdapter.itemCount
+
+        selectAllItem.isVisible = selectedCount < totalCount
+        deselectAllItem.isVisible = selectedCount > 0
+
+        popupMenu.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_select_all -> {
+                    appointmentAdapter.selectAll()
+                    true
+                }
+
+                R.id.action_deselect_all -> {
+                    appointmentAdapter.clearSelection()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
     }
 
-    // MARK: - Add Appointment Dialog
+    // show apppointment dialog
+    private fun showAppointmentDialog(appointmentToEdit: AppointmentPlus? = null) {
+        if (isDialogShowing) {
+            return
+        }
 
-    private fun showAddAppointment() {
+        addAppointmentDialog?.let { dialog ->
+            if (dialog.isShowing) {
+                dialog.dismiss()
+            }
+        }
+
+        isEditMode = appointmentToEdit != null
+        currentEditingAppointment = appointmentToEdit
+        isDialogShowing = true
+
         val dialog = Dialog(requireContext())
         addAppointmentDialog = dialog
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
-        val dialogBinding = DialogAddAppointmentBinding.inflate(LayoutInflater.from(requireContext()))
+        val dialogBinding =
+            DialogAddAppointmentBinding.inflate(LayoutInflater.from(requireContext()))
         dialog.setContentView(dialogBinding.root)
 
-        resetDialogData()
-        setupAddAppointmentDialog(dialogBinding)
+        // cau hinh dialog dựa trên mode
+        setupDialogForMode(dialogBinding, appointmentToEdit)
+
+        setupAppointmentDialog(dialogBinding, appointmentToEdit!!)
+
+        dialog.setOnDismissListener {
+            if (!shouldRestoreDialog) {
+                resetDialogData()
+            }
+        }
+
+        dialog.setOnCancelListener {
+            if (!shouldRestoreDialog) {
+                resetDialogData()
+            }
+        }
 
         dialog.show()
         dialog.window?.apply {
@@ -796,9 +899,14 @@ class AppointmentMapFragment : Fragment() {
             attributes.windowAnimations = R.style.DialogAnimation
             setGravity(Gravity.CENTER_HORIZONTAL)
         }
+
     }
 
-    private fun setupAddAppointmentDialog(dialogBinding: DialogAddAppointmentBinding) {
+    // MARK: - Add Appointment Dialog
+    private fun setupAppointmentDialog(
+        dialogBinding: DialogAddAppointmentBinding,
+        appointmentEdit: AppointmentPlus
+    ) {
         dialogBinding.tilAppointmentLocation.setEndIconOnClickListener {
             val intent = Intent(requireContext(), GoogleMapActivity::class.java)
             mapPickerLauncher.launch(intent)
@@ -808,24 +916,135 @@ class AppointmentMapFragment : Fragment() {
         setupColorPicker(dialogBinding)
         setupLocationInput(dialogBinding)
 
-        dialogBinding.btnCancel.setOnClickListener {
-            dismissAddDialog()
-        }
-
         dialogBinding.layoutReminder.setOnClickListener {
             showDateTimePicker(dialogBinding)
         }
 
         dialogBinding.btnSave.setOnClickListener {
-            saveAppointment(dialogBinding)
+            // kiem tra để tránh click nhieu lan
+            if (!canPerformClick()) {
+                return@setOnClickListener
+            }
+            dialogBinding.btnSave.isEnabled = false
+
+            if (isEditMode) {
+                updateAppointment(dialogBinding, appointmentEdit)
+            } else {
+                saveAppointment(dialogBinding)
+            }
+        }
+        dialogBinding.btnCancel.setOnClickListener {
+            if (!canPerformClick()) {
+                return@setOnClickListener
+            }
+            dismissDialog()
         }
     }
 
-    private fun dismissAddDialog() {
-        addAppointmentDialog?.dismiss()
-        resetDialogData()
+    //xử lý đề kiểm tra co click nhieu lan hay khong
+    private fun canPerformClick(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime < CLICK_DELAY) {
+            return false
+        }
+        lastClickTime = currentTime
+        return true
     }
 
+    private fun dismissDialog() {
+        try {
+            addAppointmentDialog?.dismiss()
+        } catch (e: Exception) {
+
+        } finally {
+            resetDialogData()
+        }
+    }
+
+    private fun setupDialogForMode(
+        dialogBinding: DialogAddAppointmentBinding,
+        appointmentToEdit: AppointmentPlus?
+    ) {
+        if (isEditMode && appointmentToEdit != null) {
+            setupEditMode(dialogBinding, appointmentToEdit)
+        } else {
+            setupNewMode(dialogBinding)
+        }
+    }
+
+    private fun setupEditMode(
+        dialogBinding: DialogAddAppointmentBinding,
+        appointment: AppointmentPlus
+    ) {
+        with(dialogBinding) {
+            etAppointmentTitle.setText(appointment.title)
+            etNotes.setText(appointment.description)
+            cbFavorite.isChecked = appointment.isPinned
+            btnSave.text == "Cập nhật"
+
+            //set appointment data
+            currentContactId = appointment.contactId
+            location = appointment.location
+            latitude = appointment.latitude
+            longitude = appointment.longitude
+            reminderTime = appointment.startDateTime
+            selectedColorName = appointment.color
+
+            if (!location.isNullOrEmpty()) {
+                etAppointmentLocation.setText(location)
+            }
+
+            updateReminderDisplay(dialogBinding)
+
+            setSelectedColor(appointment.color)
+
+            setSelectedContact(appointment.contactId)
+        }
+    }
+
+
+    private fun setupNewMode(dialogBinding: DialogAddAppointmentBinding) {
+        // Set default values for new appointment
+        dialogBinding.btnSave.text = "Lưu"
+        selectedColorName = "color_white"
+        currentContactId = 0
+        location = null
+        latitude = null
+        longitude = null
+        reminderTime = null
+    }
+
+
+    // set color
+    private fun setSelectedColor(colorName: String) {
+        val colorResId = colorSourceNames.entries.find { it.value == colorName }?.key ?: R.color.color_white
+
+
+        // áp dụng color cho background
+        addAppointmentDialog?.findViewById<View>(R.id.layoutAddAppointment)?.let { layout ->
+            val color = ContextCompat.getColor(requireContext(), colorResId)
+            layout.setBackgroundColor(color)
+        }
+
+        // cập nhat color picker đã chọn
+        colorAdapter.setSelectedColor(colorName)
+    }
+
+    private fun setSelectedContact(contactId: Int){
+        viewLifecycleOwner.lifecycleScope.launch {
+            contactViewModel.contactNamesAndIds.collect { contacts ->
+                if (contacts.isNotEmpty() && contactId != 0) {
+                    val contact = contacts.find { it.id == contactId }
+                    contact?.let {
+                        addAppointmentDialog?.findViewById<MaterialAutoCompleteTextView>(R.id.auto_contact_name)?.let { autoComplete ->
+                            autoComplete.setText(contact.name, false)
+                            currentContactId = contact.id
+                        }
+                    }
+                }
+            }
+        }
+    }
     // MARK: - Dialog Setup Methods (keeping existing implementation)
 
     private fun setupContactDropdown(dialogAddAppointmentBinding: DialogAddAppointmentBinding) {
@@ -850,11 +1069,17 @@ class AppointmentMapFragment : Fragment() {
                     dialogAddAppointmentBinding.autoContactName.setOnItemClickListener { _, _, position, _ ->
                         if (position == 0) {
                             currentContactId = 0
-                            dialogAddAppointmentBinding.autoContactName.setText(contactNames[0], false)
+                            dialogAddAppointmentBinding.autoContactName.setText(
+                                contactNames[0],
+                                false
+                            )
                         } else {
                             val selectedContactName = contacts[position - 1].name
                             currentContactId = contacts[position - 1].id
-                            dialogAddAppointmentBinding.autoContactName.setText(selectedContactName, false)
+                            dialogAddAppointmentBinding.autoContactName.setText(
+                                selectedContactName,
+                                false
+                            )
                         }
                     }
                 } else {
@@ -923,7 +1148,8 @@ class AppointmentMapFragment : Fragment() {
     }
 
     private fun showDateTimePicker(binding: DialogAddAppointmentBinding) {
-        val constraintBuilder = CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
+        val constraintBuilder =
+            CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Select date")
@@ -956,9 +1182,15 @@ class AppointmentMapFragment : Fragment() {
 
             if (isToday(calendar)) {
                 if (selectedHour < now.get(Calendar.HOUR_OF_DAY) ||
-                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(Calendar.MINUTE)
+                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(
+                        Calendar.MINUTE
+                    )
                 ) {
-                    Toast.makeText(requireContext(), "Please select a future time", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Please select a future time",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@addOnPositiveButtonClickListener
                 }
             }
@@ -994,7 +1226,8 @@ class AppointmentMapFragment : Fragment() {
         }
 
         if (reminderTime == null) {
-            Toast.makeText(requireContext(), "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
@@ -1019,7 +1252,61 @@ class AppointmentMapFragment : Fragment() {
         appointmentViewModel.createAppointment(appointment)
     }
 
+
+    private fun updateAppointment(
+        dialogBinding: DialogAddAppointmentBinding,
+        appointment: AppointmentPlus
+    ) {
+        val title = dialogBinding.etAppointmentTitle.text?.toString()?.trim() ?: ""
+        val notes = dialogBinding.etNotes.text?.toString()?.trim() ?: ""
+        val appointmentLocation = location ?: ""
+        val isPinned = dialogBinding.cbFavorite.isChecked
+
+        // Validation
+        if (title.isEmpty()) {
+            dialogBinding.tilAppointmentTitle.error = "Vui lòng nhập tiêu đề cuộc hẹn"
+            return
+        } else {
+            dialogBinding.tilAppointmentTitle.error = null
+        }
+
+        if (currentContactId == 0) {
+            Toast.makeText(requireContext(), "Vui lòng chọn liên hệ", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (reminderTime == null) {
+            Toast.makeText(requireContext(), "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT)
+                .show()
+            return
+        }
+
+        val endTime = reminderTime!! + (60 * 60 * 1000)
+
+        val appointment = appointment.copy(
+            userId = currentUserId,
+            contactId = currentContactId,
+            title = title,
+            description = notes,
+            startDateTime = reminderTime!!,
+            endDateTime = endTime,
+            location = appointmentLocation,
+            latitude = latitude ?: 0.0,
+            longitude = longitude ?: 0.0,
+            status = AppointmentStatus.SCHEDULED,
+            color = selectedColorName,
+            travelTimeMinutes = 0,
+            isPinned = isPinned
+        )
+
+        appointmentViewModel.updateAppointment(appointment)
+    }
+
     private fun resetDialogData() {
+        isDialogShowing = false
+        addAppointmentDialog = null
+        currentEditingAppointment = null
+
         currentContactId = 0
         location = null
         latitude = null

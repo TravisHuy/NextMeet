@@ -196,8 +196,9 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
      */
     suspend fun deleteContact(contactId: Int): Result<Unit> {
         return try {
-            val contact = contactDao.getContactById(contactId) ?:
-                return Result.failure(IllegalArgumentException("Liên hệ không tồn tại"))
+            val contact = contactDao.getContactById(contactId) ?: return Result.failure(
+                IllegalArgumentException("Liên hệ không tồn tại")
+            )
 
             contactDao.deleteContact(contact)
             Result.success(Unit)
@@ -209,7 +210,7 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
     /**
      * Lấy danh sách đơn giản của liên hệ chỉ gồm ID và tên
      * Hữu ích cho các dropdown selector
-     * 
+     *
      * @param userId ID người dùng
      * @return Flow danh sách các đối tượng ContactNameId
      */
@@ -219,5 +220,52 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
                 emit(emptyList())
                 throw e
             }
+    }
+
+    /**
+     * Cập nhật lại liên hệ
+     */
+    suspend fun updateContact(contact: Contact): Result<Unit> {
+        return try {
+            // validate truoc khi input
+            val validationResult = validateContactInputs(contact.name,contact.address,contact.phone,contact.email)
+
+            if(validationResult.isFailure){
+                return Result.failure(
+                    IllegalArgumentException(
+                        validationResult.exceptionOrNull()?.message ?: "Invalid contact inputs"
+                    )
+                )
+            }
+
+            // update time
+            val updatedContact = contact.copy(updateAt = System.currentTimeMillis())
+            val result = contactDao.updateContact(updatedContact)
+
+            if (result > 0) {
+                Result.success(Unit)
+            } else {
+                Result.failure(IllegalArgumentException("Contact not found"))
+            }
+        }
+        catch (e:Exception){
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Lấy contact theo ID
+     */
+    suspend fun getContactById(contactId: Int): Result<Contact> {
+        return try {
+            val contact = contactDao.getContactById(contactId)
+            if (contact != null) {
+                Result.success(contact)
+            } else {
+                Result.failure(IllegalArgumentException("Contact not found"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

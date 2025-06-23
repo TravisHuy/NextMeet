@@ -65,6 +65,9 @@ class AppointmentPlusAdapter(
         onSelectionChanged(0)
         notifyDataSetChanged()
     }
+
+    fun getSelectedCount() : Int = selectedAppointments.size
+
     fun selectAll(){
         selectedAppointments.clear()
         selectedAppointments.addAll(appointments.map { it.id })

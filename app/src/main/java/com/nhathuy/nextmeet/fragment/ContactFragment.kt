@@ -21,6 +21,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -78,6 +79,14 @@ class ContactFragment : Fragment() {
     private lateinit var searchSuggestionsAdapter: SearchSuggestionsAdapter
     private lateinit var contactsAdapter: ContactsAdapter
 
+    // update contact
+    private var currentEditingContact: Contact? = null
+    private var isEditMode: Boolean = false
+    private var isDialogShowing: Boolean = false
+    private var lastClickTime = 0L
+    private var CLICK_DELAY = 500L
+    private var shouldRestoreDialog = false
+
     private val mapPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -95,6 +104,17 @@ class ContactFragment : Fragment() {
                     }
                 }
 
+            }
+        }
+
+        if (shouldRestoreDialog) {
+            shouldRestoreDialog = false
+            binding.root.post {
+                if (isEditMode && currentEditingContact != null) {
+                    showContactDialog(currentEditingContact)
+                } else {
+                    showContactDialog()
+                }
             }
         }
     }
@@ -193,11 +213,20 @@ class ContactFragment : Fragment() {
                 showMessage(state.message)
                 refreshData()
                 contactViewModel.resetUiState()
+                dismissDialog()
             }
 
             is ContactUiState.FavoriteToggled -> {
                 showMessage(state.message)
                 refreshData()
+            }
+
+            is ContactUiState.ContactUpdated -> {
+                hideLoading()
+                showMessage(state.message)
+                refreshData()
+                contactViewModel.resetUiState()
+                dismissDialog()
             }
 
             is ContactUiState.Error -> {
@@ -278,8 +307,19 @@ class ContactFragment : Fragment() {
     //thiết lập fab menu
     private fun setupFabMenu() {
         binding.fabAddContact.setOnClickListener {
+
+            // kiểm tra double click
+            if (!canPerformClick()) {
+                return@setOnClickListener
+            }
+
+            // Kiểm tra nếu dialog đang hiển thị
+            if (isDialogShowing) {
+                return@setOnClickListener
+            }
+
             // Mở dialog để thêm liên hệ mới
-            showAddContactDialog()
+            showContactDialog()
         }
     }
 
@@ -303,7 +343,7 @@ class ContactFragment : Fragment() {
             handleDeleteAction()
         }
         binding.btnMore.setOnClickListener {
-
+            showSelectionPopMenu(it)
         }
     }
 
@@ -506,8 +546,8 @@ class ContactFragment : Fragment() {
 
     }
 
-    private fun performQuickFilter(filterText:String){
-        currentSearchQuery  = filterText
+    private fun performQuickFilter(filterText: String) {
+        currentSearchQuery = filterText
         isSearchMode = true
 
         searchViewModel.applyQuickFilter(filterText, SearchType.CONTACT)
@@ -519,7 +559,7 @@ class ContactFragment : Fragment() {
     }
 
     // clear search
-    private fun clearSearch(){
+    private fun clearSearch() {
         currentSearchQuery = null
         isSearchMode = false
         isSearchViewExpanded = false
@@ -532,24 +572,28 @@ class ContactFragment : Fragment() {
     }
 
     // an search view
-    private fun hideSearchView(){
+    private fun hideSearchView() {
         binding.searchView.hide()
         hideKeyboard()
     }
+
     // search event handlers
-    private fun handleSearchViewStateChange(newState : SearchView.TransitionState){
-        when(newState){
+    private fun handleSearchViewStateChange(newState: SearchView.TransitionState) {
+        when (newState) {
             SearchView.TransitionState.SHOWING -> {
                 isSearchViewExpanded = true
                 enterSearchMode()
             }
+
             SearchView.TransitionState.HIDDEN -> {
                 isSearchViewExpanded = false
                 exitSearchMode()
             }
+
             else -> {}
         }
     }
+
     private fun handleSearchBarNavigation() {
         when {
             binding.searchView.isShowing -> binding.searchView.hide()
@@ -558,7 +602,7 @@ class ContactFragment : Fragment() {
         }
     }
 
-    private fun updateSearchBarMenu(){
+    private fun updateSearchBarMenu() {
         binding.searchBar.menu.clear()
         binding.searchBar.inflateMenu(R.menu.search_menu)
 
@@ -575,6 +619,7 @@ class ContactFragment : Fragment() {
             else -> "Không tìm thấy liên hệ nào cho \"$currentSearchQuery\""
         }
     }
+
     //load danh sách contact
     private fun loadContacts() {
         if (currentUserId != 0) {
@@ -588,7 +633,30 @@ class ContactFragment : Fragment() {
 
     //xử lý khi click vào contact
     private fun handleContactClick(contact: Contact) {
+        if (!contactsAdapter.isMultiSelectMode()) {
 
+            // Kiểm tra double click
+            if (!canPerformClick()) {
+                return
+            }
+
+            // Kiểm tra nếu dialog đang hiển thị
+            if (isDialogShowing) {
+                return
+            }
+
+            showContactDialog(contact)
+        }
+    }
+
+    // xử lý để kiểm tra có click hay không
+    private fun canPerformClick(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        if(currentTime - lastClickTime < CLICK_DELAY){
+            return false
+        }
+        lastClickTime = currentTime
+        return true
     }
 
     //xử lý khi long click vào contact
@@ -663,8 +731,24 @@ class ContactFragment : Fragment() {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 
-    // hiển thị dialog để thêm liên hệ mới
-    private fun showAddContactDialog() {
+    private fun showContactDialog(contactToEdit: Contact? = null) {
+        // Double check - Kiểm tra nếu đã có dialog đang hiển thị
+        if (isDialogShowing) {
+            return
+        }
+
+        // Dismiss dialog cũ nếu có (safety check)
+        addContactDialog?.let { dialog ->
+            if (dialog.isShowing) {
+                dialog.dismiss()
+            }
+        }
+
+
+        isEditMode = contactToEdit != null
+        currentEditingContact = contactToEdit
+        isDialogShowing = true
+
         val dialog = Dialog(requireContext())
         addContactDialog = dialog
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -672,76 +756,60 @@ class ContactFragment : Fragment() {
         val dialogBinding = DialogAddContactBinding.inflate(LayoutInflater.from(requireContext()))
         dialog.setContentView(dialogBinding.root)
 
+        // Cấu hình dialog dựa trên mode
+        setupDialogForMode(dialogBinding, contactToEdit)
+
+        // Setup location picker
         dialogBinding.btnPickLocation.setOnClickListener {
-            val intent = Intent(requireContext(), GoogleMapActivity::class.java)
+            shouldRestoreDialog = true
+            val intent = Intent(requireContext(), GoogleMapActivity::class.java).apply {
+                // Nếu đang edit và có vị trí hiện tại
+                if (isEditMode && contactToEdit?.latitude != null && contactToEdit.longitude != null) {
+                    putExtra("current_lat", contactToEdit.latitude)
+                    putExtra("current_lng", contactToEdit.longitude)
+                    putExtra("current_address", contactToEdit.address)
+                }
+            }
             mapPickerLauncher.launch(intent)
         }
+
+        // Setup save button
         dialogBinding.btnSave.setOnClickListener {
-            // Lấy dữ liệu từ các trường nhập
-            val name = dialogBinding.etFullName.text.toString()
-            val phone = dialogBinding.etPhone.text.toString()
-            val email = dialogBinding.etEmail.text.toString()
-            val role = dialogBinding.etRole.text.toString()
-            val notes = dialogBinding.etNotes.text.toString()
-            val isFavorite = dialogBinding.cbFavorite.isChecked
 
-            // Xóa lỗi cũ
-            dialogBinding.tilName.error = null
-            dialogBinding.tilPhone.error = null
-            dialogBinding.tilEmail.error = null
-            dialogBinding.tvLocation.error = null
-
-            // Validate từng trường
-            val nameResult = ValidationUtils.validateName(name)
-            val phoneResult = ValidationUtils.validatePhone(phone)
-            val emailResult = ValidationUtils.validateEmail(email)
-
-            val locationText = dialogBinding.tvLocation.text.toString()
-            val addressResult =
-                if (locationText.isNotBlank() && locationText != getString(R.string.no_location_selected)) {
-                    ValidationUtils.validateAddress(locationText)
-                } else {
-                    ValidationUtils.validateAddress("")
-                }
-
-            var hasError = false
-            if (!nameResult.isValid) {
-                dialogBinding.tilName.error = nameResult.errorMessage
-                hasError = true
-            }
-            if (!phoneResult.isValid) {
-                dialogBinding.tilPhone.error = phoneResult.errorMessage
-                hasError = true
-            }
-            if (!emailResult.isValid) {
-                dialogBinding.tilEmail.error = emailResult.errorMessage
-                hasError = true
-            }
-            if (!addressResult.isValid) {
-                dialogBinding.tvLocation.error = addressResult.errorMessage
-                hasError = true
+            // Kiểm tra để tránh click nhiều lần
+            if (!canPerformClick()) {
+                return@setOnClickListener
             }
 
-            if (hasError) return@setOnClickListener
+            dialogBinding.btnSave.isEnabled = false
 
-            val contact = Contact(
-                userId = currentUserId,
-                name = name,
-                address = locationText,
-                phone = phone,
-                email = email,
-                role = role,
-                notes = notes,
-                latitude = latitude,
-                longitude = longitude,
-                isFavorite = isFavorite
-            )
-            contactViewModel.createContact(contact)
-            dialog.dismiss()
+            if (isEditMode) {
+                updateContact(dialogBinding, contactToEdit!!)
+            } else {
+                createContact(dialogBinding)
+            }
         }
 
         dialogBinding.btnCancel.setOnClickListener {
-            dialog.dismiss()
+            if(!canPerformClick()){
+                return@setOnClickListener
+            }
+            dismissDialog()
+        }
+
+        dialog.setOnDismissListener {
+            if (!shouldRestoreDialog) {
+                resetDialogState()
+            }
+        }
+        dialog.setOnCancelListener {
+            if (!shouldRestoreDialog) {
+                resetDialogState()
+            }
+        }
+
+        address?.let { addr ->
+            dialogBinding.tvLocation.text = addr
         }
 
         dialog.show()
@@ -755,6 +823,307 @@ class ContactFragment : Fragment() {
             setGravity(Gravity.CENTER_HORIZONTAL)
         }
     }
+
+    // Method để reset trạng thái dialog
+    private fun resetDialogState() {
+        isDialogShowing = false
+        addContactDialog = null
+        currentEditingContact = null
+
+        // Reset location data
+        address = null
+        latitude = null
+        longitude = null
+    }
+
+    // Tạo method riêng để dismiss dialog
+    private fun dismissDialog() {
+        try {
+            addContactDialog?.dismiss()
+        } catch (e: Exception) {
+            // Ignore exception khi dismiss
+        } finally {
+            resetDialogState()
+        }
+    }
+
+    private fun setupDialogForMode(
+        dialogBinding: DialogAddContactBinding,
+        contactToEdit: Contact?
+    ) {
+        if (isEditMode && contactToEdit != null) {
+            // Setup cho Edit mode
+            setupEditMode(dialogBinding, contactToEdit)
+        } else {
+            // Setup cho Add mode
+            setupAddMode(dialogBinding)
+        }
+    }
+
+    private fun setupEditMode(dialogBinding: DialogAddContactBinding, contact: Contact) {
+        with(dialogBinding) {
+            // Thay đổi title dialog
+            // Nếu bạn có TextView title trong dialog, update nó
+            // tvDialogTitle.text = "Chỉnh sửa liên hệ"
+
+            // Điền dữ liệu hiện tại
+            etFullName.setText(contact.name)
+            etPhone.setText(contact.phone)
+            etEmail.setText(contact.email)
+            etRole.setText(contact.role)
+            etNotes.setText(contact.notes)
+            cbFavorite.isChecked = contact.isFavorite
+
+            // Setup location
+            if (contact.address.isNotBlank()) {
+                tvLocation.text = contact.address
+                address = contact.address
+                latitude = contact.latitude
+                longitude = contact.longitude
+            } else {
+                tvLocation.text = getString(R.string.no_location_selected)
+                address = null
+                latitude = null
+                longitude = null
+            }
+
+            // Thay đổi text button
+            btnSave.text = "Cập nhật"
+        }
+    }
+
+    private fun setupAddMode(dialogBinding: DialogAddContactBinding) {
+        with(dialogBinding) {
+            // Clear tất cả fields
+            etFullName.setText("")
+            etPhone.setText("")
+            etEmail.setText("")
+            etRole.setText("")
+            etNotes.setText("")
+            cbFavorite.isChecked = false
+            tvLocation.text = getString(R.string.no_location_selected)
+
+            // Reset location data
+            address = null
+            latitude = null
+            longitude = null
+
+            // Set text button
+            btnSave.text = "Thêm"
+        }
+    }
+
+    private fun createContact(dialogBinding: DialogAddContactBinding) {
+        val name = dialogBinding.etFullName.text.toString()
+        val phone = dialogBinding.etPhone.text.toString()
+        val email = dialogBinding.etEmail.text.toString()
+        val role = dialogBinding.etRole.text.toString()
+        val notes = dialogBinding.etNotes.text.toString()
+        val isFavorite = dialogBinding.cbFavorite.isChecked
+
+        // Validate
+        if (!validateContactInput(dialogBinding, name, phone, email)) {
+            return
+        }
+
+        val locationText = dialogBinding.tvLocation.text.toString()
+        val finalAddress = if (locationText != getString(R.string.no_location_selected)) {
+            locationText
+        } else ""
+
+        val contact = Contact(
+            userId = currentUserId,
+            name = name,
+            address = finalAddress,
+            phone = phone,
+            email = email,
+            role = role,
+            notes = notes,
+            latitude = latitude,
+            longitude = longitude,
+            isFavorite = isFavorite
+        )
+
+        contactViewModel.createContact(contact)
+//        addContactDialog?.dismiss()
+    }
+
+    private fun updateContact(dialogBinding: DialogAddContactBinding, originalContact: Contact) {
+        val name = dialogBinding.etFullName.text.toString()
+        val phone = dialogBinding.etPhone.text.toString()
+        val email = dialogBinding.etEmail.text.toString()
+        val role = dialogBinding.etRole.text.toString()
+        val notes = dialogBinding.etNotes.text.toString()
+        val isFavorite = dialogBinding.cbFavorite.isChecked
+
+        // Validate
+        if (!validateContactInput(dialogBinding, name, phone, email)) {
+            return
+        }
+
+        val locationText = dialogBinding.tvLocation.text.toString()
+        val finalAddress = if (locationText != getString(R.string.no_location_selected)) {
+            locationText
+        } else ""
+
+        val updatedContact = originalContact.copy(
+            name = name,
+            phone = phone,
+            email = email,
+            role = role,
+            notes = notes,
+            address = finalAddress,
+            latitude = latitude,
+            longitude = longitude,
+            isFavorite = isFavorite
+        )
+
+        contactViewModel.updateContact(updatedContact)
+//        addContactDialog?.dismiss()
+    }
+
+    private fun validateContactInput(
+        dialogBinding: DialogAddContactBinding,
+        name: String,
+        phone: String,
+        email: String
+    ): Boolean {
+        // Clear previous errors
+        with(dialogBinding) {
+            tilName.error = null
+            tilPhone.error = null
+            tilEmail.error = null
+            tvLocation.error = null
+        }
+
+        // Validate fields
+        val nameResult = ValidationUtils.validateName(name)
+        val phoneResult = ValidationUtils.validatePhone(phone)
+        val emailResult = ValidationUtils.validateEmail(email)
+
+        val locationText = dialogBinding.tvLocation.text.toString()
+        val addressResult = if (locationText.isNotBlank() &&
+            locationText != getString(R.string.no_location_selected)
+        ) {
+            ValidationUtils.validateAddress(locationText)
+        } else {
+            ValidationUtils.validateAddress("")
+        }
+
+        var hasError = false
+        if (!nameResult.isValid) {
+            dialogBinding.tilName.error = nameResult.errorMessage
+            hasError = true
+        }
+        if (!phoneResult.isValid) {
+            dialogBinding.tilPhone.error = phoneResult.errorMessage
+            hasError = true
+        }
+        if (!emailResult.isValid) {
+            dialogBinding.tilEmail.error = emailResult.errorMessage
+            hasError = true
+        }
+        if (!addressResult.isValid) {
+            dialogBinding.tvLocation.error = addressResult.errorMessage
+            hasError = true
+        }
+
+        return !hasError
+    }
+
+
+    // hiển thị dialog để thêm liên hệ mới
+//    private fun showAddContactDialog() {
+//        val dialog = Dialog(requireContext())
+//        addContactDialog = dialog
+//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+//
+//        val dialogBinding = DialogAddContactBinding.inflate(LayoutInflater.from(requireContext()))
+//        dialog.setContentView(dialogBinding.root)
+//
+//        dialogBinding.btnPickLocation.setOnClickListener {
+//            val intent = Intent(requireContext(), GoogleMapActivity::class.java)
+//            mapPickerLauncher.launch(intent)
+//        }
+//        dialogBinding.btnSave.setOnClickListener {
+//            // Lấy dữ liệu từ các trường nhập
+//            val name = dialogBinding.etFullName.text.toString()
+//            val phone = dialogBinding.etPhone.text.toString()
+//            val email = dialogBinding.etEmail.text.toString()
+//            val role = dialogBinding.etRole.text.toString()
+//            val notes = dialogBinding.etNotes.text.toString()
+//            val isFavorite = dialogBinding.cbFavorite.isChecked
+//
+//            // Xóa lỗi cũ
+//            dialogBinding.tilName.error = null
+//            dialogBinding.tilPhone.error = null
+//            dialogBinding.tilEmail.error = null
+//            dialogBinding.tvLocation.error = null
+//
+//            // Validate từng trường
+//            val nameResult = ValidationUtils.validateName(name)
+//            val phoneResult = ValidationUtils.validatePhone(phone)
+//            val emailResult = ValidationUtils.validateEmail(email)
+//
+//            val locationText = dialogBinding.tvLocation.text.toString()
+//            val addressResult =
+//                if (locationText.isNotBlank() && locationText != getString(R.string.no_location_selected)) {
+//                    ValidationUtils.validateAddress(locationText)
+//                } else {
+//                    ValidationUtils.validateAddress("")
+//                }
+//
+//            var hasError = false
+//            if (!nameResult.isValid) {
+//                dialogBinding.tilName.error = nameResult.errorMessage
+//                hasError = true
+//            }
+//            if (!phoneResult.isValid) {
+//                dialogBinding.tilPhone.error = phoneResult.errorMessage
+//                hasError = true
+//            }
+//            if (!emailResult.isValid) {
+//                dialogBinding.tilEmail.error = emailResult.errorMessage
+//                hasError = true
+//            }
+//            if (!addressResult.isValid) {
+//                dialogBinding.tvLocation.error = addressResult.errorMessage
+//                hasError = true
+//            }
+//
+//            if (hasError) return@setOnClickListener
+//
+//            val contact = Contact(
+//                userId = currentUserId,
+//                name = name,
+//                address = locationText,
+//                phone = phone,
+//                email = email,
+//                role = role,
+//                notes = notes,
+//                latitude = latitude,
+//                longitude = longitude,
+//                isFavorite = isFavorite
+//            )
+//            contactViewModel.createContact(contact)
+//            dialog.dismiss()
+//        }
+//
+//        dialogBinding.btnCancel.setOnClickListener {
+//            dialog.dismiss()
+//        }
+//
+//        dialog.show()
+//        dialog.window?.apply {
+//            setLayout(
+//                (resources.displayMetrics.widthPixels * 0.9).toInt(),
+//                ViewGroup.LayoutParams.WRAP_CONTENT
+//            )
+//            setBackgroundDrawableResource(R.drawable.border_dialog_background)
+//            attributes.windowAnimations = R.style.DialogAnimation
+//            setGravity(Gravity.CENTER_HORIZONTAL)
+//        }
+//    }
 
     private fun refreshData() {
         if (isSearchMode) {
@@ -861,6 +1230,38 @@ class ContactFragment : Fragment() {
         }
     }
 
+    private fun showSelectionPopMenu(view: View) {
+        val popMenu = PopupMenu(requireContext(), view)
+        popMenu.menuInflater.inflate(R.menu.menu_selection_more, popMenu.menu)
+
+        val selectAllItem = popMenu.menu.findItem(R.id.action_select_all)
+        val deselectAllItem = popMenu.menu.findItem(R.id.action_deselect_all)
+
+        val selectedCount = contactsAdapter.getSelectedCount()
+        val totalCount = contactsAdapter.itemCount
+
+        selectAllItem.isVisible = selectedCount < totalCount
+        deselectAllItem.isVisible = selectedCount > 0
+
+        popMenu.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_select_all -> {
+                    contactsAdapter.selectAll()
+                    true
+                }
+
+                R.id.action_deselect_all -> {
+                    contactsAdapter.clearSelection()
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+        popMenu.show()
+    }
+
     fun onBackPressed(): Boolean {
         return if (isSelectionMode) {
             closeSelectionMode()
@@ -872,8 +1273,15 @@ class ContactFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        addContactDialog?.dismiss()
+        dismissDialog()
         _binding = null
     }
+
+//    override fun onPause() {
+//        super.onPause()
+//        if (isDialogShowing) {
+//            dismissDialog()
+//        }
+//    }
 }
 

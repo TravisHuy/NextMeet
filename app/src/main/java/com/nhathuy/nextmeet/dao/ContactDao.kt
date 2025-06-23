@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.model.Note
@@ -84,6 +85,44 @@ interface ContactDao {
     )
     fun getContactNamesAndIds(userId: Int): Flow<List<ContactNameId>>
 
+    /**
+     * Cập nhật thông tin contact
+     */
+    @Update
+    suspend fun updateContact(contact: Contact): Int
+
+    /**
+     * Cap nhat lại contact
+     */
+    @Query("""
+            UPDATE contacts
+            SET name = :name,
+            phone = :phone,
+            email = :email,
+            role = :role,
+            address = :address,
+            notes  = :notes,
+            latitude = :latitude,
+            latitude = :latitude, 
+            longitude = :longitude, 
+            is_favorite = :isFavorite, 
+            updated_at = :updatedAt
+            
+            WHERE id = :contactId
+    """)
+    suspend fun updateContactDetail(
+        contactId: Int,
+        name: String,
+        phone: String,
+        email: String,
+        role: String,
+        address: String,
+        notes: String,
+        latitude: Double?,
+        longitude: Double?,
+        isFavorite: Boolean,
+        updatedAt: Long = System.currentTimeMillis()
+    ) : Int
 
     /**
      * tìm kiếm liên hệ theo tên, số điện thoại, email, địa chỉ, vai trò và ghi chú
