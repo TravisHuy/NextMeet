@@ -183,7 +183,11 @@
                 android:src="@drawable/ic_image"
                 app:backgroundTint="@color/light_primary"
                 app:fabSize="mini"
-                app:tint="@android:color/white" />
+                app:tint="@android:color/white"
+                app:elevation="0dp"
+                app:pressedTranslationZ="0dp"
+                app:hoveredFocusedTranslationZ="0dp"
+                />
 
         </LinearLayout>
 
@@ -218,7 +222,11 @@
                 android:src="@drawable/ic_checklist"
                 app:backgroundTint="@color/light_primary"
                 app:fabSize="mini"
-                app:tint="@android:color/white" />
+                app:tint="@android:color/white"
+                app:elevation="0dp"
+                app:pressedTranslationZ="0dp"
+                app:hoveredFocusedTranslationZ="0dp"
+                />
 
         </LinearLayout>
 
@@ -254,7 +262,11 @@
                 android:src="@drawable/ic_text_fields"
                 app:backgroundTint="@color/light_primary"
                 app:fabSize="mini"
-                app:tint="@android:color/white" />
+                app:tint="@android:color/white"
+                app:elevation="0dp"
+                app:pressedTranslationZ="0dp"
+                app:hoveredFocusedTranslationZ="0dp"
+                />
 
         </LinearLayout>
 

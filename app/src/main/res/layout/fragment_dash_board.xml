@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/padding_medium"
-    tools:context=".fragment.DashBoardFragment">
+    tools:context=".fragment.DashBoardFragment"
+    android:nestedScrollingEnabled="false"
+    android:scrollbars="none"
+    >
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -230,7 +233,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/quicksand_medium"
-                        android:text="Upcoming"
+                        android:text="@string/upcoming"
                         android:textColor="#F57C00"
                         android:textSize="12sp" />
 
@@ -294,8 +297,46 @@
                     android:layout_marginTop="@dimen/margin_medium"
                     android:nestedScrollingEnabled="false"
                     android:overScrollMode="never"
+                    android:visibility="gone"
                     tools:itemCount="2"
                     tools:listitem="@layout/item_today_appointment" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="visible"
+                    android:gravity="center"
+                    android:padding="32dp"
+                    >
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:src="@drawable/calendar_date"
+                        android:alpha="0.5"
+                        app:tint="@color/gray_dark"
+                        android:layout_marginBottom="16dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Không có cuộc hẹn nào hôm nay"
+                        android:textSize="14sp"
+                        android:textColor="@color/gray_dark"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thêm cuộc hẹn đầu tiên của bạn"
+                        android:textSize="12sp"
+                        android:textColor="@color/gray_dark"
+                        android:fontFamily="@font/open_sans"
+                        android:gravity="center" />
+
+                </LinearLayout>
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -356,8 +397,49 @@
                     android:layout_marginTop="@dimen/margin_small"
                     android:nestedScrollingEnabled="false"
                     android:overScrollMode="never"
+                    android:visibility="gone"
                     tools:itemCount="2"
-                    tools:listitem="@layout/item_note_recents" />
+                    tools:listitem="@layout/item_note_recents"
+                    />
+
+                <LinearLayout
+                    android:id="@+id/layout_empty_recent_notes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="32dp"
+                    android:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:src="@drawable/ic_note"
+                        android:alpha="0.3"
+                        app:tint="@color/gray_dark"
+                        android:layout_marginBottom="16dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chưa có ghi chú nào"
+                        android:textSize="14sp"
+                        android:textColor="@color/gray_dark"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tạo ghi chú đầu tiên của bạn"
+                        android:textSize="12sp"
+                        android:textColor="@color/gray_dark"
+                        android:fontFamily="@font/open_sans"
+                        android:gravity="center" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
@@ -416,7 +498,47 @@
                     android:name="com.google.android.gms.maps.SupportMapFragment"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/map_height"
-                    android:layout_marginTop="@dimen/margin_small" />
+                    android:layout_marginTop="@dimen/margin_small"
+                    android:visibility="gone"
+                    />
+
+                <LinearLayout
+                    android:id="@+id/layout_empty_map"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="#F5F5F5"
+                    android:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:src="@drawable/ic_geo"
+                        android:alpha="0.3"
+                        app:tint="@color/gray_dark"
+                        android:layout_marginBottom="16dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chưa có địa điểm nào"
+                        android:textSize="14sp"
+                        android:textColor="@color/gray_dark"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thêm cuộc hẹn có địa điểm để xem bản đồ"
+                        android:textSize="12sp"
+                        android:textColor="@color/gray_dark"
+                        android:fontFamily="@font/open_sans"
+                        android:gravity="center" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
