@@ -5,9 +5,9 @@
     android:layout_height="150dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:cardCornerRadius="@dimen/corner_radius_medium"
-    android:elevation="@dimen/elevation_medium"
+    android:elevation="@dimen/cardview_default_elevation"
     android:padding="@dimen/padding_medium"
-    android:layout_margin="@dimen/margin_small"
+    android:layout_margin="@dimen/margin_extra_small"
     >
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -20,10 +20,10 @@
             android:id="@+id/tv_note_recent_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
             android:fontFamily="@font/poppins_bold"
             android:hint="Ý tường dự án moi"
             android:maxLines="1"
+            android:ellipsize="end"
             android:textSize="@dimen/text_size_body"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -59,10 +59,10 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginTop="@dimen/margin_large"
-            android:src="@drawable/ic_geo"
+            android:src="@drawable/ic_recent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_note_recent_content"
-            app:tint="#FF5722" />
+            />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

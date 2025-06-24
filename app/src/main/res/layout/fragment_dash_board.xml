@@ -14,7 +14,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-
         <!-- Stats Cards Grid -->
         <GridLayout
             android:id="@+id/stat_card_grid"
@@ -24,6 +23,7 @@
             android:columnCount="2"
             android:rowCount="2"
             android:useDefaultMargins="false"
+            android:visibility="visible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -302,6 +302,7 @@
                     tools:listitem="@layout/item_today_appointment" />
 
                 <LinearLayout
+                    android:id="@+id/layout_empty_today_appointments"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
@@ -332,7 +333,7 @@
                         android:text="Thêm cuộc hẹn đầu tiên của bạn"
                         android:textSize="12sp"
                         android:textColor="@color/gray_dark"
-                        android:fontFamily="@font/open_sans"
+                        android:fontFamily="@font/inter"
                         android:gravity="center" />
 
                 </LinearLayout>
@@ -366,7 +367,7 @@
                     <ImageView
                         android:layout_width="@dimen/icon_size_medium"
                         android:layout_height="@dimen/icon_size_medium"
-                        android:src="@drawable/calendar_date" />
+                        android:src="@drawable/ic_note" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -407,6 +408,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
+                    android:layout_marginTop="4dp"
                     android:gravity="center"
                     android:padding="32dp"
                     android:visibility="visible">
@@ -435,7 +437,7 @@
                         android:text="Tạo ghi chú đầu tiên của bạn"
                         android:textSize="12sp"
                         android:textColor="@color/gray_dark"
-                        android:fontFamily="@font/open_sans"
+                        android:fontFamily="@font/inter"
                         android:gravity="center" />
 
                 </LinearLayout>
@@ -470,7 +472,7 @@
                     <ImageView
                         android:layout_width="@dimen/icon_size_medium"
                         android:layout_height="@dimen/icon_size_medium"
-                        android:src="@drawable/calendar_date" />
+                        android:src="@drawable/ic_geo" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -535,7 +537,7 @@
                         android:text="Thêm cuộc hẹn có địa điểm để xem bản đồ"
                         android:textSize="12sp"
                         android:textColor="@color/gray_dark"
-                        android:fontFamily="@font/open_sans"
+                        android:fontFamily="@font/inter"
                         android:gravity="center" />
 
                 </LinearLayout>
@@ -543,6 +545,82 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            android:id="@+id/layout_welcome_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            >
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/ic_dash"
+                android:alpha="0.7"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chào mừng bạn!"
+                android:textSize="24sp"
+                android:textColor="#333333"
+                android:fontFamily="@font/poppins_bold"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bắt đầu bằng cách thêm cuộc hẹn hoặc ghi chú đầu tiên"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:fontFamily="@font/quicksand_medium"
+                android:gravity="center"
+                android:layout_marginBottom="32dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_add_appointment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thêm cuộc hẹn"
+                    android:textColor="@android:color/white"
+                    app:backgroundTint="#1976D2"
+                    app:cornerRadius="8dp"
+                    app:icon="@drawable/ic_appointment"
+                    android:layout_marginEnd="12dp"
+                    android:paddingHorizontal="20dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_add_note"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thêm ghi chú"
+                    android:textColor="#7B1FA2"
+                    app:backgroundTint="@android:color/transparent"
+                    app:strokeColor="#7B1FA2"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp"
+                    app:icon="@drawable/ic_note"
+                    app:iconTint="#7B1FA2"
+                    android:paddingHorizontal="20dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
