@@ -13,6 +13,7 @@ class ColorPickerAdapter(private val colorList: List<Int>,
 ) :RecyclerView.Adapter<ColorPickerAdapter.ColorPickerViewHolder>(){
 
     private var selectedPosition = 0
+    private var selectedColorName: String = "color_white"
 
     inner class ColorPickerViewHolder(val binding: ItemColorPickerBinding):RecyclerView.ViewHolder(binding.root) {
         fun bind(resId: Int,isChecked:Boolean){
@@ -36,16 +37,8 @@ class ColorPickerAdapter(private val colorList: List<Int>,
     }
 
     fun setSelectedColor(colorName: String) {
-        val colorResId = colorNames.entries.find { it.value == colorName }?.key
-        if (colorResId != null) {
-            val newPosition = colorList.indexOf(colorResId)
-            if (newPosition != -1) {
-                val previous = selectedPosition
-                selectedPosition = newPosition
-                notifyItemChanged(previous)
-                notifyItemChanged(selectedPosition)
-            }
-        }
+        selectedColorName = colorName
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(

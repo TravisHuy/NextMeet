@@ -12,169 +12,233 @@
         android:layout_height="match_parent">
 
 
-        <androidx.constraintlayout.helper.widget.Flow
-            android:id="@+id/dashboard_flow"
-            android:layout_width="0dp"
+        <!-- Stats Cards Grid -->
+        <GridLayout
+            android:id="@+id/stat_card_grid"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:constraint_referenced_ids="card_today,card_notes,card_contact,card_appointment_soon"
-            app:flow_horizontalGap="@dimen/spacing_small"
-            app:flow_maxElementsWrap="4"
-            app:flow_verticalGap="@dimen/spacing_small"
-            app:flow_wrapMode="chain"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="24dp"
+            android:columnCount="2"
+            android:rowCount="2"
+            android:useDefaultMargins="false"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            >
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_today"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_extra_small"
-            app:cardCornerRadius="@dimen/corner_radius_medium"
-            app:cardElevation="@dimen/elevation_small"
-            app:layout_constraintWidth_default="percent"
-            app:layout_constraintWidth_percent="@dimen/card_width_percent">
+            <!-- Today's Appointments Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_today"
+                android:layout_width="0dp"
+                android:layout_height="140dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="#E3F2FD"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#BBDEFB"
+                app:strokeWidth="1dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_small">
-
-                <TextView
-                    android:id="@+id/tv_dash_board_today"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_bold"
-                    android:textSize="@dimen/text_size_large"
-                    android:text="5"
-                    android:textAlignment="center"
-                    android:textColor="#1976D2" />
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <TextView
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:src="@drawable/calendar_date"
+                        app:tint="#1976D2" />
+
+                    <TextView
+                        android:id="@+id/tv_dash_board_today"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_bold"
+                        android:text="5"
+                        android:textColor="#1976D2"
+                        android:textSize="24sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:text="@string/today"
+                        android:textColor="#1976D2"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Notes Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_notes"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="#F3E5F5"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#E1BEE7"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:text="@string/today"
-                    android:textAlignment="center"
-                    android:textSize="@dimen/text_size_medium" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_notes"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_extra_small"
-            app:cardCornerRadius="@dimen/corner_radius_medium"
-            app:cardElevation="@dimen/elevation_small"
-            app:layout_constraintWidth_default="percent"
-            app:layout_constraintWidth_percent="@dimen/card_width_percent">
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:src="@drawable/ic_note"
+                        app:tint="#7B1FA2" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_small">
+                    <TextView
+                        android:id="@+id/tv_dash_board_notes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_bold"
+                        android:text="12"
+                        android:textColor="#7B1FA2"
+                        android:textSize="24sp" />
 
-                <TextView
-                    android:id="@+id/tv_dash_board_notes"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:text="@string/notes"
+                        android:textColor="#7B1FA2"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Contacts Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_contact"
+                android:layout_width="0dp"
+                android:layout_height="140dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="#E8F5E8"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#C8E6C9"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_bold"
-                    android:textSize="@dimen/text_size_large"
-                    android:text="5"
-                    android:textAlignment="center"
-                    android:textColor="#1976D2" />
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <TextView
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:src="@drawable/ic_contact"
+                        app:tint="#388E3C" />
+
+                    <TextView
+                        android:id="@+id/tv_dash_board_contact"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_bold"
+                        android:text="28"
+                        android:textColor="#388E3C"
+                        android:textSize="24sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:text="@string/contact"
+                        android:textColor="#388E3C"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Upcoming Appointments Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_appointment_soon"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="#FFF3E0"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#FFE0B2"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:text="@string/notes"
-                    android:textAlignment="center"
-                    android:textSize="@dimen/text_size_medium" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_contact"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_extra_small"
-            app:cardCornerRadius="@dimen/corner_radius_medium"
-            app:cardElevation="@dimen/elevation_small"
-            app:layout_constraintWidth_default="percent"
-            app:layout_constraintWidth_percent="@dimen/card_width_percent">
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:src="@drawable/ic_appointment"
+                        app:tint="#F57C00" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_small">
+                    <TextView
+                        android:id="@+id/tv_dash_board_appointment_soon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_bold"
+                        android:text="3"
+                        android:textColor="#F57C00"
+                        android:textSize="24sp" />
 
-                <TextView
-                    android:id="@+id/tv_dash_board_contact"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_bold"
-                    android:textSize="@dimen/text_size_large"
-                    android:text="5"
-                    android:textAlignment="center"
-                    android:textColor="#1976D2" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:text="Upcoming"
+                        android:textColor="#F57C00"
+                        android:textSize="12sp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:text="@string/contact"
-                    android:textAlignment="center"
-                    android:textSize="@dimen/text_size_medium" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_appointment_soon"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_extra_small"
-            app:cardCornerRadius="@dimen/corner_radius_medium"
-            app:cardElevation="@dimen/elevation_small"
-            app:layout_constraintWidth_default="percent"
-            app:layout_constraintWidth_percent="@dimen/card_width_percent">
+            </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_small">
-
-                <TextView
-                    android:id="@+id/tv_dash_board_appointment_soon"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_bold"
-                    android:textSize="@dimen/text_size_large"
-                    android:text="5"
-                    android:textAlignment="center"
-                    android:textColor="#1976D2" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:maxLines="1"
-                    android:text="Upcoming"
-                    android:textAlignment="center"
-                    android:textSize="@dimen/text_size_medium" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </GridLayout>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_today_appointment"
@@ -184,7 +248,7 @@
             app:cardCornerRadius="@dimen/corner_radius_large"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/dashboard_flow">
+            app:layout_constraintTop_toBottomOf="@id/stat_card_grid">
 
             <LinearLayout
                 android:layout_width="match_parent"

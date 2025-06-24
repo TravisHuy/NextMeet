@@ -66,6 +66,6 @@
 
     <!-- Map height -->
     <dimen name="map_height">250dp</dimen>
-    <dimen name="bottom_sheet_peek_height">110dp</dimen>
-    <dimen name="map_padding">300dp</dimen>
+    <dimen name="bottom_sheet_peek_height">120dp</dimen>
+    <dimen name="map_route_padding">180dp</dimen>
 </resources>
