@@ -73,6 +73,10 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
+    // Biến để theo dõi trạng thái route
+    private var hasRouteData = false
+    private var routeResult: RouteResult? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigationMapBinding.inflate(layoutInflater)
@@ -103,7 +107,6 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
 
                     is AppointmentUiState.Error -> {
-                        // Handle error (show message, finish activity, etc.)
                         finish()
                     }
 
@@ -118,7 +121,6 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         setupClickListener()
     }
 
-    // Setup UI với thông tin appointment
     private fun setupUI() {
         appointment?.let { appt ->
             binding.apply {
@@ -129,18 +131,18 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        // Mặc định chọn phương tiện lái xe
         updateTransportModeUI(TransportMode.DRIVING)
+
+        // Ẩn thông tin route ban đầu vì chưa có dữ liệu
+        hideRouteInfo()
     }
 
-    // Khởi tạo map
     private fun setupMap() {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
 
-    // Khởi tạo recycler view
     private fun setupRecyclerView() {
         routeStepAdapter = RouteStepAdapter()
         binding.rvRouteSteps.apply {
@@ -149,47 +151,78 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // Setup BottomSheet behavior theo layout design
+    // Setup BottomSheet behavior - chỉ hiển thị thông tin cơ bản ban đầu
     private fun setupBottomSheet() {
         try {
             bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
 
-            // Thiết lập behavior theo layout - peek height = 110dp, không hideable
             bottomSheetBehavior.apply {
-                peekHeight = resources.getDimensionPixelSize(R.dimen.bottom_sheet_peek_height) // 110dp
+                peekHeight = resources.getDimensionPixelSize(R.dimen.bottom_sheet_peek_height)
                 isHideable = false
-                isFitToContents = false // vi tri trung gian
-                halfExpandedRatio = 0.4f // vi tri 40% chieu cao man hinh
+                isFitToContents = false
+                halfExpandedRatio = 0.4f
                 state = BottomSheetBehavior.STATE_COLLAPSED
             }
 
-            // Ẩn expandable content khi collapsed
+            // Ban đầu ẩn expandable content
             binding.expandableContent.visibility = View.GONE
 
-            // Setup callback để handle state changes
             bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     when (newState) {
                         BottomSheetBehavior.STATE_EXPANDED -> {
-                            binding.expandableContent.visibility = View.VISIBLE
+                            if (hasRouteData) {
+                                binding.expandableContent.visibility = View.VISIBLE
+                            }
                         }
                         BottomSheetBehavior.STATE_COLLAPSED -> {
                             binding.expandableContent.visibility = View.GONE
                         }
+                        BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+                            if (hasRouteData) {
+                                binding.expandableContent.visibility = View.VISIBLE
+                                binding.expandableContent.alpha = 0.7f
+                            }
+                        }
                         BottomSheetBehavior.STATE_DRAGGING -> {
-                            // User đang kéo bottom sheet
+                            // Đang kéo
+                            binding.expandableContent.visibility = View.VISIBLE
                         }
-                        BottomSheetBehavior.STATE_SETTLING -> {
-                            // Bottom sheet đang settle vào vị trí cuối
-                        }
-                        else -> {}
                     }
                 }
 
                 override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                    // Có thể thêm animation cho expandable content dựa trên slideOffset
-                    // slideOffset: 0 = collapsed, 1 = expanded
-                    binding.expandableContent.alpha = slideOffset
+                    // Smooth animation cho expandable content
+//                    if (hasRouteData && slideOffset > 0.5f) {
+//                        binding.expandableContent.alpha = (slideOffset - 0.5f) * 2f
+//                    } else {
+//                        binding.expandableContent.alpha = 0f
+//                    }
+                    if(hasRouteData){
+                        when {
+                            slideOffset >= 0.75f -> {
+                                // Từ 75% trở lên -> hiển thị full content và auto expand
+                                binding.expandableContent.visibility = View.VISIBLE
+                                binding.expandableContent.alpha = 1f
+                                // Auto expand to full khi vượt 75%
+                                if (bottomSheetBehavior.state != BottomSheetBehavior.STATE_EXPANDED) {
+                                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                                }
+                            }
+                            slideOffset >= 0.30f -> {
+                                // Từ 30% đến 75% -> hiển thị content với alpha theo tỷ lệ
+                                binding.expandableContent.visibility = View.VISIBLE
+                                // Alpha từ 0.3 đến 1.0 tương ứng với slideOffset từ 0.3 đến 0.75
+                                val normalizedOffset = (slideOffset - 0.30f) / (0.75f - 0.30f)
+                                binding.expandableContent.alpha = 0.3f + (normalizedOffset * 0.7f)
+                            }
+                            else -> {
+                                // Dưới 30% -> ẩn content
+                                binding.expandableContent.visibility = View.GONE
+                                binding.expandableContent.alpha = 0f
+                            }
+                        }
+                    }
                 }
             })
 
@@ -198,12 +231,13 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // Xử lý sự kiện click
     private fun setupClickListener() {
         binding.apply {
-            // Click vào peek content để expand/collapse bottom sheet
+            // Click vào peek content để expand/collapse bottom sheet - chỉ khi có route data
             peekContent.setOnClickListener {
-                toggleBottomSheet()
+                if (hasRouteData) {
+                    toggleBottomSheet()
+                }
             }
 
             // Chọn phương tiện di chuyển
@@ -212,34 +246,48 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             cardTransit.setOnClickListener { selectTransportMode(TransportMode.TRANSIT) }
 
             // Action buttons
-            btnStartNavigation.setOnClickListener { startNavigation() }
+            btnStartNavigation.setOnClickListener {
+                if (hasRouteData) {
+                    startNavigation()
+                } else {
+                    showError("Vui lòng đợi tính toán tuyến đường")
+                }
+            }
             buttonShare.setOnClickListener { shareLocation() }
 
-            // FAB buttons - Fix tên theo layout
-            buttonMyLocation.setOnClickListener { moveToCurrentLocation() }
+            buttonMyLocation.setOnClickListener {
+                if (hasRouteData) {
+                    showFullRoute() // Hiển thị toàn bộ tuyến đường
+                } else {
+                    moveToCurrentLocation() // Chỉ hiển thị vị trí hiện tại
+                }
+            }
             buttonClose.setOnClickListener { finish() }
         }
     }
 
-    // Toggle bottom sheet state
+    // Toggle bottom sheet state - chỉ khi có route data
     private fun toggleBottomSheet() {
+        if (!hasRouteData) return
+
         if (::bottomSheetBehavior.isInitialized) {
             when (bottomSheetBehavior.state) {
                 BottomSheetBehavior.STATE_COLLAPSED -> {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+                }
+                BottomSheetBehavior.STATE_HALF_EXPANDED -> {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                 }
                 BottomSheetBehavior.STATE_EXPANDED -> {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 }
                 else -> {
-                    // Nếu đang dragging hoặc settling, set về collapsed
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                 }
             }
         }
     }
 
-    // Format thời gian của cuộc hẹn
     private fun formatAppointmentTime(appointment: AppointmentPlus): String {
         val startTime = SimpleDateFormat("HH:mm", Locale.getDefault())
             .format(Date(appointment.startDateTime))
@@ -253,11 +301,34 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         googleMap.uiSettings.apply {
-            isZoomControlsEnabled = false // Tắt zoom controls vì có FAB buttons
-            isCompassEnabled = false // Tắt compass vì có compass button riêng
-            isMyLocationButtonEnabled = false // Tắt vì có FAB my location riêng
+            isZoomControlsEnabled = false
+            isCompassEnabled = false
+            isMyLocationButtonEnabled = false
         }
+
+        // Ban đầu zoom vào điểm hẹn để người dùng thấy được nơi cần đến
+        showDestinationFirst()
+
         checkLocationPermission()
+    }
+
+    // Hiển thị điểm đến trước khi có route
+    private fun showDestinationFirst() {
+        appointment?.let { appt ->
+            val destinationLatLng = LatLng(appt.latitude, appt.longitude)
+
+            // Thêm marker cho điểm đến
+            googleMap.addMarker(
+                MarkerOptions()
+                    .position(destinationLatLng)
+                    .title(appt.title)
+                    .snippet(appt.location)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+            )
+
+            // Zoom vào điểm đến với mức zoom vừa phải
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destinationLatLng, 15f))
+        }
     }
 
     private fun checkLocationPermission() {
@@ -286,39 +357,18 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             location?.let {
                 currentLocation = it
 
-                // Lấy vị trí hiện tại của người dùng
                 val currentLatLng = LatLng(it.latitude, it.longitude)
 
                 appointment?.let { appointment ->
-                    // Lấy tọa độ điểm hẹn
                     val destinationLatLng = LatLng(appointment.latitude, appointment.longitude)
 
-                    // Thêm marker cho điểm đến
-                    googleMap.addMarker(
-                        MarkerOptions().position(destinationLatLng)
-                            .title(appointment.title)
-                            .snippet(appointment.location)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-                    )
-
-                    // Tính toán đường đi
+                    // Tính toán đường đi ngay sau khi có vị trí
                     calculateRoute(currentLatLng, destinationLatLng)
-
-                    // Tạo bounds chứa cả hai điểm
-                    val boundsBuilder = LatLngBounds.Builder()
-                    boundsBuilder.include(currentLatLng)
-                    boundsBuilder.include(destinationLatLng)
-                    val bounds = boundsBuilder.build()
-
-//                    // Padding để tránh che bởi bottom sheet (110dp peek height)
-//                    val padding = resources.getDimensionPixelSize(R.dimen.map_padding) // ~150dp
-//                    googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
                 }
             }
         }
     }
 
-    // Chọn phương tiện di chuyển
     private fun selectTransportMode(mode: TransportMode) {
         selectedTransportMode = mode
         updateTransportModeUI(mode)
@@ -328,18 +378,18 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         val destinationLatLng = appointment?.let { LatLng(it.latitude, it.longitude) }
 
         if (currentLatLng != null && destinationLatLng != null) {
+            // Hiển thị loading state
+            showRouteCalculating()
             calculateRoute(currentLatLng, destinationLatLng)
         }
     }
 
     private fun updateTransportModeUI(mode: TransportMode) {
         binding.apply {
-            // Reset tất cả về trạng thái không được chọn
             cardDriving.strokeWidth = 0
             cardWalking.strokeWidth = 0
             cardTransit.strokeWidth = 0
 
-            // Highlight phương tiện được chọn với stroke color blue
             when (mode) {
                 TransportMode.DRIVING -> cardDriving.strokeWidth = 2
                 TransportMode.WALKING -> cardWalking.strokeWidth = 2
@@ -354,33 +404,86 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                 val result = getRouteFromRoutesAPI(origin, destination, selectedTransportMode)
                 withContext(Dispatchers.Main) {
                     if (result != null) {
+                        routeResult = result
+                        hasRouteData = true
                         displayRoute(result)
                         updateRouteInfo(result)
-                        // Tự động expand bottom sheet khi có thông tin route
-                        expandBottomSheetWithRouteInfo()
+                        showRouteInfo()
+
+                        // Tự động hiển thị toàn bộ tuyến đường
+                        showFullRoute()
+
+                        // Chuyển bottom sheet về half-expanded để hiển thị thông tin route
+                        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                     } else {
                         showError("Không thể tính toán tuyến đường")
+                        hideRouteInfo()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     showError("Lỗi khi tính toán tuyến đường: ${e.message}")
+                    hideRouteInfo()
                 }
             }
         }
     }
 
-    // Expand bottom sheet khi có thông tin route
-    private fun expandBottomSheetWithRouteInfo() {
-        if (::bottomSheetBehavior.isInitialized) {
-            // Delay một chút để đảm bảo UI đã update
-            binding.root.postDelayed({
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-            }, 300)
+    // Hiển thị toàn bộ tuyến đường trên map
+    private fun showFullRoute() {
+        routeResult?.let { result ->
+            val currentLatLng = currentLocation?.let { LatLng(it.latitude, it.longitude) }
+            val destinationLatLng = appointment?.let { LatLng(it.latitude, it.longitude) }
+
+            if (currentLatLng != null && destinationLatLng != null) {
+                val boundsBuilder = LatLngBounds.Builder()
+                boundsBuilder.include(currentLatLng)
+                boundsBuilder.include(destinationLatLng)
+
+                // Thêm tất cả các điểm trên route vào bounds
+                val path = decodePolyline(result.encodedPolyline)
+                path.forEach { point ->
+                    boundsBuilder.include(point)
+                }
+
+                val bounds = boundsBuilder.build()
+                val padding = resources.getDimensionPixelSize(R.dimen.map_route_padding) // ~200dp
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
+            }
         }
     }
 
-    // Sử dụng Routes API mới
+    // Hiển thị trạng thái đang tính toán route
+    private fun showRouteCalculating() {
+        binding.apply {
+            tvTravelTime.text = "..."
+            tvDistance.text = "..."
+            tvArrivalTime.text = "..."
+        }
+    }
+
+    // Hiển thị thông tin route
+    private fun showRouteInfo() {
+        binding.apply {
+            // Hiển thị các thông tin route đã được tính toán
+            tvTravelTime.visibility = View.VISIBLE
+            tvDistance.visibility = View.VISIBLE
+            tvArrivalTime.visibility = View.VISIBLE
+        }
+    }
+
+    // Ẩn thông tin route
+    private fun hideRouteInfo() {
+        hasRouteData = false
+        binding.apply {
+            tvTravelTime.text = "--"
+            tvDistance.text = "--"
+            tvArrivalTime.text = "--"
+        }
+    }
+
+    // [Giữ nguyên các method khác: getRouteFromRoutesAPI, parseRouteResponse, displayRoute, updateRouteInfo, etc.]
+
     private suspend fun getRouteFromRoutesAPI(
         origin: LatLng,
         destination: LatLng,
@@ -460,7 +563,6 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                 val distanceMeters = route.optInt("distanceMeters", 0)
                 val encodedPolyline = route.getJSONObject("polyline").getString("encodedPolyline")
 
-                // Parse steps for navigation instructions
                 val steps = mutableListOf<RouteStep>()
                 val legs = route.optJSONArray("legs")
                 if (legs != null && legs.length() > 0) {
@@ -500,7 +602,6 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun parseDurationToMinutes(duration: String): Int {
-        // Parse duration string like "1234s" to minutes
         return try {
             val seconds = duration.replace("s", "").toInt()
             (seconds / 60)
@@ -508,8 +609,8 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             0
         }
     }
-    //them method de xu ly icon directions
-    private fun getDirectionIcon(instruction:String):Int{
+
+    private fun getDirectionIcon(instruction: String): Int {
         return when {
             instruction.contains("rẽ trái", ignoreCase = true) ||
                     instruction.contains("turn left", ignoreCase = true) -> R.drawable.ic_turn_left
@@ -523,9 +624,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // Hiển thị route trên map
     private fun displayRoute(routeResult: RouteResult) {
-        // Xóa các polyline trước đó
         googleMap.clear()
 
         // Thêm marker cho điểm đến
@@ -553,23 +652,19 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         routeStepAdapter.updateSteps(routeResult.steps)
     }
 
-    // Cập nhật thông tin route
     private fun updateRouteInfo(routeResult: RouteResult) {
         binding.apply {
             tvTravelTime.text = "${routeResult.duration} phút"
             tvDistance.text = "${String.format("%.1f", routeResult.distanceMeters / 1000.0)} km"
 
-            // Tính toán thời gian đến nơi
             val arrivalTime = System.currentTimeMillis() + (routeResult.duration * 60 * 1000)
             tvArrivalTime.text = SimpleDateFormat("HH:mm", Locale.getDefault())
                 .format(Date(arrivalTime))
         }
     }
 
-    // Bắt đầu điều hướng
     private fun startNavigation() {
         appointment?.let { appt ->
-            // Start TurnByTurnNavigationActivity instead of Google Maps
             val intent = Intent(this, TurnByTurnNavigationActivity::class.java)
             intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appt.id)
             startActivity(intent)
@@ -580,11 +675,9 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun updateAppointmentNavigationStatus() {
         lifecycleScope.launch(Dispatchers.IO) {
             // Update appointment to mark navigation as started
-            // This would require an AppointmentRepository method
         }
     }
 
-    // Chia sẻ vị trí location
     private fun shareLocation() {
         val shareText = appointment?.let {
             "Tôi đang đi đến: ${it.location}\n" +
@@ -602,7 +695,6 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         startActivity(Intent.createChooser(shareIntent, "Chia sẻ vị trí"))
     }
 
-    // Di chuyển tới vị trí hiện tại
     private fun moveToCurrentLocation() {
         currentLocation?.let { location ->
             val currentLatLng = LatLng(location.latitude, location.longitude)
@@ -612,10 +704,6 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    /**
-     * Giải mã chuỗi polyline đã được encode thành danh sách các điểm LatLng
-     * sử dụng thuật toán polyline encoding
-     */
     private fun decodePolyline(encoded: String): List<LatLng> {
         val poly = mutableListOf<LatLng>()
         var index = 0
@@ -655,7 +743,6 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         return poly
     }
 
-    // Hiển thị thông báo lỗi
     private fun showError(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
         Log.e("NavigationMapActivity", message)
@@ -678,9 +765,8 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // Data class để lưu kết quả route
     data class RouteResult(
-        val duration: Int, // minutes
+        val duration: Int,
         val distanceMeters: Int,
         val encodedPolyline: String,
         val steps: List<RouteStep>

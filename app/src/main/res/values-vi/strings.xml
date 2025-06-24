@@ -126,6 +126,9 @@
 
     <!-- API Key (Keep as is) -->
     <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
+    <string name="search_appointments">Tìm cuộc hẹn...</string>
+    <string name="select_all">Chọn tất cả</string>
+    <string name="deselect_all">Bỏ chọn tất cả</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">
