@@ -233,6 +233,7 @@ class ContactFragment : Fragment() {
                 hideLoading()
                 showMessage(state.message)
                 contactViewModel.resetUiState()
+                enableSaveButton()
             }
 
             else -> {}
@@ -858,13 +859,42 @@ class ContactFragment : Fragment() {
             // Setup cho Add mode
             setupAddMode(dialogBinding)
         }
+        // xử lý khi nhận sai validation
+        setupRealTimeValidation(dialogBinding)
+    }
+
+    private fun setupRealTimeValidation(dialogBinding: DialogAddContactBinding){
+        with(dialogBinding){
+            etFullName.doOnTextChanged {
+                _,_,_,_ ->
+                tilName.error = null
+                if (!btnSave.isEnabled) {
+                    btnSave.isEnabled = true
+                }
+
+                etPhone.doOnTextChanged { _, _, _, _ ->
+                    tilPhone.error = null
+                    if (!btnSave.isEnabled) {
+                        btnSave.isEnabled = true
+                    }
+                }
+
+                etEmail.doOnTextChanged { _, _, _, _ ->
+                    tilEmail.error = null
+                    if (!btnSave.isEnabled) {
+                        btnSave.isEnabled = true
+                    }
+                }
+            }
+        }
+    }
+
+    private fun enableSaveButton() {
+        addContactDialog?.findViewById<View>(R.id.btn_save)?.isEnabled = true
     }
 
     private fun setupEditMode(dialogBinding: DialogAddContactBinding, contact: Contact) {
         with(dialogBinding) {
-            // Thay đổi title dialog
-            // Nếu bạn có TextView title trong dialog, update nó
-            // tvDialogTitle.text = "Chỉnh sửa liên hệ"
 
             // Điền dữ liệu hiện tại
             etFullName.setText(contact.name)
