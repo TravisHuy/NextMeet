@@ -5,18 +5,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:padding="@dimen/padding_medium"
-    android:layout_margin="@dimen/margin_small"
+    android:layout_margin="@dimen/margin_extra_small"
     android:gravity="center_vertical"
     android:background="@drawable/bg_item"
     android:clickable="true"
     android:focusable="true"
-    android:elevation="@dimen/elevation_small">
+    android:elevation="@dimen/cardview_default_elevation">
 
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/margin_large">
-
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -29,7 +28,7 @@
                 android:id="@+id/tv_time_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hôm nay"
+                android:text="@string/today"
                 android:textSize="@dimen/text_size_small"
                 android:textColor="#666666"
                 android:fontFamily="@font/open_sans" />
@@ -88,7 +87,7 @@
                 android:text="Phòng họp A - với Nguyễn Văn A"
                 android:textSize="@dimen/text_size_medium"
                 android:ellipsize="end"
-                android:maxLines="1"
+                android:maxLines="2"
                 android:textColor="#666666"
                 android:fontFamily="@font/open_sans" />
 
