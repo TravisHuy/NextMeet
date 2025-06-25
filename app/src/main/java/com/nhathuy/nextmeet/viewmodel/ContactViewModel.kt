@@ -171,6 +171,90 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
     }
 
     /**
+     * Thêm liên hệ nhanh
+     */
+    suspend fun quickAddContact(
+        userId: Int,
+        name: String,
+        phone: String,
+        role: String
+    ): Long? {
+        return try {
+            // Validate input
+            if (name.trim().isEmpty()) {
+                _contactUiState.value = ContactUiState.Error("Tên không được để trống")
+                return null
+            }
+
+            if (phone.trim().isEmpty()) {
+                _contactUiState.value = ContactUiState.Error("Số điện thoại không được để trống")
+                return null
+            }
+
+            if (role.trim().isEmpty()) {
+                _contactUiState.value = ContactUiState.Error("Vai trò không được để trống")
+                return null
+            }
+
+            // Validate phone format (basic validation)
+            val phonePattern = "^[+]?[0-9]{10,15}$".toRegex()
+            val cleanPhone = phone.trim().replace("\\s".toRegex(), "")
+            if (!cleanPhone.matches(phonePattern)) {
+                _contactUiState.value = ContactUiState.Error("Số điện thoại không hợp lệ")
+                return null
+            }
+
+            // Kiểm tra xem phone đã tồn tại chưa
+            val existingContact = contactRepository.getContactByUserIdAndPhone(userId, cleanPhone)
+            if (existingContact.isSuccess) {
+                val existing = existingContact.getOrNull()
+                _contactUiState.value = ContactUiState.Error("Số điện thoại này đã được sử dụng cho liên hệ: ${existing?.name}")
+                return null
+            }
+
+            val result = contactRepository.quickAddContact(userId, name.trim(), cleanPhone, role.trim())
+
+            if (result.isSuccess) {
+                val contactId = result.getOrThrow()
+
+                // Lấy contact vừa tạo để emit state
+                val createdContact = contactRepository.getContactById(contactId.toInt())
+                if (createdContact.isSuccess) {
+                    val createdContact = createdContact.getOrNull()
+                    createdContact?.let {
+                        _contactUiState.value = ContactUiState.ContactCreated(
+                            it.id.toLong(),
+                            "Đã thêm liên hệ thành công"
+                        )
+                    }
+                }
+
+                // Refresh contact names and IDs list
+                getContactNamesAndIds(userId)
+
+                // Return the contact ID
+                contactId
+            } else {
+                val exception = result.exceptionOrNull()
+                val errorMessage = when {
+                    exception?.message?.contains("UNIQUE constraint failed") == true ->
+                        "Số điện thoại này đã được sử dụng"
+                    else -> exception?.message ?: "Lỗi khi thêm liên hệ"
+                }
+                _contactUiState.value = ContactUiState.Error(errorMessage)
+                null
+            }
+        } catch (e: Exception) {
+            val errorMessage = when {
+                e.message?.contains("UNIQUE constraint failed") == true ->
+                    "Số điện thoại này đã được sử dụng"
+                else -> e.message ?: "Lỗi không xác định khi thêm liên hệ"
+            }
+            _contactUiState.value = ContactUiState.Error(errorMessage)
+            null
+        }
+    }
+    /**
      * Reset Ui state ve Idle
      */
     fun resetUiState() {

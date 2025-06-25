@@ -131,6 +131,11 @@
     <string name="deselect_all">Deselect All</string>
     <string name="add_appointment">Add appointment</string>
     <string name="add_note">Add note</string>
+    <string name="edit_appointment">Edit appointment\n</string>
+    <string name="add_contact_new">+ Add contact new</string>
+    <string name="add_contact_quickly">Add contact quickly</string>
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

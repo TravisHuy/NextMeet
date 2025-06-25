@@ -199,7 +199,6 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
             val contact = contactDao.getContactById(contactId) ?: return Result.failure(
                 IllegalArgumentException("Liên hệ không tồn tại")
             )
-
             contactDao.deleteContact(contact)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -264,6 +263,47 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
             } else {
                 Result.failure(IllegalArgumentException("Contact not found"))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    /**
+     * Thêm contact nhanh
+     */
+    suspend fun quickAddContact(
+        userId:Int,
+        name:String,
+        phone:String,
+        role:String
+    ): Result<Long> {
+        return try {
+            val contact = Contact(
+                userId = userId,
+                name = name.trim(),
+                phone = phone.trim(),
+                address = "",
+                email = "",
+                role = role,
+                notes = "",
+                latitude = null,
+                longitude = null,
+                isFavorite = false,
+                createAt = System.currentTimeMillis(),
+                updateAt = System.currentTimeMillis()
+            )
+
+            val contactId = contactDao.insertContact(contact)
+            return Result.success(contactId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // lấy liên hệ với số điện thoại
+    suspend fun getContactByUserIdAndPhone(userId: Int, phone: String): Result<Contact?> {
+        return try {
+            val contact = contactDao.getContactByUserIdAndPhone(userId, phone)
+            Result.success(contact)
         } catch (e: Exception) {
             Result.failure(e)
         }

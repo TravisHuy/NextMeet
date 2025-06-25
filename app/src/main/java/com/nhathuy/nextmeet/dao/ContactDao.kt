@@ -206,4 +206,11 @@ interface ContactDao {
         LIMIT :limit
     """)
     suspend fun getRecentContacts(userId: Int, limit: Int = 10): List<Contact>
+
+    /**
+     * Lấy liên hệ có sđt
+     */
+    @Query("SELECT * FROM contacts WHERE user_id = :userId AND phone = :phone LIMIT 1")
+    suspend fun getContactByUserIdAndPhone(userId: Int, phone: String): Contact?
+
 }

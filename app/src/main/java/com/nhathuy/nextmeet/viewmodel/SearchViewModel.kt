@@ -1,5 +1,7 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchSuggestionType
@@ -33,6 +35,9 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
 
     private val _suggestions = MutableStateFlow<List<SearchSuggestion>>(emptyList())
     val suggestions: StateFlow<List<SearchSuggestion>> = _suggestions.asStateFlow()
+
+    private val _navigationFilter = MutableLiveData<String?>()
+    val navigationFilter: LiveData<String?> = _navigationFilter
 
     private var currentUserId: Int = 0
 
@@ -281,6 +286,14 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
      */
     fun hasSuggestions(): Boolean {
         return _suggestions.value.isNotEmpty()
+    }
+
+    fun setNavigationFilter(filter: String) {
+        _navigationFilter.value = filter
+    }
+
+    fun clearNavigationFilter() {
+        _navigationFilter.value = null
     }
 
     override fun onCleared() {
