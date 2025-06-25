@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.AppointmentTodayAdapter
+import com.nhathuy.nextmeet.adapter.NoteRecentAdapter
 import com.nhathuy.nextmeet.databinding.FragmentDashBoardBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.Note
@@ -42,6 +43,7 @@ class DashBoardFragment : Fragment() {
 
     //adapter
     private lateinit var todayAppointmentAdapter: AppointmentTodayAdapter
+    private lateinit var noteRecentAdapter: NoteRecentAdapter
     //
     private var currentUserId: Int = 0
 
@@ -112,9 +114,19 @@ class DashBoardFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
+        setupAppointmentTodayAdapter()
+        setupNoteRecentAdapter()
+    }
+    private fun setupAppointmentTodayAdapter(){
         binding.rvTodayApppointments.layoutManager = LinearLayoutManager(requireContext())
         todayAppointmentAdapter = AppointmentTodayAdapter()
         binding.rvTodayApppointments.adapter = todayAppointmentAdapter
+    }
+
+    private fun setupNoteRecentAdapter(){
+        binding.rvNoteRecents.layoutManager = LinearLayoutManager(requireContext())
+        noteRecentAdapter = NoteRecentAdapter()
+        binding.rvNoteRecents.adapter = noteRecentAdapter
     }
 
     private fun observeData() {
@@ -287,8 +299,7 @@ class DashBoardFragment : Fragment() {
         else{
             binding.rvNoteRecents.visibility = View.VISIBLE
             binding.layoutEmptyRecentNotes.visibility = View.GONE
-
-            //setupAdapter
+            noteRecentAdapter.submitList(notes)
         }
     }
 

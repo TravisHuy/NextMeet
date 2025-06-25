@@ -39,7 +39,7 @@ class NoteRecentAdapter() :
             }
 
             diff < TimeUnit.DAYS.toMillis(1) -> {
-                val hours = TimeUnit.DAYS.toHours(diff)
+                val hours = TimeUnit.MILLISECONDS.toHours(diff)
                 "${hours}h ago"
             }
 
