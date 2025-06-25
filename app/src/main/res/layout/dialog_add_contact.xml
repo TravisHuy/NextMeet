@@ -7,12 +7,14 @@
     android:backgroundTint="@color/white"
    >
 
-
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="Họ và tên"
+        app:counterEnabled="true"
+        app:counterMaxLength="25"
+        app:errorEnabled="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -22,7 +24,9 @@
             android:id="@+id/et_full_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:singleLine="true"
+            />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -31,6 +35,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:hint="Số điện thoại"
+        app:counterEnabled="true"
+        app:counterMaxLength="10"
+        app:errorEnabled="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/til_name"
@@ -40,7 +47,9 @@
             android:id="@+id/et_phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="phone" />
+            android:inputType="phone"
+            android:maxLength="10"
+            />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout

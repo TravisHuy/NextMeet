@@ -34,6 +34,7 @@ import com.nhathuy.nextmeet.resource.NoteUiState
 import com.nhathuy.nextmeet.ui.AddNoteActivity
 import com.nhathuy.nextmeet.ui.EditNoteActivity
 import com.nhathuy.nextmeet.utils.Constant
+import com.nhathuy.nextmeet.utils.NavigationCallback
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,7 +45,7 @@ import java.util.Calendar
  * NoteFragment fragment thể hiện logic với FAB menu animation
  */
 @AndroidEntryPoint
-class NotesFragment : Fragment() {
+class NotesFragment : Fragment() , NavigationCallback{
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
 
@@ -589,6 +590,10 @@ class NotesFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun triggerAddAction() {
+        openAddNote(NoteType.TEXT)
     }
 }
 

@@ -1,14 +1,17 @@
 package com.nhathuy.nextmeet.fragment
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.AppointmentTodayAdapter
@@ -20,10 +23,13 @@ import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.NoteUiState
 import com.nhathuy.nextmeet.ui.TestActivity
+import com.nhathuy.nextmeet.utils.Constant
+import com.nhathuy.nextmeet.utils.NavigationCallback
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
 import com.nhathuy.nextmeet.viewmodel.AppointmentViewModel
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
+import com.nhathuy.nextmeet.viewmodel.SearchViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -44,6 +50,7 @@ class DashBoardFragment : Fragment() {
     //adapter
     private lateinit var todayAppointmentAdapter: AppointmentTodayAdapter
     private lateinit var noteRecentAdapter: NoteRecentAdapter
+
     //
     private var currentUserId: Int = 0
 
@@ -90,16 +97,16 @@ class DashBoardFragment : Fragment() {
 
     private fun setupCardClickListeners() {
         binding.cardToday.setOnClickListener {
-            //navigateToAppointment("today")
+            navigateToAppointment(Constant.FILTER_TODAY)
         }
         binding.cardNotes.setOnClickListener {
-            //navigateNotes()
+            navigateToNotes()
         }
         binding.cardContact.setOnClickListener {
-            //navigateToContact()
+            navigateToContacts()
         }
         binding.cardAppointmentSoon.setOnClickListener {
-            //navigateToAppointment("upcoming")
+            navigateToAppointment(Constant.FILTER_UPCOMING)
         }
     }
 
@@ -117,13 +124,14 @@ class DashBoardFragment : Fragment() {
         setupAppointmentTodayAdapter()
         setupNoteRecentAdapter()
     }
-    private fun setupAppointmentTodayAdapter(){
+
+    private fun setupAppointmentTodayAdapter() {
         binding.rvTodayApppointments.layoutManager = LinearLayoutManager(requireContext())
         todayAppointmentAdapter = AppointmentTodayAdapter()
         binding.rvTodayApppointments.adapter = todayAppointmentAdapter
     }
 
-    private fun setupNoteRecentAdapter(){
+    private fun setupNoteRecentAdapter() {
         binding.rvNoteRecents.layoutManager = LinearLayoutManager(requireContext())
         noteRecentAdapter = NoteRecentAdapter()
         binding.rvNoteRecents.adapter = noteRecentAdapter
@@ -244,11 +252,11 @@ class DashBoardFragment : Fragment() {
         val now = System.currentTimeMillis()
 
         todayAppointmentCount = appointments.count { isToday(it.startDateTime) }
-        upcomingAppointmentCount = appointments.count { it.startDateTime > now}
+        upcomingAppointmentCount = appointments.count { it.startDateTime > now }
     }
 
     // kiểm tra thời gian là ngày hôm nay
-    private fun isToday(timestamp: Long) : Boolean {
+    private fun isToday(timestamp: Long): Boolean {
         val today = Calendar.getInstance()
         val date = Calendar.getInstance().apply {
             timeInMillis = timestamp
@@ -257,8 +265,9 @@ class DashBoardFragment : Fragment() {
         return today.get(Calendar.YEAR) == date.get(Calendar.YEAR)
                 && today.get(Calendar.DAY_OF_YEAR) == date.get(Calendar.DAY_OF_YEAR)
     }
+
     //cập nhat lại cuộn hẹn card
-    private fun updateAppointmentCards(){
+    private fun updateAppointmentCards() {
         binding.tvDashBoardToday.text = todayAppointmentCount.toString()
         binding.tvDashBoardAppointmentSoon.text = upcomingAppointmentCount.toString()
     }
@@ -274,29 +283,23 @@ class DashBoardFragment : Fragment() {
     }
 
     // cập nhật lại hiển thị danh sach cuộn hẹn ngày hôm nay
-    private fun updateTodayAppointmentsSection(todayAppointments : List<AppointmentPlus>){
-        if(todayAppointments.isEmpty()) {
+    private fun updateTodayAppointmentsSection(todayAppointments: List<AppointmentPlus>) {
+        if (todayAppointments.isEmpty()) {
             binding.rvTodayApppointments.visibility = View.GONE
             binding.layoutEmptyTodayAppointments.visibility = View.VISIBLE
-        }
-        else{
+        } else {
             binding.rvTodayApppointments.visibility = View.VISIBLE
             binding.layoutEmptyTodayAppointments.visibility = View.GONE
             todayAppointmentAdapter.submitList(todayAppointments)
         }
     }
-    // khoi tao cuoc hen ngay hom nay
-    private fun setupTodayAppointmentRec(){
-
-    }
 
     // câp nhật ghi chú
-    private fun updateNotesSection(notes : List<Note>){
-        if(notes.isEmpty()){
+    private fun updateNotesSection(notes: List<Note>) {
+        if (notes.isEmpty()) {
             binding.rvNoteRecents.visibility = View.GONE
             binding.layoutEmptyRecentNotes.visibility = View.VISIBLE
-        }
-        else{
+        } else {
             binding.rvNoteRecents.visibility = View.VISIBLE
             binding.layoutEmptyRecentNotes.visibility = View.GONE
             noteRecentAdapter.submitList(notes)
@@ -331,23 +334,200 @@ class DashBoardFragment : Fragment() {
     /**
      * Navigation methods
      */
-    private fun navigateToAppointments(filter: String = "") {
-        // TODO: Implement navigation to appointments fragment with filter
+    private fun navigateToAppointment(filter: String = "") {
+        try {
+            // set filter vào searchViewModel truoc khi navigate
+            if(filter.isNotEmpty()){
+                val searchQuery = when(filter){
+                    Constant.FILTER_TODAY -> "Today"
+                    Constant.FILTER_UPCOMING -> "Upcoming"
+                    else -> ""
+                }
+                if (searchQuery.isNotEmpty()) {
+                    val searchViewModel = ViewModelProvider(requireActivity())[SearchViewModel::class.java]
+                    searchViewModel.setNavigationFilter(searchQuery)
+                }
+            }
+            val bottomNavigation =
+                (activity as? AppCompatActivity)?.findViewById<BottomNavigationView>(R.id.nav_bottom_navigation)
+            if (bottomNavigation != null) {
+                val appointmentMenuItem = bottomNavigation.menu.findItem(R.id.nav_appointment)
+                if (appointmentMenuItem != null) {
+                    bottomNavigation.selectedItemId = appointmentMenuItem.itemId
+                    Log.d("Navigation", "Navigated to Appointment with filter: $filter")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Navigation", "Failed to navigate to AppointmentFragment: ${e.message}")
+        }
     }
 
+    // apply cho search filter
+//    private fun applyAppointmentFilter(filter: String) {
+//        val searchQuery = when (filter) {
+//            Constant.FILTER_TODAY -> "Today"
+//            Constant.FILTER_UPCOMING -> "Upcoming"
+//            else -> ""
+//        }
+//
+//        if (searchQuery.isNotEmpty()) {
+//            findAndApplyFilter(searchQuery)
+//        }
+//    }
+//
+//    private fun findAndApplyFilter(searchQuery: String) {
+//        val fragments = requireActivity().supportFragmentManager.fragments
+//        for (fragment in fragments) {
+//            if (fragment is AppointmentMapFragment) {
+//                fragment.applyQuickSearch(searchQuery)
+//                return
+//            }
+//
+//            // kiểm tra chồn fragment
+//            if (fragment != null) {
+//                val childFragments = fragment.childFragmentManager.fragments
+//                for (childFragment in childFragments) {
+//                    if (childFragment is AppointmentMapFragment) {
+//                        childFragment.applyQuickSearch(searchQuery)
+//                        return
+//                    }
+//                }
+//            }
+//        }
+//
+//    }
+
     private fun navigateToNotes() {
-        // TODO: Implement navigation to notes fragment
+        try {
+            val parentFragment = parentFragment
+            if (parentFragment is HomeFragment) {
+                val homeBinding = parentFragment.binding
+                homeBinding.homeViewpager2.currentItem = 1
+                Log.d("Navigation", "Navigated to Notes tab in ViewPager2")
+                return
+            }
+        } catch (e: Exception) {
+            Log.e("Navigation", "Failed to navigate to NotesFragment: ${e.message}")
+        }
     }
 
     private fun navigateToContacts() {
-        // TODO: Implement navigation to contacts fragment
+        try {
+            val bottomNavigation =
+                (activity as? AppCompatActivity)?.findViewById<BottomNavigationView>(R.id.nav_bottom_navigation)
+            if (bottomNavigation != null) {
+                val contactMenuItem = bottomNavigation.menu.findItem(R.id.nav_contact)
+                if (contactMenuItem != null) {
+                    bottomNavigation.selectedItemId = contactMenuItem.itemId
+                    Log.d("Navigation", "Navigated to Contact via BottomNavigation")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Navigation", "Failed to navigate to ContactFragment: ${e.message}")
+            Toast.makeText(
+                requireContext(),
+                "Không thể chuyển đến trang Liên hệ. Vui lòng thử lại.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     private fun navigateToAddAppointment() {
-        // TODO: Implement navigation to add appointment
+        try{
+            val bottomNavigation = (activity as? AppCompatActivity)?.findViewById<BottomNavigationView>(R.id.nav_bottom_navigation)
+
+            if(bottomNavigation != null){
+                val appointmentMenuItem = bottomNavigation.menu.findItem(R.id.nav_appointment)
+                if (appointmentMenuItem != null) {
+                    bottomNavigation.selectedItemId = appointmentMenuItem.itemId
+
+                    // Đặt delay nhỏ để fragment load xong trước khi trigger FAB
+                    view?.postDelayed({
+                        triggerAppointmentFAB()
+                    }, 300)
+
+                    Log.d("Navigation", "Navigated to Appointment to add new")
+                    return
+                }
+            }
+        }
+        catch (e: Exception) {
+            Log.e("Navigation", "Failed to navigate to add appointment: ${e.message}")
+        }
     }
 
     private fun navigateToAddNote() {
-        // TODO: Implement navigation to add note
+        try {
+            val parentFragment = parentFragment
+            if (parentFragment is HomeFragment) {
+                val homeBinding = parentFragment.binding
+                homeBinding.homeViewpager2.currentItem = 1
+
+                // Đặt delay nhỏ để fragment load xong trước khi trigger FAB
+                view?.postDelayed({
+                    triggerNoteFAB()
+                }, 300)
+
+                Log.d("Navigation", "Navigated to Notes to add new")
+                return
+            }
+        } catch (e: Exception) {
+            Log.e("Navigation", "Failed to navigate to add note: ${e.message}")
+        }
+    }
+
+    // Trigger FAB click cho AppointmentMapFragment
+    private fun triggerAppointmentFAB() {
+        try {
+            val fragments = requireActivity().supportFragmentManager.fragments
+            for (fragment in fragments) {
+                if (fragment is AppointmentMapFragment) {
+                    fragment.triggerAddAction()
+                    return
+                }
+
+                // Kiểm tra child fragments
+                fragment?.let {
+                    val childFragments = it.childFragmentManager.fragments
+                    for (childFragment in childFragments) {
+                        if (childFragment is AppointmentMapFragment) {
+                            childFragment.triggerAddAction()
+                            return
+                        }
+                    }
+                }
+            }
+            Log.w("Navigation", "AppointmentMapFragment not found for FAB trigger")
+        } catch (e: Exception) {
+            Log.e("Navigation", "Failed to trigger appointment FAB: ${e.message}")
+        }
+    }
+
+    // Trigger FAB click cho NoteFragment
+    private fun triggerNoteFAB() {
+        try {
+            val parentFragment = parentFragment
+            if (parentFragment is HomeFragment) {
+                // Tìm NoteFragment trong ViewPager2
+                val fragments = parentFragment.childFragmentManager.fragments
+                for (fragment in fragments) {
+                    // Kiểm tra nếu là ViewPager fragment container
+                    if (fragment != null) {
+                        val childFragments = fragment.childFragmentManager.fragments
+                        for (childFragment in childFragments) {
+                            if (childFragment is NotesFragment) {
+                                (childFragment as? NavigationCallback)?.triggerAddAction()
+                                return
+                            }
+                        }
+                    }
+                }
+            }
+            Log.w("Navigation", "NoteFragment not found for FAB trigger")
+        } catch (e: Exception) {
+            Log.e("Navigation", "Failed to trigger note FAB: ${e.message}")
+        }
     }
 }

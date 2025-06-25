@@ -1,0 +1,668 @@
+package com.nhathuy.nextmeet.ui
+
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.location.Geocoder
+import android.os.Bundle
+import android.text.Editable
+import android.text.InputType
+import android.text.TextWatcher
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
+import com.nhathuy.nextmeet.R
+import com.nhathuy.nextmeet.adapter.ColorPickerAdapter
+import com.nhathuy.nextmeet.databinding.ActivityAddAppointmentBinding
+import com.nhathuy.nextmeet.model.AppointmentPlus
+import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.ContactNameId
+import com.nhathuy.nextmeet.resource.AppointmentUiState
+import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
+import com.nhathuy.nextmeet.viewmodel.ContactViewModel
+import com.nhathuy.nextmeet.viewmodel.UserViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+
+@AndroidEntryPoint
+class AddAppointmentActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityAddAppointmentBinding
+    private lateinit var userViewModel: UserViewModel
+    private lateinit var contactViewModel: ContactViewModel
+    private lateinit var appointmentViewModel: AppointmentPlusViewModel
+
+    // Data variables
+    private var currentUserId: Int = 0
+    private var currentContactId: Int = 0
+    private var location: String? = null
+    private var latitude: Double? = null
+    private var longitude: Double? = null
+    private var reminderTime: Long? = null
+    private var selectedColorName: String = "color_white"
+
+    // Edit mode variables
+    private var isEditMode: Boolean = false
+    private var appointmentId: Int = 0
+
+    // Contact data
+    private val contactMap = mutableMapOf<String, ContactNameId>()
+
+    // Color picker
+    private lateinit var colorAdapter: ColorPickerAdapter
+
+    // Geocoding
+    private var geocodingJob: Job? = null
+    private var geocodingCache = mutableMapOf<String, Pair<Double?, Double?>>()
+
+    // Activity Result Launcher
+    private val mapPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                location = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
+                latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
+                longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
+
+                if (!location.isNullOrEmpty()) {
+                    binding.etAppointmentLocation.setText(location)
+                } else {
+                    binding.etAppointmentLocation.setText(getString(R.string.no_location_selected))
+                    location = ""
+                }
+            }
+        }
+    }
+
+    companion object {
+        val listColor = listOf(
+            R.color.color_white, R.color.color_red, R.color.color_orange,
+            R.color.color_yellow, R.color.color_green, R.color.color_teal,
+            R.color.color_blue, R.color.color_dark_blue, R.color.color_purple,
+            R.color.color_pink, R.color.color_brown, R.color.color_gray
+        )
+
+        val colorSourceNames = mapOf(
+            R.color.color_white to "color_white",
+            R.color.color_red to "color_red",
+            R.color.color_orange to "color_orange",
+            R.color.color_yellow to "color_yellow",
+            R.color.color_green to "color_green",
+            R.color.color_teal to "color_teal",
+            R.color.color_blue to "color_blue",
+            R.color.color_dark_blue to "color_dark_blue",
+            R.color.color_purple to "color_purple",
+            R.color.color_pink to "color_pink",
+            R.color.color_brown to "color_brown",
+            R.color.color_gray to "color_gray"
+        )
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityAddAppointmentBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+
+        initializeData()
+        initializeViewModels()
+        setupUI()
+        observeData()
+        loadInitialData()
+    }
+
+    private fun initializeData() {
+        currentUserId = intent.getIntExtra("current_user_id", 0)
+        isEditMode = intent.getBooleanExtra("is_edit_mode", false)
+
+        if (isEditMode) {
+            appointmentId = intent.getIntExtra("appointment_id", 0)
+            setupEditMode()
+        }
+    }
+
+    private fun setupEditMode() {
+        // Load data từ intent
+        binding.etAppointmentTitle.setText(intent.getStringExtra("appointment_title") ?: "")
+        binding.etNotes.setText(intent.getStringExtra("appointment_description") ?: "")
+
+        location = intent.getStringExtra("appointment_location")
+        binding.etAppointmentLocation.setText(location ?: "")
+
+        latitude = intent.getDoubleExtra("appointment_latitude", 0.0).takeIf { it != 0.0 }
+        longitude = intent.getDoubleExtra("appointment_longitude", 0.0).takeIf { it != 0.0 }
+
+        reminderTime = intent.getLongExtra("appointment_start_time", 0L).takeIf { it != 0L }
+        currentContactId = intent.getIntExtra("appointment_contact_id", 0)
+        selectedColorName = intent.getStringExtra("appointment_color") ?: "color_white"
+        binding.cbFavorite.isChecked = intent.getBooleanExtra("appointment_is_pinned", false)
+
+        // Update UI for edit mode
+        binding.btnSave.text = "Cập nhật"
+        supportActionBar?.title = "Chỉnh sửa cuộc hẹn"
+
+        // Update reminder display if available
+        reminderTime?.let { updateReminderDisplay() }
+    }
+
+    private fun initializeViewModels() {
+        userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
+        contactViewModel = ViewModelProvider(this)[ContactViewModel::class.java]
+        appointmentViewModel = ViewModelProvider(this)[AppointmentPlusViewModel::class.java]
+    }
+
+    private fun setupUI() {
+        setupToolbar()
+        setupContactDropdown()
+        setupColorPicker()
+        setupLocationInput()
+        setupClickListeners()
+    }
+
+    private fun setupToolbar() {
+        binding.titleAddAppointment.text = if (isEditMode) getString(R.string.edit_appointment) else getString(R.string.add_appointment)
+        binding.btnBack.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+    }
+
+    private fun setupContactDropdown() {
+        binding.autoContactName.apply {
+            inputType = InputType.TYPE_NULL
+            isFocusable = false
+            isCursorVisible = false
+            keyListener = null
+        }
+
+        lifecycleScope.launch {
+            contactViewModel.contactNamesAndIds.collect { contacts ->
+                contactMap.clear()
+                contacts.forEach { contact ->
+                    contactMap[contact.name] = contact
+                }
+
+                if (contacts.isNotEmpty()) {
+                    binding.tilContactName.helperText = null
+                    val contactNames = mutableListOf("-- Chọn liên hệ --").apply {
+                        addAll(contacts.map { it.name })
+                    }.toTypedArray()
+
+                    val adapter = ArrayAdapter(
+                        this@AddAppointmentActivity,
+                        android.R.layout.simple_dropdown_item_1line,
+                        contactNames
+                    )
+                    binding.autoContactName.setAdapter(adapter)
+
+                    // Set selected contact for edit mode
+                    if (isEditMode && currentContactId != 0) {
+                        val selectedContact = contacts.find { it.id == currentContactId }
+                        if (selectedContact != null) {
+                            val contactPosition = contacts.indexOfFirst { it.id == currentContactId }
+                            if (contactPosition != -1) {
+                                val displayPosition = contactPosition + 1
+                                binding.autoContactName.setText(contactNames[displayPosition], false)
+                            }
+                        }
+                    } else {
+                        binding.autoContactName.setText(contactNames[0], false)
+                        if (!isEditMode) {
+                            currentContactId = 0
+                        }
+                    }
+
+                    binding.autoContactName.setOnItemClickListener { _, _, position, _ ->
+                        if (position == 0) {
+                            currentContactId = 0
+                            binding.autoContactName.setText(contactNames[0], false)
+                        } else {
+                            val selectedContact = contacts[position - 1]
+                            currentContactId = selectedContact.id
+                            binding.autoContactName.setText(selectedContact.name, false)
+                            Log.d("ContactDropdown", "Selected contact: ${selectedContact.name} with ID: ${selectedContact.id}")
+                        }
+                    }
+                } else {
+                    binding.tilContactName.helperText = "⚠️ Không tìm thấy liên hệ - vui lòng thêm ít nhất 1 liên hệ để thêm cuộc hẹn."
+                }
+            }
+        }
+    }
+
+//    private fun showQuickAddContactDialog(){
+//        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_quick_add_contact, null)
+//        val etName = dialogView.findViewById<TextInputEditText>(R.id.et_contact_name)
+//        val etPhone = dialogView.findViewById<TextInputEditText>(R.id.et_contact_phone)
+//
+//        MaterialAlertDialogBuilder(this)
+//            .setTitle(getString(R.string.add_contact_quickly))
+//            .setView(dialogView)
+//            .setPositiveButton(getString(R.string.add)) { dialog, _ ->
+//                val name = etName.text?.toString()?.trim()
+//                val phone = etPhone.text?.toString()?.trim()
+//
+//                if (!name.isNullOrEmpty() && !phone.isNullOrEmpty()) {
+//                    addQuickContact(name, phone)
+//                    dialog.dismiss()
+//                } else {
+//                    Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+//                dialog.dismiss()
+//            }
+//            .show()
+//    }
+
+    // thêm lie
+    private fun setupColorPicker() {
+        colorAdapter = ColorPickerAdapter(listColor, colorSourceNames) { colorResId, colorName ->
+            val color = ContextCompat.getColor(this, colorResId)
+            binding.layoutAddAppointment.setBackgroundColor(color)
+            selectedColorName = colorName
+        }
+
+        binding.rvColorPicker.apply {
+            adapter = colorAdapter
+            layoutManager = LinearLayoutManager(this@AddAppointmentActivity, LinearLayoutManager.HORIZONTAL, false)
+        }
+
+        // Set initial color for edit mode
+        if (isEditMode) {
+            colorAdapter.setSelectedColor(selectedColorName)
+        }
+    }
+
+    private fun setupLocationInput() {
+        binding.tilAppointmentLocation.apply {
+            helperText = "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+            setEndIconDrawable(R.drawable.ic_geo)
+            setEndIconContentDescription("Chọn vị trí trên bản đồ")
+
+            setEndIconOnClickListener {
+                val intent = Intent(this@AddAppointmentActivity, GoogleMapActivity::class.java).apply {
+                    if (latitude != null && longitude != null) {
+                        putExtra("current_lat", latitude)
+                        putExtra("current_lng", longitude)
+                        putExtra("current_address", location)
+                    }
+                }
+                mapPickerLauncher.launch(intent)
+            }
+        }
+
+        var isLocationFromMap = false
+
+        binding.etAppointmentLocation.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val manualLocation = s?.toString()?.trim()
+
+                if (!isLocationFromMap) {
+                    geocodingJob?.cancel()
+
+                    if (!manualLocation.isNullOrEmpty() && manualLocation.length >= 3) {
+                        location = manualLocation
+
+                        geocodingJob = lifecycleScope.launch {
+                            delay(800)
+                            binding.tilAppointmentLocation.helperText = "🔄 Đang tìm tọa độ..."
+
+                            geocodeAddress(manualLocation) { lat, lng ->
+                                if (lat != null && lng != null) {
+                                    latitude = lat
+                                    longitude = lng
+                                    binding.tilAppointmentLocation.helperText =
+                                        "📍 Tọa độ: ${String.format("%.4f", lat)}, ${String.format("%.4f", lng)}"
+                                    Log.d("Geocoding", "Found coordinates: $lat, $lng for address: $manualLocation")
+                                } else {
+                                    latitude = null
+                                    longitude = null
+                                    binding.tilAppointmentLocation.helperText =
+                                        "⚠️ Không tìm thấy tọa độ - có thể chọn trên bản đồ để chính xác hơn"
+                                    Log.d("Geocoding", "No coordinates found for address: $manualLocation")
+                                }
+                            }
+                        }
+                    } else if (manualLocation.isNullOrEmpty()) {
+                        location = null
+                        latitude = null
+                        longitude = null
+                        binding.tilAppointmentLocation.helperText =
+                            "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+                        geocodingJob?.cancel()
+                    } else {
+                        location = manualLocation
+                        latitude = null
+                        longitude = null
+                        binding.tilAppointmentLocation.helperText = "📝 Nhập thêm để tìm tọa độ..."
+                    }
+                }
+
+                if (isLocationFromMap) {
+                    isLocationFromMap = false
+                }
+            }
+        })
+    }
+
+    private fun setupClickListeners() {
+        binding.layoutReminder.setOnClickListener {
+            showDateTimePicker()
+        }
+
+        binding.btnCancel.setOnClickListener {
+            finish()
+        }
+
+        binding.btnSave.setOnClickListener {
+            binding.btnSave.isEnabled = false
+            if (isEditMode) {
+                updateAppointment()
+            } else {
+                saveAppointment()
+            }
+        }
+    }
+
+    private fun observeData() {
+        lifecycleScope.launch {
+            appointmentViewModel.appointmentUiState.collect { state ->
+                handleAppointmentUiState(state)
+            }
+        }
+    }
+
+    private fun handleAppointmentUiState(state: AppointmentUiState) {
+        when (state) {
+            is AppointmentUiState.Loading -> showLoading()
+
+            is AppointmentUiState.AppointmentCreated -> {
+                hideLoading()
+                setResultAndFinish(state.message)
+            }
+
+            is AppointmentUiState.AppointmentUpdated -> {
+                hideLoading()
+                setResultAndFinish(state.message)
+            }
+
+            is AppointmentUiState.Error -> {
+                hideLoading()
+                showMessage(state.message)
+                binding.btnSave.isEnabled = true
+                appointmentViewModel.resetUiState()
+            }
+
+            else -> {}
+        }
+    }
+
+    private fun loadInitialData() {
+        if (currentUserId != 0) {
+            contactViewModel.getContactNamesAndIds(currentUserId)
+        }
+    }
+
+    private fun saveAppointment() {
+        val title = binding.etAppointmentTitle.text?.toString()?.trim() ?: ""
+        val notes = binding.etNotes.text?.toString()?.trim() ?: ""
+        val appointmentLocation = location ?: ""
+        val isPinned = binding.cbFavorite.isChecked
+
+        if (!validateAppointmentInput(title)) {
+            binding.btnSave.isEnabled = true
+            return
+        }
+
+        val endTime = reminderTime!! + (60 * 60 * 1000)
+
+        val appointment = AppointmentPlus(
+            userId = currentUserId,
+            contactId = currentContactId,
+            title = title,
+            description = notes,
+            startDateTime = reminderTime!!,
+            endDateTime = endTime,
+            location = appointmentLocation,
+            latitude = latitude ?: 0.0,
+            longitude = longitude ?: 0.0,
+            status = AppointmentStatus.SCHEDULED,
+            color = selectedColorName,
+            travelTimeMinutes = 0,
+            isPinned = isPinned
+        )
+
+        appointmentViewModel.createAppointment(appointment)
+    }
+
+    private fun updateAppointment() {
+        val title = binding.etAppointmentTitle.text?.toString()?.trim() ?: ""
+        val notes = binding.etNotes.text?.toString()?.trim() ?: ""
+        val appointmentLocation = location ?: ""
+        val isPinned = binding.cbFavorite.isChecked
+
+        if (!validateAppointmentInput(title)) {
+            binding.btnSave.isEnabled = true
+            return
+        }
+
+        val endTime = reminderTime!! + (60 * 60 * 1000)
+
+        val updatedAppointment = AppointmentPlus(
+            id = appointmentId,
+            userId = currentUserId,
+            contactId = currentContactId,
+            title = title,
+            description = notes,
+            startDateTime = reminderTime!!,
+            endDateTime = endTime,
+            location = appointmentLocation,
+            latitude = latitude ?: 0.0,
+            longitude = longitude ?: 0.0,
+            status = AppointmentStatus.SCHEDULED,
+            color = selectedColorName,
+            travelTimeMinutes = 0,
+            isPinned = isPinned
+        )
+
+        appointmentViewModel.updateAppointment(updatedAppointment)
+    }
+
+    private fun validateAppointmentInput(title: String): Boolean {
+        binding.tilAppointmentTitle.error = null
+
+        if (title.isEmpty()) {
+            binding.tilAppointmentTitle.error = "Vui lòng nhập tiêu đề cuộc hẹn"
+            return false
+        }
+
+        if (currentContactId == 0) {
+            Toast.makeText(this, "Vui lòng chọn liên hệ", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (reminderTime == null) {
+            Toast.makeText(this, "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        return true
+    }
+
+    private fun showDateTimePicker() {
+        val constraintBuilder = CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
+
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Select date")
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setCalendarConstraints(constraintBuilder.build())
+            .build()
+
+        datePicker.addOnPositiveButtonClickListener { selectedDate ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = selectedDate
+            showTimePicker(calendar)
+        }
+
+        datePicker.show(supportFragmentManager, "date_picker")
+    }
+
+    private fun showTimePicker(calendar: Calendar) {
+        val now = Calendar.getInstance()
+
+        val timePicker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_24H)
+            .setHour(calendar.get(Calendar.HOUR_OF_DAY))
+            .setMinute(calendar.get(Calendar.MINUTE))
+            .setTitleText("Select time")
+            .build()
+
+        timePicker.addOnPositiveButtonClickListener {
+            val selectedHour = timePicker.hour
+            val selectedMinute = timePicker.minute
+
+            if (isToday(calendar)) {
+                if (selectedHour < now.get(Calendar.HOUR_OF_DAY) ||
+                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(Calendar.MINUTE)
+                ) {
+                    Toast.makeText(this, "Please select a future time", Toast.LENGTH_SHORT).show()
+                    return@addOnPositiveButtonClickListener
+                }
+            }
+
+            calendar.set(Calendar.HOUR_OF_DAY, timePicker.hour)
+            calendar.set(Calendar.MINUTE, timePicker.minute)
+            calendar.set(Calendar.SECOND, 0)
+
+            reminderTime = calendar.timeInMillis
+            updateReminderDisplay()
+        }
+
+        timePicker.show(supportFragmentManager, "time_picker")
+    }
+
+    private fun isToday(calendar: Calendar): Boolean {
+        val today = Calendar.getInstance()
+        return today.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
+                today.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun updateReminderDisplay() {
+        val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
+        val formattedDate = formatter.format(Date(reminderTime!!))
+        binding.tvReminderTime.text = formattedDate
+    }
+
+    private fun geocodeAddress(address: String, callback: (Double?, Double?) -> Unit) {
+        if (address.isBlank() || address.length < 3) {
+            callback(null, null)
+            return
+        }
+
+        val cachedResult = geocodingCache[address]
+        if (cachedResult != null) {
+            callback(cachedResult.first, cachedResult.second)
+            return
+        }
+
+        try {
+            val geocoder = Geocoder(this, Locale.getDefault())
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                geocoder.getFromLocationName(address, 1) { addresses ->
+                    handleGeocodingResult(address, addresses, callback)
+                }
+            } else {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        @Suppress("DEPRECATION")
+                        val addresses = geocoder.getFromLocationName(address, 1)
+                        launch(Dispatchers.Main) {
+                            handleGeocodingResult(address, addresses, callback)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Geocoding", "Error geocoding address: ${e.message}")
+                        launch(Dispatchers.Main) {
+                            callback(null, null)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Geocoding", "Geocoder error: ${e.message}")
+            callback(null, null)
+        }
+    }
+
+    private fun handleGeocodingResult(
+        address: String,
+        addresses: List<android.location.Address>?,
+        callback: (Double?, Double?) -> Unit
+    ) {
+        if (!addresses.isNullOrEmpty()) {
+            val location = addresses[0]
+            val result = Pair(location.latitude, location.longitude)
+            geocodingCache[address] = result
+            callback(location.latitude, location.longitude)
+        } else {
+            geocodingCache[address] = Pair(null, null)
+            callback(null, null)
+        }
+    }
+
+    private fun setResultAndFinish(message: String) {
+        val resultIntent = Intent().apply {
+            putExtra("message", message)
+        }
+        setResult(Activity.RESULT_OK, resultIntent)
+        finish()
+    }
+
+    private fun showLoading() {
+        binding.btnSave.isEnabled = false
+        // Có thể thêm progress bar nếu cần
+        binding.loadingOverlay.visibility = View.VISIBLE
+
+    }
+
+    private fun hideLoading() {
+        binding.btnSave.isEnabled = true
+        binding.loadingOverlay.visibility = View.GONE
+    }
+
+    private fun showMessage(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
+    }
+}

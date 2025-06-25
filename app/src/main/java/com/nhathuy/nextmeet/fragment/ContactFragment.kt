@@ -958,6 +958,7 @@ class ContactFragment : Fragment() {
 
         // Validate
         if (!validateContactInput(dialogBinding, name, phone, email)) {
+            dialogBinding.btnSave.isEnabled = true
             return
         }
 
@@ -1031,99 +1032,6 @@ class ContactFragment : Fragment() {
         return !hasError
     }
 
-
-    // hiển thị dialog để thêm liên hệ mới
-//    private fun showAddContactDialog() {
-//        val dialog = Dialog(requireContext())
-//        addContactDialog = dialog
-//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-//
-//        val dialogBinding = DialogAddContactBinding.inflate(LayoutInflater.from(requireContext()))
-//        dialog.setContentView(dialogBinding.root)
-//
-//        dialogBinding.btnPickLocation.setOnClickListener {
-//            val intent = Intent(requireContext(), GoogleMapActivity::class.java)
-//            mapPickerLauncher.launch(intent)
-//        }
-//        dialogBinding.btnSave.setOnClickListener {
-//            // Lấy dữ liệu từ các trường nhập
-//            val name = dialogBinding.etFullName.text.toString()
-//            val phone = dialogBinding.etPhone.text.toString()
-//            val email = dialogBinding.etEmail.text.toString()
-//            val role = dialogBinding.etRole.text.toString()
-//            val notes = dialogBinding.etNotes.text.toString()
-//            val isFavorite = dialogBinding.cbFavorite.isChecked
-//
-//            // Xóa lỗi cũ
-//            dialogBinding.tilName.error = null
-//            dialogBinding.tilPhone.error = null
-//            dialogBinding.tilEmail.error = null
-//            dialogBinding.tvLocation.error = null
-//
-//            // Validate từng trường
-//            val nameResult = ValidationUtils.validateName(name)
-//            val phoneResult = ValidationUtils.validatePhone(phone)
-//            val emailResult = ValidationUtils.validateEmail(email)
-//
-//            val locationText = dialogBinding.tvLocation.text.toString()
-//            val addressResult =
-//                if (locationText.isNotBlank() && locationText != getString(R.string.no_location_selected)) {
-//                    ValidationUtils.validateAddress(locationText)
-//                } else {
-//                    ValidationUtils.validateAddress("")
-//                }
-//
-//            var hasError = false
-//            if (!nameResult.isValid) {
-//                dialogBinding.tilName.error = nameResult.errorMessage
-//                hasError = true
-//            }
-//            if (!phoneResult.isValid) {
-//                dialogBinding.tilPhone.error = phoneResult.errorMessage
-//                hasError = true
-//            }
-//            if (!emailResult.isValid) {
-//                dialogBinding.tilEmail.error = emailResult.errorMessage
-//                hasError = true
-//            }
-//            if (!addressResult.isValid) {
-//                dialogBinding.tvLocation.error = addressResult.errorMessage
-//                hasError = true
-//            }
-//
-//            if (hasError) return@setOnClickListener
-//
-//            val contact = Contact(
-//                userId = currentUserId,
-//                name = name,
-//                address = locationText,
-//                phone = phone,
-//                email = email,
-//                role = role,
-//                notes = notes,
-//                latitude = latitude,
-//                longitude = longitude,
-//                isFavorite = isFavorite
-//            )
-//            contactViewModel.createContact(contact)
-//            dialog.dismiss()
-//        }
-//
-//        dialogBinding.btnCancel.setOnClickListener {
-//            dialog.dismiss()
-//        }
-//
-//        dialog.show()
-//        dialog.window?.apply {
-//            setLayout(
-//                (resources.displayMetrics.widthPixels * 0.9).toInt(),
-//                ViewGroup.LayoutParams.WRAP_CONTENT
-//            )
-//            setBackgroundDrawableResource(R.drawable.border_dialog_background)
-//            attributes.windowAnimations = R.style.DialogAnimation
-//            setGravity(Gravity.CENTER_HORIZONTAL)
-//        }
-//    }
 
     private fun refreshData() {
         if (isSearchMode) {
@@ -1220,6 +1128,7 @@ class ContactFragment : Fragment() {
                     }
                     showMessage("Đã xóa ${selectedContacts.size} liên hệ")
                     closeSelectionMode()
+                    dialog.dismiss()
                 }
                 .setNegativeButton("Hủy") { dialog, _ ->
                     dialog.dismiss()
@@ -1262,26 +1171,11 @@ class ContactFragment : Fragment() {
         popMenu.show()
     }
 
-    fun onBackPressed(): Boolean {
-        return if (isSelectionMode) {
-            closeSelectionMode()
-            true
-        } else {
-            false
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         dismissDialog()
         _binding = null
     }
 
-//    override fun onPause() {
-//        super.onPause()
-//        if (isDialogShowing) {
-//            dismissDialog()
-//        }
-//    }
 }
 
