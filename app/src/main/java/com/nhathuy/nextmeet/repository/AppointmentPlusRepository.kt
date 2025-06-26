@@ -359,7 +359,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
 
             if(searchInContactName){
                 try {
-                    val contact = contactDao.getContactById(appointment.contactId)
+                    val contact = contactDao.getContactById(appointment.contactId!!)
                     if (contact?.name?.contains(query, ignoreCase = true) == true) {
                         matchFound = true
                     }

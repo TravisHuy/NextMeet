@@ -60,7 +60,7 @@ data class AppointmentPlus(
     @ColumnInfo(name = "user_id")
     val userId: Int,
     @ColumnInfo(name = "contact_id")
-    val contactId: Int,
+    val contactId: Int?,
     @ColumnInfo(name = "title")
     val title: String = "",
     @ColumnInfo(name = "description")

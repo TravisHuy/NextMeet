@@ -206,9 +206,8 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
 
             // Kiểm tra xem phone đã tồn tại chưa
             val existingContact = contactRepository.getContactByUserIdAndPhone(userId, cleanPhone)
-            if (existingContact.isSuccess) {
-                val existing = existingContact.getOrNull()
-                _contactUiState.value = ContactUiState.Error("Số điện thoại này đã được sử dụng cho liên hệ: ${existing?.name}")
+            existingContact.getOrNull()?.let { existing ->
+                _contactUiState.value = ContactUiState.Error("Số điện thoại này đã được sử dụng cho liên hệ: ${existing.name}")
                 return null
             }
 
