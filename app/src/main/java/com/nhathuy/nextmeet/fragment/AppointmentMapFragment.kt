@@ -624,25 +624,48 @@ class AppointmentMapFragment : Fragment(), NavigationCallback {
 
     private fun handleDeleteAction() {
         val selectedAppointments = appointmentAdapter.getSelectedAppointments()
-        if (selectedAppointments.isNotEmpty()) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Xóa cuộc hẹn")
-                .setMessage("Bạn có chắc chắn muốn xóa ${selectedAppointments.size} cuộc hẹn đã chọn?")
-                .setPositiveButton("Xóa") { dialog, _ ->
-                    selectedAppointments.forEach { appointment ->
+
+        if (selectedAppointments.isEmpty()) {
+            exitSelectionMode()
+            return
+        }
+
+
+        // Backup appointments trước khi xóa khỏi UI
+        val backupAppointments = selectedAppointments.toList()
+
+        // Xóa khỏi UI trước (soft delete)
+        appointmentAdapter.removeAppointments(selectedAppointments)
+
+        val snackbar = Snackbar.make(
+            binding.root,
+            "Đã xóa ${selectedAppointments.size} cuộc hẹn",
+            Snackbar.LENGTH_LONG
+        )
+
+        var isUndoClicked = false
+
+        snackbar.setAction("Hoàn tác") {
+            isUndoClicked = true
+            // Restore lại vào UI
+            appointmentAdapter.restoreAppointments(backupAppointments)
+            showMessage("Đã hoàn tác xóa cuộc hẹn")
+        }
+
+        snackbar.addCallback(object : Snackbar.Callback() {
+            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                // Chỉ xóa khỏi database khi snackbar bị dismiss và user không hoàn tác
+                if (!isUndoClicked && event != DISMISS_EVENT_ACTION) {
+                    // Thực hiện xóa thật khỏi database
+                    backupAppointments.forEach { appointment ->
                         appointmentViewModel.deleteAppointment(appointment.id)
                     }
-                    showMessage("Đã xóa ${selectedAppointments.size} cuộc hẹn")
-                    exitSelectionMode()
-                    dialog.dismiss()
                 }
-                .setNegativeButton("Hủy") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
-        } else {
-            exitSelectionMode()
-        }
+            }
+        })
+
+        snackbar.show()
+        exitSelectionMode()
     }
 
     private fun handleMoreAction(view: View) {

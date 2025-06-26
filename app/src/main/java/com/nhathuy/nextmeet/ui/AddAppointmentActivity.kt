@@ -452,7 +452,7 @@ class AddAppointmentActivity : AppCompatActivity() {
             val contact = contactMap[contactName]
             if (contact != null) {
                 binding.autoContactName.setText(contactName, false)
-                showMessage("✅ Đã chọn liên hệ: $contactName")
+                showMessage("Đã chọn liên hệ: $contactName")
 
                 // Clear helper text warning
                 binding.tilContactName.helperText = null

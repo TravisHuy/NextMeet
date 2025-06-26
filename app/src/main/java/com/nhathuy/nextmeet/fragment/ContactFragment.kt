@@ -18,6 +18,7 @@ import android.view.Window
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
@@ -89,6 +90,10 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     private var CLICK_DELAY = 500L
     private var shouldRestoreDialog = false
 
+
+    //delete contact
+    private var deleteContact: Contact? = null
+
     private val mapPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -124,11 +129,11 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     // lấy chuyển cảnh từng thêm cuộn hẹn đến
     private val addAppointmentLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) {
-        result ->
-        if(result.resultCode == Activity.RESULT_OK){
-            val navigateToContact = result.data?.getBooleanExtra("navigate_to_contact",false) ?: false
-            if(navigateToContact){
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val navigateToContact =
+                result.data?.getBooleanExtra("navigate_to_contact", false) ?: false
+            if (navigateToContact) {
                 showMessage("Vui lòng thêm liên hệ để tạo cuộc hẹn")
                 showContactDialog()
             }
@@ -673,7 +678,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     // xử lý để kiểm tra có click hay không
     private fun canPerformClick(): Boolean {
         val currentTime = System.currentTimeMillis()
-        if(currentTime - lastClickTime < CLICK_DELAY){
+        if (currentTime - lastClickTime < CLICK_DELAY) {
             return false
         }
         lastClickTime = currentTime
@@ -692,6 +697,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         isSelectionMode = true
         binding.selectionToolbar.visibility = View.VISIBLE
         binding.appBarLayout.visibility = View.GONE
+        binding.fabAddContact.visibility = View.GONE
     }
 
     //thoát chế độ selection
@@ -699,6 +705,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         isSelectionMode = false
         binding.selectionToolbar.visibility = View.GONE
         binding.appBarLayout.visibility = View.VISIBLE
+        binding.fabAddContact.visibility = View.VISIBLE
         contactsAdapter.setMultiSelectMode(false)
         contactsAdapter.clearSelection()
     }
@@ -812,7 +819,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         }
 
         dialogBinding.btnCancel.setOnClickListener {
-            if(!canPerformClick()){
+            if (!canPerformClick()) {
                 return@setOnClickListener
             }
             dismissDialog()
@@ -883,10 +890,9 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         setupRealTimeValidation(dialogBinding)
     }
 
-    private fun setupRealTimeValidation(dialogBinding: DialogAddContactBinding){
-        with(dialogBinding){
-            etFullName.doOnTextChanged {
-                _,_,_,_ ->
+    private fun setupRealTimeValidation(dialogBinding: DialogAddContactBinding) {
+        with(dialogBinding) {
+            etFullName.doOnTextChanged { _, _, _, _ ->
                 tilName.error = null
                 if (!btnSave.isEnabled) {
                     btnSave.isEnabled = true
@@ -1168,26 +1174,45 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     // xử lý action delete
     private fun handleDeleteAction() {
         val selectedContacts = contactsAdapter.getSelectedContacts()
-        if (selectedContacts.isNotEmpty()) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Xóa liên hệ")
-                .setMessage("Bạn có chắc chắn muốn xóa ${selectedContacts.size} liên hệ đã chọn?")
-                .setPositiveButton("Xóa") { dialog, _ ->
-                    selectedContacts.forEach { contact ->
-                        contactViewModel.deleteContact(contact.id)
-                    }
-                    showMessage("Đã xóa ${selectedContacts.size} liên hệ")
-                    closeSelectionMode()
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Hủy") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
-        } else {
+
+        if (selectedContacts.isEmpty()) {
             closeSelectionMode()
+            return
         }
+
+        val backupContacts = selectedContacts.toList()
+        contactsAdapter.removeContacts(selectedContacts)
+
+        val snackbar = Snackbar.make(
+            binding.root,
+            "Đã xóa ${selectedContacts.size} liên hệ",
+            Snackbar.LENGTH_LONG
+        )
+        var isUndoClicked = false
+
+        snackbar.setAction("Hoàn tác") {
+            isUndoClicked = true
+            contactsAdapter.restoreContacts(backupContacts)
+            showMessage("Đã hoàn tác xóa liên hệ")
+        }
+
+        snackbar.addCallback(
+            object : Snackbar.Callback(){
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    if(!isUndoClicked && event != DISMISS_EVENT_ACTION){
+                        backupContacts.forEach {
+                            contact ->
+                            contactViewModel.deleteContact(contact.id)
+                        }
+                    }
+                }
+            }
+        )
+
+        snackbar.show()
+        closeSelectionMode()
     }
+
 
     private fun showSelectionPopMenu(view: View) {
         val popMenu = PopupMenu(requireContext(), view)
