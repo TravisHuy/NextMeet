@@ -15,6 +15,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
@@ -26,6 +27,7 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.nhathuy.nextmeet.R
@@ -35,6 +37,7 @@ import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.resource.AppointmentUiState
+import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
@@ -78,6 +81,9 @@ class AddAppointmentActivity : AppCompatActivity() {
     // Geocoding
     private var geocodingJob: Job? = null
     private var geocodingCache = mutableMapOf<String, Pair<Double?, Double?>>()
+
+    // has show contact
+    private var hasShownNoContactDialog = false
 
     // Activity Result Launcher
     private val mapPickerLauncher = registerForActivityResult(
@@ -128,12 +134,12 @@ class AddAppointmentActivity : AppCompatActivity() {
         binding = ActivityAddAppointmentBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         initializeData()
         initializeViewModels()
+        loadInitialData()
         setupUI()
         observeData()
-        loadInitialData()
+
     }
 
     private fun initializeData() {
@@ -147,6 +153,9 @@ class AddAppointmentActivity : AppCompatActivity() {
     }
 
     private fun setupEditMode() {
+        Log.d("AddAppointment", "Setting up edit mode")
+        Log.d("AddAppointment", "Contact ID: $currentContactId")
+
         // Load data từ intent
         binding.etAppointmentTitle.setText(intent.getStringExtra("appointment_title") ?: "")
         binding.etNotes.setText(intent.getStringExtra("appointment_description") ?: "")
@@ -161,6 +170,8 @@ class AddAppointmentActivity : AppCompatActivity() {
         currentContactId = intent.getIntExtra("appointment_contact_id", 0)
         selectedColorName = intent.getStringExtra("appointment_color") ?: "color_white"
         binding.cbFavorite.isChecked = intent.getBooleanExtra("appointment_is_pinned", false)
+
+        Log.d("AddAppointment", "Edit mode contact ID: $currentContactId")
 
         // Update UI for edit mode
         binding.btnSave.text = "Cập nhật"
@@ -201,85 +212,264 @@ class AddAppointmentActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             contactViewModel.contactNamesAndIds.collect { contacts ->
-                contactMap.clear()
-                contacts.forEach { contact ->
-                    contactMap[contact.name] = contact
-                }
+                handleContactsData(contacts)
+            }
+        }
+    }
 
-                if (contacts.isNotEmpty()) {
-                    binding.tilContactName.helperText = null
-                    val contactNames = mutableListOf("-- Chọn liên hệ --").apply {
-                        addAll(contacts.map { it.name })
-                    }.toTypedArray()
+    private fun handleContactsData(contacts: List<ContactNameId>) {
+        contactMap.clear()
+        contacts.forEach { contact ->
+            contactMap[contact.name] = contact
+        }
 
-                    val adapter = ArrayAdapter(
-                        this@AddAppointmentActivity,
-                        android.R.layout.simple_dropdown_item_1line,
-                        contactNames
-                    )
-                    binding.autoContactName.setAdapter(adapter)
+        when {
+            contacts.isNotEmpty() -> {
+                // Có contacts - setup bình thường
+                hasShownNoContactDialog = false
+                setupContactAdapter(contacts)
+                binding.tilContactName.helperText = null
+            }
 
-                    // Set selected contact for edit mode
-                    if (isEditMode && currentContactId != 0) {
-                        val selectedContact = contacts.find { it.id == currentContactId }
-                        if (selectedContact != null) {
-                            val contactPosition = contacts.indexOfFirst { it.id == currentContactId }
-                            if (contactPosition != -1) {
-                                val displayPosition = contactPosition + 1
-                                binding.autoContactName.setText(contactNames[displayPosition], false)
-                            }
-                        }
-                    } else {
-                        binding.autoContactName.setText(contactNames[0], false)
-                        if (!isEditMode) {
-                            currentContactId = 0
-                        }
-                    }
+            isEditMode -> {
+                // Edit mode nhưng không có contacts - báo lỗi nhưng không hiển thị dialog
+                binding.tilContactName.helperText = "⚠️ Không tìm thấy liên hệ - dữ liệu có thể đã bị xóa"
+                hasShownNoContactDialog = true
+            }
 
-                    binding.autoContactName.setOnItemClickListener { _, _, position, _ ->
-                        if (position == 0) {
-                            currentContactId = 0
-                            binding.autoContactName.setText(contactNames[0], false)
-                        } else {
-                            val selectedContact = contacts[position - 1]
-                            currentContactId = selectedContact.id
-                            binding.autoContactName.setText(selectedContact.name, false)
-                            Log.d("ContactDropdown", "Selected contact: ${selectedContact.name} with ID: ${selectedContact.id}")
+            else -> {
+                // Add mode và không có contacts - hiển thị dialog
+                binding.tilContactName.helperText = "⚠️ Không tìm thấy liên hệ - vui lòng thêm ít nhất 1 liên hệ để thêm cuộc hẹn."
+                if (!hasShownNoContactDialog) {
+                    // Thêm delay để đảm bảo đã load xong
+                    lifecycleScope.launch {
+                        delay(1000) // Wait 1 second
+
+                        // Kiểm tra lại một lần nữa
+                        if (contactMap.isEmpty() && !isEditMode && !hasShownNoContactDialog) {
+                            handleNoContactsAvailable()
                         }
                     }
-                } else {
-                    binding.tilContactName.helperText = "⚠️ Không tìm thấy liên hệ - vui lòng thêm ít nhất 1 liên hệ để thêm cuộc hẹn."
                 }
             }
         }
     }
 
-//    private fun showQuickAddContactDialog(){
-//        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_quick_add_contact, null)
-//        val etName = dialogView.findViewById<TextInputEditText>(R.id.et_contact_name)
-//        val etPhone = dialogView.findViewById<TextInputEditText>(R.id.et_contact_phone)
-//
-//        MaterialAlertDialogBuilder(this)
-//            .setTitle(getString(R.string.add_contact_quickly))
-//            .setView(dialogView)
-//            .setPositiveButton(getString(R.string.add)) { dialog, _ ->
-//                val name = etName.text?.toString()?.trim()
-//                val phone = etPhone.text?.toString()?.trim()
-//
-//                if (!name.isNullOrEmpty() && !phone.isNullOrEmpty()) {
-//                    addQuickContact(name, phone)
-//                    dialog.dismiss()
-//                } else {
-//                    Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-//                dialog.dismiss()
-//            }
-//            .show()
-//    }
+    private fun setupContactAdapter(contacts: List<ContactNameId>) {
+        val contactNames = mutableListOf("-- Chọn liên hệ --").apply {
+            addAll(contacts.map { it.name })
+        }.toTypedArray()
 
-    // thêm lie
+        val adapter = ArrayAdapter(
+            this@AddAppointmentActivity,
+            android.R.layout.simple_dropdown_item_1line,
+            contactNames
+        )
+        binding.autoContactName.setAdapter(adapter)
+
+        // Set selected contact for edit mode
+        if (isEditMode && currentContactId != 0) {
+            val selectedContact = contacts.find { it.id == currentContactId }
+            selectedContact?.let {
+                val contactPosition = contacts.indexOfFirst { contact -> contact.id == currentContactId }
+                if (contactPosition != -1) {
+                    val displayPosition = contactPosition + 1
+                    binding.autoContactName.setText(contactNames[displayPosition], false)
+                }
+            }
+        } else {
+            binding.autoContactName.setText(contactNames[0], false)
+            if (!isEditMode) {
+                currentContactId = 0
+            }
+        }
+
+        binding.autoContactName.setOnItemClickListener { _, _, position, _ ->
+            if (position == 0) {
+                currentContactId = 0
+                binding.autoContactName.setText(contactNames[0], false)
+            } else {
+                val selectedContact = contacts[position - 1]
+                currentContactId = selectedContact.id
+                binding.autoContactName.setText(selectedContact.name, false)
+                Log.d("ContactDropdown", "Selected contact: ${selectedContact.name} with ID: ${selectedContact.id}")
+            }
+        }
+    }
+
+    private fun handleNoContactsAvailable() {
+        hasShownNoContactDialog = true
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Không có liên hệ")
+            .setMessage("Bạn cần tạo ít nhất một liên hệ trước khi có thể tạo cuộc hẹn.")
+            .setPositiveButton("Tạo liên hệ nhanh") { dialog, _ ->
+                dialog.dismiss()
+                showQuickAddContactDialog()
+            }
+            .setNeutralButton("Đến trang Liên hệ") { dialog, _ ->
+                dialog.dismiss()
+                navigateToContactFragment()
+            }
+            .setNegativeButton("Hủy") { dialog, _ ->
+                dialog.dismiss()
+                finish()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun showQuickAddContactDialog() {
+        val dialogView = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_quick_add_contact, null)
+
+        val tilName = dialogView.findViewById<TextInputLayout>(R.id.til_name)
+        val tilPhone = dialogView.findViewById<TextInputLayout>(R.id.til_phone)
+        val tilRole = dialogView.findViewById<TextInputLayout>(R.id.til_role)
+
+        val etContactName = dialogView.findViewById<TextInputEditText>(R.id.et_contact_name)
+        val etContactPhone = dialogView.findViewById<TextInputEditText>(R.id.et_contact_phone)
+        val etContactRole = dialogView.findViewById<TextInputEditText>(R.id.et_contact_role)
+
+        val alertDialog = MaterialAlertDialogBuilder(this)
+            .setTitle("Tạo liên hệ nhanh")
+            .setView(dialogView)
+            .setPositiveButton("Tạo", null) // Set null để override sau
+            .setNegativeButton("Hủy") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+
+        alertDialog.setOnShowListener { dialog ->
+            val button = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
+            button.setOnClickListener {
+                val name = etContactName.text?.toString()?.trim() ?: ""
+                val phone = etContactPhone.text?.toString()?.trim() ?: ""
+                val role = etContactRole.text?.toString()?.trim() ?: ""
+
+                // Clear previous errors
+                tilName.error = null
+                tilPhone.error = null
+                tilRole.error = null
+
+                if (validateQuickContactInput(name, phone, role, tilName, tilPhone, tilRole)) {
+                    button.isEnabled = false
+                    createQuickContact(name, phone, role) { success ->
+                        if (success) {
+                            dialog.dismiss()
+                        } else {
+                            button.isEnabled = true
+                        }
+                    }
+                }
+            }
+        }
+
+        alertDialog.show()
+
+        // Auto focus và hiển thị keyboard
+        etContactName.requestFocus()
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(etContactName, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    private fun validateQuickContactInput(
+        name: String,
+        phone: String,
+        role: String,
+        tilName: TextInputLayout,
+        tilPhone: TextInputLayout,
+        tilRole: TextInputLayout
+    ): Boolean {
+        var isValid = true
+
+        if (name.isEmpty()) {
+            tilName.error = "Tên không được để trống"
+            isValid = false
+        } else if (name.length > 25) {
+            tilName.error = "Tên không được quá 25 ký tự"
+            isValid = false
+        }
+
+        if (phone.isEmpty()) {
+            tilPhone.error = "Số điện thoại không được để trống"
+            isValid = false
+        } else if (phone.length != 10) {
+            tilPhone.error = "Số điện thoại phải có 10 chữ số"
+            isValid = false
+        } else if (!phone.matches("^[0-9]+$".toRegex())) {
+            tilPhone.error = "Số điện thoại chỉ được chứa chữ số"
+            isValid = false
+        }
+
+        if (role.isEmpty()) {
+            tilRole.error = "Vai trò không được để trống"
+            isValid = false
+        }
+
+        return isValid
+    }
+
+    private fun createQuickContact(
+        name: String,
+        phone: String,
+        role: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        lifecycleScope.launch {
+            try {
+                val contactId = contactViewModel.quickAddContact(currentUserId, name, phone, role)
+
+                if (contactId != null) {
+                    showMessage("Đã tạo liên hệ: $name")
+
+                    // Wait for contact list to refresh
+                    delay(500)
+
+                    // Auto select the new contact
+                    autoSelectNewContact(name, contactId.toInt())
+
+                    onComplete(true)
+                } else {
+                    onComplete(false)
+                }
+            } catch (e: Exception) {
+                showMessage("Lỗi tạo liên hệ: ${e.message}")
+                onComplete(false)
+            }
+        }
+    }
+
+    private fun autoSelectNewContact(contactName: String, contactId: Int) {
+        // Update current contact ID
+        currentContactId = contactId
+
+        // Update UI
+        lifecycleScope.launch {
+            // Wait for adapter to update
+            delay(200)
+
+            val contact = contactMap[contactName]
+            if (contact != null) {
+                binding.autoContactName.setText(contactName, false)
+                showMessage("✅ Đã chọn liên hệ: $contactName")
+
+                // Clear helper text warning
+                binding.tilContactName.helperText = null
+            }
+        }
+    }
+
+    private fun navigateToContactFragment() {
+        val intent = Intent(this, SolutionActivity::class.java).apply {
+            putExtra("navigate_to", "contact")
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    // cài đặt màu ban đầu
     private fun setupColorPicker() {
         colorAdapter = ColorPickerAdapter(listColor, colorSourceNames) { colorResId, colorName ->
             val color = ContextCompat.getColor(this, colorResId)
@@ -292,7 +482,7 @@ class AddAppointmentActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@AddAppointmentActivity, LinearLayoutManager.HORIZONTAL, false)
         }
 
-        // Set initial color for edit mode
+        // Đặt màu ban đầu cho chế độ chỉnh sửa
         if (isEditMode) {
             colorAdapter.setSelectedColor(selectedColorName)
         }
@@ -392,9 +582,17 @@ class AddAppointmentActivity : AppCompatActivity() {
     }
 
     private fun observeData() {
+        // Existing appointment observation
         lifecycleScope.launch {
             appointmentViewModel.appointmentUiState.collect { state ->
                 handleAppointmentUiState(state)
+            }
+        }
+
+        // Add contact observation for quick add
+        lifecycleScope.launch {
+            contactViewModel.contactUiState.collect { state ->
+                handleContactUiState(state)
             }
         }
     }
@@ -424,8 +622,25 @@ class AddAppointmentActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleContactUiState(state: ContactUiState) {
+        when (state) {
+            is ContactUiState.ContactCreated -> {
+                // Contact created successfully - handled in createQuickContact
+            }
+            is ContactUiState.Error -> {
+                showMessage(state.message)
+            }
+            else -> {}
+        }
+    }
+
     private fun loadInitialData() {
         if (currentUserId != 0) {
+            // Đặt flag trước khi load data để tránh hiển thị dialog sai
+            if (isEditMode) {
+                hasShownNoContactDialog = true // Ngăn dialog hiển thị trong edit mode
+            }
+
             contactViewModel.getContactNamesAndIds(currentUserId)
         }
     }
@@ -647,9 +862,7 @@ class AddAppointmentActivity : AppCompatActivity() {
 
     private fun showLoading() {
         binding.btnSave.isEnabled = false
-        // Có thể thêm progress bar nếu cần
         binding.loadingOverlay.visibility = View.VISIBLE
-
     }
 
     private fun hideLoading() {
