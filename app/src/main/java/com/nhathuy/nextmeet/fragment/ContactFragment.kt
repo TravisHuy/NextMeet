@@ -28,6 +28,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.search.SearchView
 import com.google.android.material.snackbar.Snackbar
@@ -43,6 +44,7 @@ import com.nhathuy.nextmeet.model.SearchType
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.SearchUiState
 import com.nhathuy.nextmeet.ui.GoogleMapActivity
+import com.nhathuy.nextmeet.ui.SolutionActivity
 import com.nhathuy.nextmeet.utils.ValidationUtils
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
 import com.nhathuy.nextmeet.viewmodel.SearchViewModel
@@ -51,7 +53,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class ContactFragment : Fragment() {
+class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     private var _binding: FragmentContactBinding? = null
     private val binding get() = _binding!!
 
@@ -115,6 +117,24 @@ class ContactFragment : Fragment() {
                 } else {
                     showContactDialog()
                 }
+            }
+        }
+    }
+
+    // lấy chuyển cảnh từng thêm cuộn hẹn đến
+    private val addAppointmentLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        result ->
+        if(result.resultCode == Activity.RESULT_OK){
+            val navigateToContact = result.data?.getBooleanExtra("navigate_to_contact",false) ?: false
+            if(navigateToContact){
+                showMessage("Vui lòng thêm liên hệ để tạo cuộc hẹn")
+                showContactDialog()
+            }
+            val message = result.data?.getStringExtra("message")
+            if (!message.isNullOrEmpty()) {
+                showMessage(message)
             }
         }
     }
@@ -1207,5 +1227,9 @@ class ContactFragment : Fragment() {
         _binding = null
     }
 
+    override fun onNavigateToContact() {
+        showContactDialog()
+        showMessage("Vui lòng thêm liên hệ để tạo cuộc hẹn")
+    }
 }
 
