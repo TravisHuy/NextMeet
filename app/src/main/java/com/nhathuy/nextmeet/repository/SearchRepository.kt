@@ -7,6 +7,7 @@ import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.dao.NoteDao
 import com.nhathuy.nextmeet.dao.SearchHistoryDao
 import com.nhathuy.nextmeet.model.AppointmentPlus
+import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.SearchHistory
@@ -631,4 +632,6 @@ class SearchRepository @Inject constructor(
 
         return Pair(weekStart, weekEnd)
     }
+
+    suspend fun getAppointmentByContactId(userId:Int,contactId:Int,status: AppointmentStatus) = appointmentDao.getAppointmentByContactId(userId,contactId,status)
 }

@@ -13,7 +13,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class SolutionActivity : AppCompatActivity() {
-    private lateinit var binding: ActivitySolutionBinding
+    public final lateinit var binding: ActivitySolutionBinding
     private lateinit var viewPagerAdapter: ViewPagerAdapter
 
     interface NavigationCallback {

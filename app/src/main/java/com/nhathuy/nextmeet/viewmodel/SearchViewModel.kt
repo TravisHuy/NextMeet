@@ -198,6 +198,50 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
         )
     }
     /**
+     * appply contact quickfilter
+     */
+    fun applyContactFilter(contactId: Int, contactName: String) {
+        _currentQuery.value = "Contact: $contactName"
+        _currentSearchType.value = SearchType.APPOINTMENT
+        _isSearching.value = true
+        _uiState.value = SearchUiState.Loading
+
+        searchManager.performContactFilterSearch(
+            userId = currentUserId,
+            contactId = contactId,
+            contactName = contactName,
+            onResult = { result ->
+                _isSearching.value = false
+                _searchResults.value = result
+                _uiState.value = SearchUiState.SearchResultsLoaded(
+                    results = result,
+                    query = "Contact: $contactName",
+                    searchType = SearchType.APPOINTMENT
+                )
+            },
+            onError = { error ->
+                _isSearching.value = false
+                _uiState.value = SearchUiState.Error(error)
+            }
+        )
+    }
+
+    /**
+    * Check if current search is a contact filter
+    */
+    fun isContactFilter(): Boolean {
+        return _currentQuery.value.startsWith("Contact: ")
+    }
+
+    /**
+     * Get contact name from contact filter query
+     */
+    fun getContactNameFromFilter(): String? {
+        return if (isContactFilter()) {
+            _currentQuery.value.removePrefix("Contact: ")
+        } else null
+    }
+    /**
      * Handle quick filter suggestions
      */
     private fun handleQuickFilter(suggestion: SearchSuggestion) {

@@ -46,6 +46,8 @@ import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.SearchUiState
 import com.nhathuy.nextmeet.ui.GoogleMapActivity
 import com.nhathuy.nextmeet.ui.SolutionActivity
+import com.nhathuy.nextmeet.utils.AppointmentNavigationCallback
+import com.nhathuy.nextmeet.utils.NavigationCallback
 import com.nhathuy.nextmeet.utils.ValidationUtils
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
 import com.nhathuy.nextmeet.viewmodel.SearchViewModel
@@ -738,7 +740,26 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
 
     //tạo cuộc hẹn với contact
     private fun handleAppointmentWithContact(contact: Contact) {
+        (activity as? SolutionActivity)?.let { solutionActivity ->
+            // Switch to appointment tab (index 1)
+            solutionActivity.binding.viewPager2.setCurrentItem(1, true)
+            solutionActivity.binding.navBottomNavigation.selectedItemId = R.id.nav_appointment
 
+            // Post a delayed action to ensure fragment is ready
+            solutionActivity.binding.root.postDelayed({
+                triggerAppointmentWithContactNavigation(contact)
+            }, 200)
+        }
+    }
+
+    private fun triggerAppointmentWithContactNavigation(contact: Contact) {
+        val fragments = requireActivity().supportFragmentManager.fragments
+        for (fragment in fragments) {
+            if (fragment is AppointmentNavigationCallback && fragment.isVisible) {
+                fragment.onNavigateToAppointmentWithContact(contact)
+                break
+            }
+        }
     }
 
     // cập nhật trạng thái rỗng
@@ -1116,8 +1137,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     }
 
     private fun hideKeyboard() {
-        val imm =
-            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(binding.searchView.windowToken, 0)
     }
 
