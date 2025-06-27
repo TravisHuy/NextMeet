@@ -179,17 +179,17 @@ class UniversalSearchManager @Inject constructor(
                     }
                 }
 
-                // Lưu vào search history
-                if (filterText.isNotBlank()) {
-                    withContext(Dispatchers.IO) {
-                        searchRepository.saveSearchHistory(
-                            userId = userId,
-                            query = filterText,
-                            searchType = searchType,
-                            resultCount = result.totalCount
-                        )
-                    }
-                }
+//                // Lưu vào search history
+//                if (filterText.isNotBlank()) {
+//                    withContext(Dispatchers.IO) {
+//                        searchRepository.saveSearchHistory(
+//                            userId = userId,
+//                            query = filterText,
+//                            searchType = searchType,
+//                            resultCount = result.totalCount
+//                        )
+//                    }
+//                }
 
                 withContext(Dispatchers.Main) {
                     onResult(result)

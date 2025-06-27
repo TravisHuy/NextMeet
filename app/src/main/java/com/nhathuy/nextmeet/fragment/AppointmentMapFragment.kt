@@ -11,11 +11,13 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.search.SearchView
 import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.AppointmentPlusAdapter
@@ -212,6 +214,10 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
             setupWithSearchBar(binding.searchBar)
 
             editText.apply {
+                doOnTextChanged { text, _, _, _ ->
+                    val query = text?.toString()?.trim() ?: ""
+                    searchViewModel.updateQuery(query)
+                }
                 setOnEditorActionListener { _, actionId, _ ->
                     if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
                         val query = text.toString()
@@ -378,13 +384,13 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         hideKeyboard()
     }
 
-    private fun handleSearchViewStateChange(newState: com.google.android.material.search.SearchView.TransitionState) {
+    private fun handleSearchViewStateChange(newState: SearchView.TransitionState) {
         when (newState) {
-            com.google.android.material.search.SearchView.TransitionState.SHOWING -> {
+            SearchView.TransitionState.SHOWING -> {
                 isSearchViewExpanded = true
                 enterSearchMode()
             }
-            com.google.android.material.search.SearchView.TransitionState.HIDDEN -> {
+            SearchView.TransitionState.HIDDEN -> {
                 isSearchViewExpanded = false
                 exitSearchMode()
             }
