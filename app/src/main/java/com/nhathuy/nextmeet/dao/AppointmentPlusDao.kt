@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.nhathuy.nextmeet.model.AppointmentPlus
+import com.nhathuy.nextmeet.model.AppointmentStatus
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -276,4 +277,15 @@ interface AppointmentPlusDao {
     """)
     suspend fun getPinnedAppointmentsCount(userId: Int, status: String = "SCHEDULED"): Int
 
+    /**
+     * lấy appointment voi contact tương ứng
+     */
+    @Query("""
+        SELECT *  FROM appointments
+        WHERE user_id = :userId 
+        AND contact_id = :contactId 
+        AND status = :status
+        ORDER BY start_date_time ASC
+    """)
+    suspend fun getAppointmentByContactId(userId:Int,contactId:Int,status: AppointmentStatus) : List<AppointmentPlus>
 }

@@ -3,6 +3,7 @@ package com.nhathuy.nextmeet.utils
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchType
 import com.nhathuy.nextmeet.model.UniversalSearchResult
@@ -280,6 +281,47 @@ class UniversalSearchManager @Inject constructor(
         }
     }
 
+    /**
+     * filter search contact
+     */
+    fun performContactFilterSearch(
+        userId: Int,
+        contactId: Int,
+        contactName: String,
+        onResult: (UniversalSearchResult) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        searchScope.launch {
+            try {
+                // Get appointments for specific contact with SCHEDULED status
+                val appointments = searchRepository.getAppointmentByContactId(userId, contactId, AppointmentStatus.SCHEDULED)
+
+                // Calculate total count
+                val totalCount = appointments.size
+
+                val result = UniversalSearchResult(
+                    contacts = emptyList(),
+                    appointments = appointments,
+                    notes = emptyList(),
+                    totalCount = totalCount
+                )
+
+                onResult(result)
+
+                // Save this as search history
+
+                searchRepository.saveSearchHistory(
+                    userId,
+                    "Contact: $contactName",
+                    SearchType.APPOINTMENT,
+                    1
+                )
+
+            } catch (e: Exception) {
+                onError("Lỗi khi lọc cuộc hẹn theo liên hệ: ${e.message}")
+            }
+        }
+    }
     /**
      * Delete search history item
      */

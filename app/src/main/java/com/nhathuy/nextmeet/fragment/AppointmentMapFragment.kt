@@ -23,6 +23,7 @@ import com.nhathuy.nextmeet.adapter.SearchSuggestionsAdapter
 import com.nhathuy.nextmeet.databinding.FragmentAppointmentMapBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchSuggestionType
@@ -31,6 +32,7 @@ import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.SearchUiState
 import com.nhathuy.nextmeet.ui.AddAppointmentActivity
 import com.nhathuy.nextmeet.ui.NavigationMapActivity
+import com.nhathuy.nextmeet.utils.AppointmentNavigationCallback
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.utils.NavigationCallback
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
@@ -41,7 +43,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class AppointmentMapFragment : Fragment(), NavigationCallback {
+class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNavigationCallback {
 
     private var _binding: FragmentAppointmentMapBinding? = null
     private val binding get() = _binding!!
@@ -69,6 +71,10 @@ class AppointmentMapFragment : Fragment(), NavigationCallback {
     // Adapters
     private lateinit var appointmentAdapter: AppointmentPlusAdapter
     private lateinit var searchSuggestionsAdapter: SearchSuggestionsAdapter
+
+    //
+    private var selectedContactForFilter: Contact? = null
+    private var isContactFilterMode: Boolean = false
 
     // Activity Result Launcher cho AddAppointmentActivity
     private val addAppointmentLauncher = registerForActivityResult(
@@ -357,6 +363,8 @@ class AppointmentMapFragment : Fragment(), NavigationCallback {
         currentSearchQuery = null
         isSearchMode = false
         isSearchViewExpanded = false
+        isContactFilterMode = false
+        selectedContactForFilter = null
 
         updateSearchBar("")
         searchViewModel.clearSearch()
@@ -387,7 +395,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback {
     private fun handleSearchBarNavigation() {
         when {
             binding.searchView.isShowing -> binding.searchView.hide()
-            isSearchMode -> clearSearch()
+            isSearchMode || isContactFilterMode -> clearSearch()
             else -> requireActivity().onBackPressedDispatcher.onBackPressed()
         }
     }
@@ -506,11 +514,13 @@ class AppointmentMapFragment : Fragment(), NavigationCallback {
     }
 
     private fun getSearchEmptyMessage(): String {
-        return when (currentSearchQuery) {
-            "Today" -> "Không có cuộc hẹn nào hôm nay"
-            "Upcoming" -> "Không có cuộc hẹn sắp tới"
-            "Pinned" -> "Không có cuộc hẹn đã ghim"
-            "This Week" -> "Không có cuộc hẹn tuần này"
+        return when {
+            isContactFilterMode && selectedContactForFilter != null ->
+                "Không có cuộc hẹn nào với ${selectedContactForFilter!!.name}"
+            currentSearchQuery == "Today" -> "Không có cuộc hẹn nào hôm nay"
+            currentSearchQuery == "Upcoming" -> "Không có cuộc hẹn sắp tới"
+            currentSearchQuery == "Pinned" -> "Không có cuộc hẹn đã ghim"
+            currentSearchQuery == "This Week" -> "Không có cuộc hẹn tuần này"
             else -> "Không tìm thấy cuộc hẹn nào cho \"$currentSearchQuery\""
         }
     }
@@ -764,4 +774,35 @@ class AppointmentMapFragment : Fragment(), NavigationCallback {
     override fun triggerAddAction() {
         binding.fabAddAppointment.performClick()
     }
+
+    override fun onNavigateToAppointmentWithContact(contact: Contact) {
+        selectedContactForFilter = contact
+        isContactFilterMode = true
+
+        // Update search bar to show contact filter
+        val filterText = "Contact: ${contact.name}"
+        updateSearchBar(filterText)
+        currentSearchQuery = filterText
+        isSearchMode = true
+
+        // Apply contact filter
+        applyContactFilter(contact)
+
+        // Update UI state
+        updateSearchBarMenu()
+        updateUIState()
+    }
+
+    private fun applyContactFilter(contact: Contact) {
+        showLoading()
+
+        // Use search view model to filter by contact
+        searchViewModel.applyContactFilter(contact.id, contact.name)
+
+        // Update search bar display
+        binding.searchBar.setText("Contact: ${contact.name}")
+
+        Log.d("AppointmentContactFilter", "Filtering appointments for contact: ${contact.name} (ID: ${contact.id})")
+    }
+
 }
