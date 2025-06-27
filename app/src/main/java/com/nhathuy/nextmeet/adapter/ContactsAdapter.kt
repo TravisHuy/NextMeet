@@ -194,6 +194,36 @@ class ContactsAdapter(
         diffResult.dispatchUpdatesTo(this)
     }
 
+    fun removeContacts(contactsToRemove: List<Contact>){
+        contactsToRemove.forEach {
+            contact ->
+            val position = contacts.indexOf(contact)
+            if(position != -1) {
+                contacts.removeAt(position)
+                notifyItemRemoved(position)
+            }
+        }
+    }
+
+    fun restoreContacts(contactsToRestore: List<Contact>){
+        contactsToRestore.forEach {
+            contact ->
+            val interPosition = findInsertPosition(contact)
+            contacts.add(interPosition,contact)
+            notifyItemInserted(interPosition)
+        }
+    }
+
+    private fun findInsertPosition(contact: Contact): Int {
+        // Logic để tìm vị trí phù hợp (ví dụ: sort theo startDateTime)
+        for (i in contacts.indices) {
+            if (contacts[i].createAt > contact.createAt) {
+                return i
+            }
+        }
+        return contacts.size
+    }
+
     override fun getItemCount(): Int = contacts.size
 
     private class ContactDiffCallback(

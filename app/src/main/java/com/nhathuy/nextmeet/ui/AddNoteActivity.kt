@@ -38,6 +38,11 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Activity để thêm mới hoặc chỉnh sửa ghi chú
+ * Hỗ trợ các loại note: TEXT, PHOTO, CHECKLIST
+ * Mode: Add (tạo mới) hoặc Edit (chỉnh sửa)
+ */
 @AndroidEntryPoint
 class AddNoteActivity : AppCompatActivity() {
 
@@ -45,25 +50,35 @@ class AddNoteActivity : AppCompatActivity() {
     private lateinit var colorAdapter: ColorPickerAdapter
     private lateinit var checklistAdapter: ChecklistAdapter
     private lateinit var mediaAdapter: MediaAdapter
+
+    // Data collections
     private val checklistItems = mutableListOf<ChecklistItem>()
     private val imageList = mutableListOf<NoteImage>()
+
+    // Note properties
     private var noteType: NoteType? = null
     private var reminderTime: Long? = null
     private var selectedColorName: String = "color_white"
     private var isPinned = false
     private var isShared = false
     private var currentUserId: Int? = null
+
+    // ViewModels
     private val noteViewModel: NoteViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
 
+    // Edit mode variables
+    private var noteId: Int = -1
+    private var isEditMode = false
+    private var currentNote: Note? = null
 
-
-    private val pickMultipleImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) {
-        uris: List<Uri> ->
-        if (uris.isNotEmpty()) {
-            handleMultipleImageSelection(uris)
+    // Image picker launcher
+    private val pickMultipleImagesLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
+            if (uris.isNotEmpty()) {
+                handleMultipleImageSelection(uris)
+            }
         }
-    }
 
     companion object {
         val listColor = listOf(
@@ -95,6 +110,9 @@ class AddNoteActivity : AppCompatActivity() {
             R.color.color_brown to "color_brown",
             R.color.color_gray to "color_gray"
         )
+
+        // Reverse mapping để tìm color resource từ name
+        val colorNamesToRes = colorSourceNames.entries.associate { (res, name) -> name to res }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,97 +120,273 @@ class AddNoteActivity : AppCompatActivity() {
         binding = ActivityAddNoteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        noteType = intent.getSerializableExtra(Constant.EXTRA_NOTE_TYPE) as NoteType?
-
+        initializeFromIntent()
         setupUI()
         setupObservers()
         setupClickListeners()
         setupMediaSection()
+
+        // Load note data nếu ở edit mode
+        if (isEditMode) {
+            noteViewModel.getNoteById(noteId)
+        }
     }
 
-    // khởi tạo giao diện
+    /**
+     * Khởi tạo dữ liệu từ Intent
+     */
+    private fun initializeFromIntent() {
+        // Kiểm tra xem có noteId không (edit mode)
+        noteId = intent.getIntExtra(Constant.EXTRA_NOTE_ID, -1)
+        isEditMode = noteId != -1
+
+        // Chỉ lấy noteType từ intent nếu không phải edit mode
+        if (!isEditMode) {
+            noteType = intent.getSerializableExtra(Constant.EXTRA_NOTE_TYPE) as NoteType?
+        }
+
+        Log.d("AddNoteActivity", "Mode: ${if (isEditMode) "Edit" else "Add"}, NoteId: $noteId, NoteType: $noteType")
+    }
+
+    /**
+     * Khởi tạo giao diện
+     */
     private fun setupUI() {
         setupColorPicker()
         setupChecklist()
-        showContentBasedOnType(noteType!!)
+        updateUIForMode()
+
+        // Chỉ show content based on type nếu không phải edit mode
+        // Nếu là edit mode, sẽ show sau khi load note
+        if (!isEditMode && noteType != null) {
+            showContentBasedOnType(noteType!!)
+        }
     }
 
-    //khởi tạo observer
+    /**
+     * Cập nhật UI dựa trên mode (Add/Edit)
+     */
+    private fun updateUIForMode() {
+        if (isEditMode) {
+            binding.noteTitle.text = getString(R.string.edit_note)
+        } else {
+            binding.noteTitle.text = getString(R.string.add_note)
+        }
+    }
+
+    /**
+     * Khởi tạo observers cho ViewModel
+     */
     private fun setupObservers() {
         lifecycleScope.launch {
             noteViewModel.uiState.collect { state ->
                 when (state) {
                     is NoteUiState.Loading -> {
                         // Show loading indicator if needed
+                        Log.d("AddNoteActivity", "Loading...")
+                    }
+
+                    is NoteUiState.NoteLoaded -> {
+                        Log.d("AddNoteActivity", "Note loaded: ${state.note}")
+                        populateNoteData(state.note)
                     }
 
                     is NoteUiState.NoteCreated -> {
-                        if(noteType == NoteType.PHOTO && imageList.isNotEmpty()){
+                        Log.d("AddNoteActivity", "Note created with ID: ${state.noteId}")
+                        if (noteType == NoteType.PHOTO && imageList.isNotEmpty()) {
                             val noteId = state.noteId.toInt()
                             val imagesToSave = imageList.map { it.copy(noteId = noteId) }
                             noteViewModel.insertImagesForNote(imagesToSave)
-                            // Show success and finish immediately after saving images
-                            showSuccessAndFinish(state.message)
-                        } else {
-                            showSuccessAndFinish(state.message)
                         }
+                        showSuccessAndFinish(state.message)
+                    }
+
+                    is NoteUiState.NoteUpdated -> {
+                        Log.d("AddNoteActivity", "Note updated successfully")
+                        showSuccessAndFinish(state.message)
+                    }
+
+                    is NoteUiState.ImagesInserted -> {
+                        Log.d("AddNoteActivity", "Images inserted successfully")
+                        // Images được insert thành công, có thể finish ngay
                     }
 
                     is NoteUiState.Error -> {
-                        Toast.makeText(this@AddNoteActivity, state.message, Toast.LENGTH_SHORT)
-                            .show()
+                        Log.e("AddNoteActivity", "Error: ${state.message}")
+                        Toast.makeText(this@AddNoteActivity, state.message, Toast.LENGTH_SHORT).show()
                     }
 
                     else -> {
+                        // Handle other states if needed
                     }
                 }
             }
         }
-        
+
         userViewModel.getCurrentUser().observe(this) { user ->
             user?.let {
                 currentUserId = user.id
+                Log.d("AddNoteActivity", "Current user ID: ${user.id}")
             }
         }
     }
 
-    // Hiệu ứng đơn giản, hiệu quả khi tạo note xong
+    /**
+     * Populate UI với dữ liệu note đã load (cho edit mode)
+     */
+    private fun populateNoteData(note: Note) {
+        currentNote = note
+        noteType = note.noteType
+
+        // Set basic fields
+        binding.textEditTitle.setText(note.title)
+        selectedColorName = note.color
+        isPinned = note.isPinned
+        isShared = note.isShared
+        reminderTime = note.reminderTime
+
+        // Update UI controls
+        binding.switchPin.isChecked = isPinned
+        binding.switchShare.isChecked = isShared
+
+        // Set color và background
+        colorAdapter.setSelectedColors(note.color)
+        val colorRes = colorNamesToRes[note.color] ?: R.color.color_white
+        val color = ContextCompat.getColor(this, colorRes)
+        binding.layoutAddNote.setBackgroundColor(color)
+
+        // Set reminder display
+        reminderTime?.let {
+            updateReminderDisplay()
+        }
+
+        // Show content dựa trên note type
+        showContentBasedOnType(note.noteType)
+
+        // Populate content dựa trên note type
+        when (note.noteType) {
+            NoteType.TEXT -> {
+                binding.textEdContent.setText(note.content)
+            }
+
+            NoteType.CHECKLIST -> {
+                populateChecklistItems(note.checkListItems ?: "")
+            }
+
+            NoteType.PHOTO -> {
+                loadExistingImages(note.id)
+            }
+
+            else -> {
+                Log.w("AddNoteActivity", "Unsupported note type: ${note.noteType}")
+            }
+        }
+
+        Log.d("AddNoteActivity", "Note data populated successfully")
+    }
+
+    /**
+     * Populate checklist items từ string
+     */
+    private fun populateChecklistItems(checklistString: String) {
+        checklistItems.clear()
+        if (checklistString.isNotEmpty()) {
+            val lines = checklistString.split("\n")
+            for (line in lines) {
+                if (line.trim().isNotEmpty()) {
+                    val isChecked = line.contains("[x]")
+                    val text = line.replace("- [x] ", "").replace("- [ ] ", "").trim()
+                    if (text.isNotEmpty()) {
+                        checklistItems.add(ChecklistItem(text, isChecked))
+                    }
+                }
+            }
+        }
+
+        // Add empty item nếu list rỗng
+        if (checklistItems.isEmpty()) {
+            checklistItems.add(ChecklistItem("", false))
+        }
+
+        checklistAdapter.notifyDataSetChanged()
+        Log.d("AddNoteActivity", "Populated ${checklistItems.size} checklist items")
+    }
+
+    /**
+     * Load existing images cho PHOTO note
+     */
+    private fun loadExistingImages(noteId: Int) {
+        noteViewModel.getImagesForNote(noteId) { images ->
+            imageList.clear()
+            imageList.addAll(images)
+
+            // Update layout manager span count
+            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+            layoutManager.spanCount = calculateSpanCount(imageList.size)
+
+            // Update adapter
+            mediaAdapter.notifyDataSetChanged()
+            binding.rvMediaItems.post {
+                binding.rvMediaItems.requestLayout()
+            }
+
+            Log.d("AddNoteActivity", "Loaded ${images.size} existing images")
+        }
+    }
+
+    /**
+     * Hiển thị thông báo thành công và đóng activity
+     */
     private fun showSuccessAndFinish(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         finish()
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 
-    // hàm sử lý click
+    /**
+     * Setup click listeners
+     */
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
             showDialogBack()
         }
+
         binding.btnSave.setOnClickListener {
             saveNote()
         }
+
         binding.layoutReminder.setOnClickListener {
             showDateTimePicker()
         }
+
         binding.switchPin.setOnCheckedChangeListener { _, isChecked ->
             isPinned = isChecked
         }
+
         binding.switchShare.setOnCheckedChangeListener { _, isChecked ->
             isShared = isChecked
         }
     }
 
+    /**
+     * Setup checklist adapter và RecyclerView
+     */
     private fun setupChecklist() {
-        checklistAdapter = ChecklistAdapter(checklistItems, onItemChanged = {
-            // Optional: handle changes if needed
-        }, onRequestFocus = { position ->
-            binding.rvChecklistItems.post {
-                val holder = binding.rvChecklistItems.findViewHolderForAdapterPosition(position)
-                if (holder is ChecklistAdapter.ChecklistViewHolder) {
-                    holder.binding.etCheckItem.requestFocus()
+        checklistAdapter = ChecklistAdapter(
+            checklistItems,
+            onItemChanged = {
+                // Optional: handle changes if needed
+            },
+            onRequestFocus = { position ->
+                binding.rvChecklistItems.post {
+                    val holder = binding.rvChecklistItems.findViewHolderForAdapterPosition(position)
+                    if (holder is ChecklistAdapter.ChecklistViewHolder) {
+                        holder.binding.etCheckItem.requestFocus()
+                    }
                 }
             }
-        })
+        )
+
         binding.rvChecklistItems.adapter = checklistAdapter
         binding.rvChecklistItems.layoutManager = LinearLayoutManager(this)
 
@@ -200,11 +394,16 @@ class AddNoteActivity : AppCompatActivity() {
             checklistAdapter.addItem()
             binding.rvChecklistItems.smoothScrollToPosition(checklistItems.size - 1)
         }
-        // Add one empty item by default
-        if (noteType == NoteType.CHECKLIST && checklistItems.isEmpty()) checklistAdapter.addItem()
+
+        // Chỉ thêm empty item mặc định nếu không phải edit mode
+        if (!isEditMode && noteType == NoteType.CHECKLIST && checklistItems.isEmpty()) {
+            checklistAdapter.addItem()
+        }
     }
 
-    // hàm show layout với notetype tương ứng
+    /**
+     * Hiển thị layout content dựa trên note type
+     */
     private fun showContentBasedOnType(noteType: NoteType) {
         when (noteType) {
             NoteType.TEXT -> {
@@ -219,20 +418,24 @@ class AddNoteActivity : AppCompatActivity() {
                 binding.layoutMedia.visibility = View.GONE
             }
 
-            NoteType.VIDEO, NoteType.PHOTO -> {
+            NoteType.PHOTO, NoteType.VIDEO -> {
                 binding.textInputContent.visibility = View.GONE
                 binding.checklistContainer.visibility = View.GONE
                 binding.layoutMedia.visibility = View.VISIBLE
             }
         }
+        Log.d("AddNoteActivity", "Content layout set for type: $noteType")
     }
 
-    // xử lý chọn color cho note
+    /**
+     * Setup color picker
+     */
     private fun setupColorPicker() {
         colorAdapter = ColorPickerAdapter(listColor, colorSourceNames) { colorResId, colorName ->
             val color = ContextCompat.getColor(this, colorResId)
             binding.layoutAddNote.setBackgroundColor(color)
             selectedColorName = colorName
+            Log.d("AddNoteActivity", "Color selected: $colorName")
         }
 
         binding.rvColorPicker.adapter = colorAdapter
@@ -240,41 +443,70 @@ class AddNoteActivity : AppCompatActivity() {
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
-    // hiển thị dialog thoát
+    /**
+     * Hiển thị dialog xác nhận thoát
+     */
     private fun showDialogBack() {
+        val title = if (isEditMode) {
+            "Do you want to cancel editing this note?"
+        } else {
+            "Do you want to cancel creating this note?"
+        }
+
+        val message = if (isEditMode) {
+            "Your changes will not be saved."
+        } else {
+            "Your note will not be saved."
+        }
+
         MaterialAlertDialogBuilder(this)
-            .setTitle("Do you want to cancel creating this note?")
-            .setMessage("Your note will not be saved.")
+            .setTitle(title)
+            .setMessage(message)
             .setIcon(R.drawable.ic_cancel)
             .setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
-            }.setPositiveButton("Yes") { _, _ ->
-                onBackPressedDispatcher.onBackPressed()
+            }
+            .setPositiveButton("Yes") { _, _ ->
+                finish()
             }
             .show()
     }
 
-    //khởi tạo recyclerview và nút thêm ảnh
+    /**
+     * Setup media section (RecyclerView cho images)
+     */
     private fun setupMediaSection() {
         mediaAdapter = MediaAdapter(imageList) { noteImage ->
+            // Handle image removal
+            if (isEditMode && noteImage.id != 0) {
+                // Remove from database if it's an existing image
+                noteViewModel.deleteImage(noteImage)
+            }
             mediaAdapter.removeImage(noteImage)
+
+            // Update layout after removal
+            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+            layoutManager.spanCount = calculateSpanCount(imageList.size)
+            binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
         }
-        
+
         val gridLayoutManager = GridLayoutManager(this, calculateSpanCount(imageList.size))
-        
+
         binding.rvMediaItems.apply {
             layoutManager = gridLayoutManager
             adapter = mediaAdapter
             setHasFixedSize(false)
             itemAnimator?.changeDuration = 0
         }
-        
+
         binding.btnAddImage.setOnClickListener {
             pickMultipleImagesLauncher.launch("image/*")
         }
     }
 
-    // Calculate appropriate span count based on the number of items
+    /**
+     * Tính span count dựa trên số lượng items
+     */
     private fun calculateSpanCount(itemCount: Int): Int {
         return when {
             itemCount <= 1 -> 1    // Single column for 0-1 items
@@ -283,37 +515,72 @@ class AddNoteActivity : AppCompatActivity() {
         }
     }
 
-    // Chon nhieu anh
+    /**
+     * Xử lý chọn nhiều ảnh
+     */
     private fun handleMultipleImageSelection(uris: List<Uri>) {
         try {
             val noteImages = uris.map { uri ->
                 NoteImage(
-                    noteId = 0, // Will be set when note is created
+                    noteId = if (isEditMode) noteId else 0, // Set noteId nếu đang ở edit mode
                     imagePath = uri.toString()
                 )
             }
+
             // Add to data source
             imageList.addAll(noteImages)
-            // Update span count based on new size before updating the adapter
+
+            // Update span count based on new size
             val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
             layoutManager.spanCount = calculateSpanCount(imageList.size)
+
             // Update UI with the new images
             mediaAdapter.addMultipleImages(noteImages)
+
             // Force layout update
             binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
-            // Show success message
+
+            // Nếu đang ở edit mode, save images ngay lập tức
+            if (isEditMode) {
+                noteViewModel.insertImagesForNote(noteImages)
+            }
+
             val count = noteImages.size
-            Log.d("AddNoteActivity","$count images added successfully")
+            Log.d("AddNoteActivity", "$count images added successfully")
+
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
             Log.e("AddNoteActivity", "Error adding multiple images", e)
         }
     }
 
-    //hàm lưu note
+    /**
+     * Lưu note (tạo mới hoặc cập nhật)
+     */
     private fun saveNote() {
         val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
 
+        if (title.isEmpty()) {
+            Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (currentUserId == null) {
+            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (isEditMode) {
+            updateNote(title)
+        } else {
+            createNote(title)
+        }
+    }
+
+    /**
+     * Tạo note mới
+     */
+    private fun createNote(title: String) {
         when (noteType) {
             NoteType.TEXT -> {
                 val content = binding.textEdContent.text?.toString()?.trim() ?: ""
@@ -331,12 +598,12 @@ class AddNoteActivity : AppCompatActivity() {
                 noteViewModel.createNote(note)
             }
 
-            NoteType.PHOTO, NoteType.VIDEO -> {
-                if (noteType == NoteType.PHOTO && imageList.isEmpty()) {
+            NoteType.PHOTO -> {
+                if (imageList.isEmpty()) {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
                     return
                 }
-                
+
                 val note = Note(
                     userId = currentUserId!!,
                     title = title,
@@ -347,13 +614,20 @@ class AddNoteActivity : AppCompatActivity() {
                     reminderTime = reminderTime
                 )
                 noteViewModel.createNote(note)
-                // Note: Images will be saved in the observer when note creation is successful
+                // Images will be saved in the observer when note creation is successful
             }
 
             NoteType.CHECKLIST -> {
                 val items = checklistAdapter.getItems()
-                val checklistString =
-                    items.joinToString("\n") { (if (it.isChecked) "- [x] " else "- [ ] ") + it.text }
+                if (items.all { it.text.isEmpty() }) {
+                    Toast.makeText(this, "Please add at least one checklist item", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                val checklistString = items.joinToString("\n") {
+                    (if (it.isChecked) "- [x] " else "- [ ] ") + it.text
+                }
+
                 val note = Note(
                     userId = currentUserId!!,
                     title = title,
@@ -367,13 +641,81 @@ class AddNoteActivity : AppCompatActivity() {
                 noteViewModel.createNote(note)
             }
 
-            else -> {}
+            else -> {
+                Toast.makeText(this, "Unsupported note type", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    // hiển thị ra ngày ,tháng năm
-    private fun showDateTimePicker() {
+    /**
+     * Cập nhật note hiện có
+     */
+    private fun updateNote(title: String) {
+        when (noteType) {
+            NoteType.TEXT -> {
+                val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+                noteViewModel.updateNote(
+                    noteId = noteId,
+                    title = title,
+                    content = content,
+                    color = selectedColorName
+                )
+            }
 
+            NoteType.CHECKLIST -> {
+                val items = checklistAdapter.getItems()
+                if (items.all { it.text.isEmpty() }) {
+                    Toast.makeText(this, "Please add at least one checklist item", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                val checklistString = items.joinToString("\n") {
+                    (if (it.isChecked) "- [x] " else "- [ ] ") + it.text
+                }
+
+                noteViewModel.updateNote(
+                    noteId = noteId,
+                    title = title,
+                    color = selectedColorName,
+                    checkListItems = checklistString
+                )
+            }
+
+            NoteType.PHOTO -> {
+                if (imageList.isEmpty()) {
+                    Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                noteViewModel.updateNote(
+                    noteId = noteId,
+                    title = title,
+                    color = selectedColorName
+                )
+                // Images are handled separately when added/removed
+            }
+
+            else -> {
+                Toast.makeText(this, "Unsupported note type", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        // Update các properties khác nếu thay đổi
+        currentNote?.let { note ->
+            if (note.isPinned != isPinned) {
+                noteViewModel.togglePin(noteId)
+            }
+            if (note.reminderTime != reminderTime) {
+                noteViewModel.updateReminder(noteId, reminderTime)
+            }
+        }
+    }
+
+    /**
+     * Hiển thị date time picker cho reminder
+     */
+    private fun showDateTimePicker() {
         val constraintBuilder =
             CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
 
@@ -386,14 +728,15 @@ class AddNoteActivity : AppCompatActivity() {
         datePicker.addOnPositiveButtonClickListener { selectedDate ->
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = selectedDate
-
             showTimePicker(calendar)
         }
 
         datePicker.show(supportFragmentManager, "date_picker")
     }
 
-    // hiển thị thời gian chọn
+    /**
+     * Hiển thị time picker
+     */
     private fun showTimePicker(calendar: Calendar) {
         val now = Calendar.getInstance()
 
@@ -410,9 +753,7 @@ class AddNoteActivity : AppCompatActivity() {
 
             if (isToday(calendar)) {
                 if (selectedHour < now.get(Calendar.HOUR_OF_DAY) ||
-                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(
-                        Calendar.MINUTE
-                    )
+                    (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(Calendar.MINUTE)
                 ) {
                     Toast.makeText(this, "Please select a future time", Toast.LENGTH_SHORT).show()
                     return@addOnPositiveButtonClickListener
@@ -424,24 +765,39 @@ class AddNoteActivity : AppCompatActivity() {
             calendar.set(Calendar.SECOND, 0)
 
             reminderTime = calendar.timeInMillis
-
             updateReminderDisplay()
         }
 
         timePicker.show(supportFragmentManager, "time_picker")
     }
 
+    /**
+     * Kiểm tra xem có phải ngày hôm nay không
+     */
     private fun isToday(calendar: Calendar): Boolean {
         val today = Calendar.getInstance()
         return today.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
                 today.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR)
     }
 
+    /**
+     * Cập nhật hiển thị reminder time
+     */
     private fun updateReminderDisplay() {
-        val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
-        val formattedDate = formatter.format(Date(reminderTime!!))
-        binding.tvReminderTime.text = formattedDate
+        reminderTime?.let {
+            val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
+            val formattedDate = formatter.format(Date(it))
+            binding.tvReminderTime.text = formattedDate
+            Log.d("AddNoteActivity", "Reminder set for: $formattedDate")
+        }
     }
 
+    override fun onBackPressed() {
+        showDialogBack()
+    }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("AddNoteActivity", "Activity destroyed")
+    }
 }

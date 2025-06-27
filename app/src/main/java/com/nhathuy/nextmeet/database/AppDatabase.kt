@@ -25,7 +25,7 @@ import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.SearchHistory
 import com.nhathuy.nextmeet.utils.SearchTypeConverter
 
-@Database(entities = [User::class,Customer::class,Appointment::class,Transaction::class,AlarmHistory::class, Note::class, NoteImage::class, Contact::class, AppointmentPlus::class,SearchHistory::class], version = 5, exportSchema = false)
+@Database(entities = [User::class,Customer::class,Appointment::class,Transaction::class,AlarmHistory::class, Note::class, NoteImage::class, Contact::class, AppointmentPlus::class,SearchHistory::class], version = 1, exportSchema = false)
 //@TypeConverters(SearchTypeConverter::class)
 abstract class AppDatabase:RoomDatabase(){
     abstract fun userDao():UserDao

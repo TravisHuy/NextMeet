@@ -217,6 +217,37 @@ class AppointmentPlusAdapter(
         appointments.addAll(newAppointments)
         diffResult.dispatchUpdatesTo(this)
     }
+
+    // xóa appointment
+    fun removeAppointments(appointmentsToRemove : List<AppointmentPlus>){
+        appointmentsToRemove.forEach {
+            appointment ->
+            val position = appointments.indexOf(appointment)
+            if (position != -1) {
+                appointments.removeAt(position)
+                notifyItemRemoved(position)
+            }
+        }
+    }
+    // hoàn appointment
+    fun restoreAppointments(appointmentsToRestore: List<AppointmentPlus>){
+        appointmentsToRestore.forEach { appointment ->
+            // Tìm vị trí phù hợp để insert (có thể sort theo thời gian)
+            val insertPosition = findInsertPosition(appointment)
+            appointments.add(insertPosition, appointment)
+            notifyItemInserted(insertPosition)
+        }
+    }
+    // Logic để tìm vị trí phù hợp
+    private fun findInsertPosition(appointment: AppointmentPlus): Int {
+        for (i in appointments.indices) {
+            if (appointments[i].startDateTime > appointment.startDateTime) {
+                return i
+            }
+        }
+        return appointments.size
+    }
+
     fun getCurrentAppointments(): List<AppointmentPlus> {
         return appointments.toList()
     }

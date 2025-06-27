@@ -259,7 +259,7 @@ class NotesFragment : Fragment() , NavigationCallback{
 
     // xử lý khi onclick vao item chuyển sao edit
     private fun openNoteForEdit(note: Note) {
-        val intent = Intent(requireContext(), EditNoteActivity::class.java)
+        val intent = Intent(requireContext(), AddNoteActivity::class.java)
         intent.putExtra(Constant.EXTRA_NOTE_ID, note.id)
         startActivity(intent)
     }

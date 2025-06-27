@@ -42,6 +42,10 @@ class AppointmentPlusViewModel @Inject constructor(
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
+                if (appointment.contactId == null) {
+                    _appointmentUiState.value = AppointmentUiState.Error("Vui lòng chọn liên hệ cho cuộc hẹn")
+                    return@launch
+                }
                 val result = appointmentRepository.createAppointment(
                     userId = appointment.userId,
                     contactId = appointment.contactId,

@@ -41,6 +41,23 @@ class ColorPickerAdapter(private val colorList: List<Int>,
         notifyDataSetChanged()
     }
 
+    /**
+     * Set màu đã chọn dựa trên tên màu
+     */
+    fun setSelectedColors(colorName: String) {
+        selectedColorName = colorName
+        // Tìm vị trí của color với tên cho trước
+        val position = colorList.indexOfFirst { colorRes ->
+            colorNames[colorRes] == colorName
+        }
+
+        if (position != -1 && position != selectedPosition) {
+            val previousPosition = selectedPosition
+            selectedPosition = position
+            notifyItemChanged(previousPosition)
+            notifyItemChanged(selectedPosition)
+        }
+    }
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int

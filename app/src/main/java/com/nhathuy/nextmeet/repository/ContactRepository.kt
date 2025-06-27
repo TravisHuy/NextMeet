@@ -309,3 +309,4 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
         }
     }
 }
+
