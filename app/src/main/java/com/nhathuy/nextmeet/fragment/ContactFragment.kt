@@ -310,7 +310,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
                 makePhone(contact.phone)
             },
             onContactAppointment = { contact ->
-                createAppointmentWithContact(contact)
+                handleAppointmentWithContact(contact)
             },
             onSelectionChanged = { count ->
                 updateSelectedCount(count)
@@ -737,7 +737,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     }
 
     //tạo cuộc hẹn với contact
-    private fun createAppointmentWithContact(contact: Contact) {
+    private fun handleAppointmentWithContact(contact: Contact) {
 
     }
 
