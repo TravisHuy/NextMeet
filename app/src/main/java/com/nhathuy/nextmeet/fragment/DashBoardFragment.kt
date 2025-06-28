@@ -19,6 +19,8 @@ import com.nhathuy.nextmeet.adapter.NoteRecentAdapter
 import com.nhathuy.nextmeet.databinding.FragmentDashBoardBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.Note
+import com.nhathuy.nextmeet.model.NoteImage
+import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.NoteUiState
@@ -58,6 +60,10 @@ class DashBoardFragment : Fragment() {
     private var noteCount = 0
     private var contactCount = 0
     private var upcomingAppointmentCount = 0
+
+
+    // Map lưu trữ danh sách ảnh cho mỗi note
+    private val noteImagesMap = mutableMapOf<Int, List<NoteImage>>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -165,8 +171,8 @@ class DashBoardFragment : Fragment() {
             lifecycleScope.launch {
                 noteViewModel.getAllNotes(currentUserId).collect { notes ->
                     noteCount = notes.size
-                    updateContactCard()
-                    updateNotesSection(notes.take(3))
+                    updateNoteCard()
+                    loadImagesForPhotoNotesAndUpdate(notes.take(3))
                 }
             }
 
@@ -230,18 +236,43 @@ class DashBoardFragment : Fragment() {
         lifecycleScope.launch {
             noteViewModel.uiState.collect { state ->
                 when (state) {
-                    is NoteUiState.NotesLoaded -> {
-                        noteCount = state.notes.size
-                        updateNoteCard()
-                        updateNotesSection(state.notes.take(3))
-                        updateOverallEmptyState()
-                    }
-
                     is NoteUiState.Error -> {
                         showMessage(state.message)
                     }
 
                     else -> {}
+                }
+            }
+        }
+    }
+
+    // Hàm mới để tải ảnh cho tất cả note kiểu PHOTO
+    private fun loadImagesForPhotoNotesAndUpdate(notes: List<Note>) {
+        val photoNotes = notes.filter { it.noteType == NoteType.PHOTO }
+
+        if (photoNotes.isEmpty()) {
+            // Không có photo notes, cập nhật UI luôn
+            Log.d("DashBoardFragment", "No photo notes, updating UI directly")
+            updateNotesSection(notes)
+            updateOverallEmptyState()
+            return
+        }
+
+        Log.d("DashBoardFragment", "Loading images for ${photoNotes.size} photo notes")
+        var loadedCount = 0
+        val totalPhotoNotes = photoNotes.size
+
+        photoNotes.forEach { note ->
+            noteViewModel.getImagesForNote(note.id) { images ->
+                Log.d("DashBoardFragment", "Loaded ${images.size} images for note ID: ${note.id}")
+                noteImagesMap[note.id] = images
+                loadedCount++
+
+                // Chỉ cập nhật UI khi tất cả ảnh đã được load
+                if (loadedCount == totalPhotoNotes) {
+                    Log.d("DashBoardFragment", "All images loaded, updating UI")
+                    updateNotesSection(notes)
+                    updateOverallEmptyState()
                 }
             }
         }
@@ -296,13 +327,15 @@ class DashBoardFragment : Fragment() {
 
     // câp nhật ghi chú
     private fun updateNotesSection(notes: List<Note>) {
+        val combinedNotes = mutableListOf<Note>()
+        combinedNotes.addAll(notes)
         if (notes.isEmpty()) {
             binding.rvNoteRecents.visibility = View.GONE
             binding.layoutEmptyRecentNotes.visibility = View.VISIBLE
         } else {
             binding.rvNoteRecents.visibility = View.VISIBLE
             binding.layoutEmptyRecentNotes.visibility = View.GONE
-            noteRecentAdapter.submitList(notes)
+            noteRecentAdapter.updateNotesWithImages(notes, noteImagesMap)
         }
     }
 
@@ -363,40 +396,6 @@ class DashBoardFragment : Fragment() {
         }
     }
 
-    // apply cho search filter
-//    private fun applyAppointmentFilter(filter: String) {
-//        val searchQuery = when (filter) {
-//            Constant.FILTER_TODAY -> "Today"
-//            Constant.FILTER_UPCOMING -> "Upcoming"
-//            else -> ""
-//        }
-//
-//        if (searchQuery.isNotEmpty()) {
-//            findAndApplyFilter(searchQuery)
-//        }
-//    }
-//
-//    private fun findAndApplyFilter(searchQuery: String) {
-//        val fragments = requireActivity().supportFragmentManager.fragments
-//        for (fragment in fragments) {
-//            if (fragment is AppointmentMapFragment) {
-//                fragment.applyQuickSearch(searchQuery)
-//                return
-//            }
-//
-//            // kiểm tra chồn fragment
-//            if (fragment != null) {
-//                val childFragments = fragment.childFragmentManager.fragments
-//                for (childFragment in childFragments) {
-//                    if (childFragment is AppointmentMapFragment) {
-//                        childFragment.applyQuickSearch(searchQuery)
-//                        return
-//                    }
-//                }
-//            }
-//        }
-//
-//    }
 
     private fun navigateToNotes() {
         try {

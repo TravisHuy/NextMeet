@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_bold"
-            android:hint="Ý tường dự án moi"
+            tools:text="Ý tường dự án moi"
             android:maxLines="1"
             android:ellipsize="end"
             android:textSize="@dimen/text_size_body"
@@ -29,19 +29,53 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tv_note_recent_content"
+        <LinearLayout
+            android:id="@+id/ll_notes_recent_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_small"
-            android:ellipsize="end"
-            android:fontFamily="@font/open_sans"
-            android:hint="Ý tường dự án moi Tôi đã tạo một giao diện chuẩn cho ứng dụng NextMeet với các tính năng chính"
-            android:maxLines="2"
-            android:textSize="@dimen/text_size_medium"
+            android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_note_recent_title" />
+            app:layout_constraintTop_toBottomOf="@id/tv_note_recent_title"
+            >
+            <TextView
+                android:id="@+id/tv_note_recent_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_small"
+                android:ellipsize="end"
+                android:fontFamily="@font/open_sans"
+                tools:text="Ý tường dự án moi Tôi đã tạo một giao diện chuẩn cho ứng dụng NextMeet với các tính năng chính"
+                android:maxLines="2"
+                android:textSize="@dimen/text_size_medium"
+                android:visibility="visible"
+                tools:visibility="gone"
+                />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_note_recent"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="@dimen/margin_small"
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedImage"
+                tools:src="@drawable/test_image"
+                tools:visibility="gone"
+                />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_checklist_note_recent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_checklist"
+                tools:visibility="gone"
+                />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tv_note_recent_time"
@@ -49,10 +83,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_small"
             android:fontFamily="@font/manrope_light"
-            android:hint="2 hours"
+            tools:text="2 hours"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_note_recent_content" />
+            app:layout_constraintTop_toBottomOf="@id/ll_notes_recent_content" />
 
         <ImageView
             android:id="@+id/iv_notes"
@@ -61,7 +95,7 @@
             android:layout_marginTop="@dimen/margin_small"
             android:src="@drawable/ic_recent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_note_recent_content"
+            app:layout_constraintTop_toBottomOf="@id/ll_notes_recent_content"
             />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
