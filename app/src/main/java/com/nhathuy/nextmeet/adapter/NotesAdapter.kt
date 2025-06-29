@@ -146,7 +146,8 @@ class NotesAdapter(
                     }
 
                     NoteType.PHOTO, NoteType.VIDEO -> {
-                        tvContent.visibility = View.GONE
+                        tvContent.visibility = View.VISIBLE
+                        tvContent.text = note.content
                         rvChecklistPreview.visibility = View.GONE
                         tvChecklistCount.visibility = View.GONE
 

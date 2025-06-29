@@ -1,6 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="@drawable/navigation_bottom_background"
+    >
+    <!-- Handle bar -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/handle_bar_background" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp"
+        android:layout_marginTop="6dp"
+        >
+
+        <TextView
+            android:id="@+id/tvSelectedCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/selected_photos"
+            android:textSize="14sp"
+            android:fontFamily="@font/inter_bold"
+            android:textColor="@color/text_primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSelectAll"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/select_all"
+            android:backgroundTint="@color/dark_primary"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/dark_primary"
+            android:textColor="@color/white"
+            android:text="@string/cancel"
+            android:textSize="12sp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDone"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="@string/add"
+            android:textSize="12sp"
+            android:backgroundTint="@color/dark_primary"
+            android:textColor="@color/white"
+            android:enabled="false"
+            android:alpha="0.5"
+            android:minWidth="0dp"
+            android:paddingHorizontal="16dp" />
+
+    </LinearLayout>
+
+    <!-- Tab Layout -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        app:tabGravity="fill"
+        android:layout_marginTop="16dp"
+        app:tabIndicatorColor="@color/color_blue"
+        app:tabSelectedTextColor="@color/blue"
+        app:tabTextColor="@color/gray_dark"
+        app:tabMode="fixed" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="300dp">
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!-- RecyclerView for photos -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewPhotos"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:clipToPadding="false" />
+
+        <!-- Empty state -->
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="No Found Photos"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:visibility="gone"
+            android:drawableTop="@drawable/ic_photo"
+            android:drawablePadding="16dp"
+            android:gravity="center" />
+
+    </FrameLayout>
+</LinearLayout>

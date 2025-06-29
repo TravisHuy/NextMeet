@@ -220,6 +220,33 @@
                 tools:visibility="visible"
                 android:layout_marginTop="8dp">
 
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/text_input_photo_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:hintEnabled="false"
+                    >
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/text_ed_photo_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Write your note here..."
+                        android:textSize="16sp"
+                        android:fontFamily="@font/open_sans"
+                        android:textColor="@color/text_primary"
+                        android:minLines="2"
+                        android:gravity="top"
+                        android:inputType="textCapSentences|textMultiLine" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_media_items"
                     android:layout_width="match_parent"
@@ -232,6 +259,7 @@
                     android:clipToPadding="false"
                     android:paddingBottom="4dp"
                     tools:listitem="@layout/item_media" />
+
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_add_image"

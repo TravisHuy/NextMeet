@@ -137,6 +137,11 @@
     <string name="add">Add</string>
     <string name="cancel">Cancel</string>
     <string name="edit_note">Edit Note</string>
+    <string name="album">Album</string>
+    <string name="selected_photos">Selected Photos</string>
+    <string name="permission_required_message">Permission required message</string>
+    <string name="no_photos_found">No photos found</string>
+    <string name="no_albums_found">No albums found</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

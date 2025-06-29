@@ -23,10 +23,12 @@ import com.nhathuy.nextmeet.adapter.ColorPickerAdapter
 import com.nhathuy.nextmeet.adapter.ChecklistAdapter
 import com.nhathuy.nextmeet.adapter.MediaAdapter
 import com.nhathuy.nextmeet.databinding.ActivityAddNoteBinding
+import com.nhathuy.nextmeet.fragment.PhotoAlbumBottomSheet
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.model.ChecklistItem
 import com.nhathuy.nextmeet.model.NoteImage
+import com.nhathuy.nextmeet.model.Photo
 import com.nhathuy.nextmeet.resource.NoteUiState
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
@@ -79,12 +81,12 @@ class AddNoteActivity : AppCompatActivity() {
     private var hasUnsavedChanges = false
 
     // Image picker launcher
-    private val pickMultipleImagesLauncher =
-        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
-            if (uris.isNotEmpty()) {
-                handleMultipleImageSelection(uris)
-            }
-        }
+//    private val pickMultipleImagesLauncher =
+//        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
+//            if (uris.isNotEmpty()) {
+//                handleMultipleImageSelection(uris)
+//            }
+//        }
 
     companion object {
         val listColor = listOf(
@@ -281,6 +283,7 @@ class AddNoteActivity : AppCompatActivity() {
             }
 
             NoteType.PHOTO -> {
+                binding.textEdPhotoContent.setText(note.content)
                 loadExistingImages(note.id)
             }
 
@@ -477,7 +480,8 @@ class AddNoteActivity : AppCompatActivity() {
                     return checklistItems.any { it.text.isNotEmpty() }
                 }
                 NoteType.PHOTO -> {
-                    return imageList.isNotEmpty()
+                    val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
+                    return imageList.isNotEmpty() && content.isNotEmpty()
                 }
                 else -> return false
             }
@@ -503,7 +507,7 @@ class AddNoteActivity : AppCompatActivity() {
                         return checklistString != (note.checkListItems ?: "")
                     }
                     NoteType.PHOTO -> {
-                        return hasUnsavedImageChanges()
+                        return hasUnsavedImageChanges(note)
                     }
                     else -> return false
                 }
@@ -515,8 +519,9 @@ class AddNoteActivity : AppCompatActivity() {
     /**
      * Kiểm tra có thay đổi chưa lưu - New method
      */
-    private fun hasUnsavedImageChanges(): Boolean {
-        return imagesToDelete.isNotEmpty() || imagesToAdd.isNotEmpty()
+    private fun hasUnsavedImageChanges(note: Note): Boolean {
+        val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
+        return imagesToDelete.isNotEmpty() || imagesToAdd.isNotEmpty() || content != (note.content ?: "")
     }
 
     /**
@@ -621,7 +626,53 @@ class AddNoteActivity : AppCompatActivity() {
         }
 
         binding.btnAddImage.setOnClickListener {
-            pickMultipleImagesLauncher.launch("image/*")
+            showPhotoAlbumBottomSheet()
+        }
+    }
+    private fun showPhotoAlbumBottomSheet() {
+        val bottomSheet = PhotoAlbumBottomSheet.newInstance { selectedPhotos ->
+            handleSelectedPhotos(selectedPhotos)
+        }
+        bottomSheet.show(supportFragmentManager, "PhotoAlbumBottomSheet")
+    }
+
+    /**
+     * Handle photos selected from bottom sheet
+     */
+    private fun handleSelectedPhotos(selectedPhotos: List<Photo>) {
+        try {
+            hasUnsavedChanges = true
+
+            val noteImages = selectedPhotos.map { photo ->
+                NoteImage(
+                    noteId = if (isEditMode) noteId else 0,
+                    imagePath = photo.uri
+                )
+            }
+
+            // Add to data source
+            imageList.addAll(noteImages)
+
+            // Add to pending list for edit mode
+            imagesToAdd.addAll(noteImages)
+
+            // Update span count based on new size
+            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+            layoutManager.spanCount = calculateSpanCount(imageList.size)
+
+            // Update adapter
+            mediaAdapter.addMultipleImages(noteImages)
+
+            // Force layout update
+            binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
+
+            val count = noteImages.size
+            Toast.makeText(this, "$count photos added", Toast.LENGTH_SHORT).show()
+            Log.d("AddNoteActivity", "$count photos selected from gallery")
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to add photos: ${e.message}", Toast.LENGTH_SHORT).show()
+            Log.e("AddNoteActivity", "Error handling selected photos", e)
         }
     }
 
@@ -664,41 +715,41 @@ class AddNoteActivity : AppCompatActivity() {
     /**
      * Xử lý chọn nhiều ảnh
      */
-    private fun handleMultipleImageSelection(uris: List<Uri>) {
-        try {
-            hasUnsavedChanges = true
-
-            val noteImages = uris.map { uri ->
-                NoteImage(
-                    noteId = if (isEditMode) noteId else 0,
-                    imagePath = uri.toString()
-                )
-            }
-
-            // Add to data source
-            imageList.addAll(noteImages)
-
-            // Thêm vào danh sách ảnh cần thêm (chưa save vào database)
-            imagesToAdd.addAll(noteImages)
-
-            // Update span count based on new size
-            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
-            layoutManager.spanCount = calculateSpanCount(imageList.size)
-
-            // Update UI with the new images
-            mediaAdapter.addMultipleImages(noteImages)
-
-            // Force layout update
-            binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
-
-            val count = noteImages.size
-            Log.d("AddNoteActivity", "$count images added to pending list")
-
-        } catch (e: Exception) {
-            Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
-            Log.e("AddNoteActivity", "Error adding multiple images", e)
-        }
-    }
+//    private fun handleMultipleImageSelection(uris: List<Uri>) {
+//        try {
+//            hasUnsavedChanges = true
+//
+//            val noteImages = uris.map { uri ->
+//                NoteImage(
+//                    noteId = if (isEditMode) noteId else 0,
+//                    imagePath = uri.toString()
+//                )
+//            }
+//
+//            // Add to data source
+//            imageList.addAll(noteImages)
+//
+//            // Thêm vào danh sách ảnh cần thêm (chưa save vào database)
+//            imagesToAdd.addAll(noteImages)
+//
+//            // Update span count based on new size
+//            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+//            layoutManager.spanCount = calculateSpanCount(imageList.size)
+//
+//            // Update UI with the new images
+//            mediaAdapter.addMultipleImages(noteImages)
+//
+//            // Force layout update
+//            binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
+//
+//            val count = noteImages.size
+//            Log.d("AddNoteActivity", "$count images added to pending list")
+//
+//        } catch (e: Exception) {
+//            Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
+//            Log.e("AddNoteActivity", "Error adding multiple images", e)
+//        }
+//    }
 
     /**
      * Lưu note (tạo mới hoặc cập nhật)
@@ -745,6 +796,8 @@ class AddNoteActivity : AppCompatActivity() {
             }
 
             NoteType.PHOTO -> {
+                val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
+
                 if (imageList.isEmpty()) {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
                     return
@@ -753,6 +806,7 @@ class AddNoteActivity : AppCompatActivity() {
                 val note = Note(
                     userId = currentUserId!!,
                     title = title,
+                    content = content,
                     noteType = noteType!!,
                     color = selectedColorName,
                     isPinned = isPinned,
@@ -828,6 +882,9 @@ class AddNoteActivity : AppCompatActivity() {
             }
 
             NoteType.PHOTO -> {
+
+                val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+
                 if (imageList.isEmpty()) {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
                     return
@@ -836,6 +893,7 @@ class AddNoteActivity : AppCompatActivity() {
                 noteViewModel.updateNote(
                     noteId = noteId,
                     title = title,
+                    content = content,
                     color = selectedColorName
                 )
                 // Images are handled separately when added/removed
