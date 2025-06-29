@@ -16,13 +16,14 @@ import com.nhathuy.nextmeet.model.ChecklistItem
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.NoteType
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class NoteRecentAdapter() :
-    ListAdapter<Note, NoteRecentAdapter.NoteRecentViewHolder>(DiffCallback) {
+class NoteRecentAdapter(private var notes: MutableList<Note>) :
+    RecyclerView.Adapter< NoteRecentAdapter.NoteRecentViewHolder>() {
     private var noteImagesMap: MutableMap<Int, List<NoteImage>> = mutableMapOf()
 
     inner class NoteRecentViewHolder(val binding: ItemNoteRecentsBinding) :
@@ -36,40 +37,39 @@ class NoteRecentAdapter() :
             }
         }
 
-        private fun setupContent(note:Note){
-            with(binding){
-                when(note.noteType){
-                    NoteType.TEXT ->{
+        // In your NoteRecentAdapter, replace the setupContent method with this fixed version:
+
+        private fun setupContent(note: Note) {
+            with(binding) {
+                when(note.noteType) {
+                    NoteType.TEXT -> {
                         tvNoteRecentContent.text = note.content
                         tvNoteRecentContent.visibility = View.VISIBLE
                         ivNoteRecent.visibility = View.GONE
                         rvChecklistNoteRecent.visibility = View.GONE
                     }
-                    NoteType.CHECKLIST ->{
+                    NoteType.CHECKLIST -> {
                         setupCheckListPreview(note)
                         tvNoteRecentContent.visibility = View.GONE
                         ivNoteRecent.visibility = View.GONE
                         rvChecklistNoteRecent.visibility = View.VISIBLE
                     }
-                    NoteType.VIDEO, NoteType.PHOTO ->{
+                    NoteType.VIDEO, NoteType.PHOTO -> {
                         tvNoteRecentContent.visibility = View.GONE
                         rvChecklistNoteRecent.visibility = View.GONE
 
                         val mediaView = binding.ivNoteRecent
                         val images = noteImagesMap[note.id] ?: emptyList()
+
                         if (images.isNotEmpty()) {
                             Log.d("NotesAdapter", "Loading image: ${images[0].imagePath}")
                             mediaView.visibility = View.VISIBLE
-                            val imageUri = if(images[0].imagePath.startsWith("content://")){
-                                Uri.parse(images[0].imagePath)
-                            }
-                            else{
-                                images[0].imagePath
-                            }
+
                             Glide.with(mediaView.context)
-                                .load(imageUri)
+                                .load(images[0].imagePath) // Use the path directly
                                 .centerCrop()
                                 .placeholder(R.drawable.ic_photo)
+                                .error(R.drawable.ic_photo) // Add error placeholder
                                 .into(mediaView)
                         } else {
                             Log.d("NotesAdapter", "No images found for note ${note.id}")
@@ -160,40 +160,16 @@ class NoteRecentAdapter() :
     override fun onBindViewHolder(
         holder: NoteRecentViewHolder, position: Int
     ) {
-        holder.bind(getItem(position))
+        holder.bind(notes[position])
     }
 
-    fun updateNotesWithImages(newNotes: List<Note>, newNoteImagesMap: Map<Int, List<NoteImage>>) {
-        Log.d("NoteRecentAdapter", "Updating ${newNotes.size} notes with ${newNoteImagesMap.size} image entries")
+    override fun getItemCount(): Int  = notes.size
 
-        // Log chi tiết để debug
-        newNoteImagesMap.forEach { (noteId, images) ->
-            Log.d("NoteRecentAdapter", "Note $noteId has ${images.size} images")
-            images.forEach { image ->
-                Log.d("NoteRecentAdapter", "  - Image path: ${image.imagePath}")
-            }
-        }
-
-        // Cập nhật images map
-        noteImagesMap.clear()
-        noteImagesMap.putAll(newNoteImagesMap)
-
-        // Submit list mới để trigger update
-        submitList(newNotes.toList())
-    }
-
-    companion object DiffCallback : DiffUtil.ItemCallback<Note>() {
-        override fun areItemsTheSame(
-            oldItem: Note, newItem: Note
-        ): Boolean {
-            return oldItem.id == newItem.id
-        }
-
-        override fun areContentsTheSame(
-            oldItem: Note, newItem: Note
-        ): Boolean {
-            return oldItem == newItem
-        }
-
+    fun updateNotesWithImages(newNotes: List<Note>, noteImagesMap: Map<Int, List<NoteImage>>) {
+        notes.clear()
+        notes.addAll(newNotes)
+        this.noteImagesMap.clear()
+        this.noteImagesMap.putAll(noteImagesMap)
+        notifyDataSetChanged()
     }
 }

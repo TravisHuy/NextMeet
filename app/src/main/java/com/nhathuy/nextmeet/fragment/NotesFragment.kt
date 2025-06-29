@@ -168,7 +168,7 @@ class NotesFragment : Fragment() , NavigationCallback{
                     pinnedNotes = notes.filter { it.isPinned }
 
                     // Tải ảnh cho tất cả note kiểu PHOTO
-                    loadImagesForPhotoNotes(notes)
+                    loadImagesForPhotoNotesImproved(notes)
 
                     when {
                         binding.chipAll.isChecked -> showAllNotes()
@@ -594,6 +594,58 @@ class NotesFragment : Fragment() , NavigationCallback{
 
     override fun triggerAddAction() {
         openAddNote(NoteType.TEXT)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (currentUserId != 0) {
+            refreshNotes()
+        }
+    }
+    private fun refreshNotes() {
+        // Clear cache cũ
+        noteImagesMap.clear()
+
+        // Trigger lại observe để load fresh data
+        viewLifecycleOwner.lifecycleScope.launch {
+            noteViewModel.getAllNotes(currentUserId).collect { notes ->
+                allNotes = notes
+                pinnedNotes = notes.filter { it.isPinned }
+
+                // Load images với cải thiện
+                loadImagesForPhotoNotesImproved(notes)
+            }
+        }
+    }
+
+    private fun loadImagesForPhotoNotesImproved(notes: List<Note>) {
+        val photoNotes = notes.filter { it.noteType == NoteType.PHOTO }
+
+        if (photoNotes.isEmpty()) {
+            // Nếu không có photo notes, update UI ngay
+            updateCurrentView()
+            return
+        }
+
+        // Load từng note một cách bất đồng bộ
+        photoNotes.forEach { note ->
+            noteViewModel.getImagesForNote(note.id) { images ->
+                Log.d("NotesFragment", "Loaded ${images.size} images for note ID: ${note.id}")
+                noteImagesMap[note.id] = images
+
+                // Update UI ngay sau khi load xong từng note
+                updateCurrentView()
+            }
+        }
+    }
+
+    // Hàm helper để update view hiện tại
+    private fun updateCurrentView() {
+        when {
+            binding.chipAll.isChecked -> showAllNotes()
+            binding.chipPinned.isChecked -> showPinnedNotes()
+            binding.chipReminder.isChecked -> showReminderNotes()
+        }
     }
 }
 

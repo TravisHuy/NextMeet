@@ -62,6 +62,7 @@ class DashBoardFragment : Fragment() {
     private var upcomingAppointmentCount = 0
 
 
+    private var allNotes = listOf<Note>()
     // Map lưu trữ danh sách ảnh cho mỗi note
     private val noteImagesMap = mutableMapOf<Int, List<NoteImage>>()
 
@@ -139,7 +140,7 @@ class DashBoardFragment : Fragment() {
 
     private fun setupNoteRecentAdapter() {
         binding.rvNoteRecents.layoutManager = LinearLayoutManager(requireContext())
-        noteRecentAdapter = NoteRecentAdapter()
+        noteRecentAdapter = NoteRecentAdapter(notes = mutableListOf())
         binding.rvNoteRecents.adapter = noteRecentAdapter
     }
 
@@ -170,6 +171,7 @@ class DashBoardFragment : Fragment() {
             //tải ghi chú
             lifecycleScope.launch {
                 noteViewModel.getAllNotes(currentUserId).collect { notes ->
+                    allNotes = notes
                     noteCount = notes.size
                     updateNoteCard()
                     loadImagesForPhotoNotesAndUpdate(notes.take(3))
@@ -335,7 +337,7 @@ class DashBoardFragment : Fragment() {
         } else {
             binding.rvNoteRecents.visibility = View.VISIBLE
             binding.layoutEmptyRecentNotes.visibility = View.GONE
-            noteRecentAdapter.updateNotesWithImages(notes, noteImagesMap)
+            noteRecentAdapter.updateNotesWithImages(combinedNotes, noteImagesMap)
         }
     }
 
@@ -527,6 +529,26 @@ class DashBoardFragment : Fragment() {
             Log.w("Navigation", "NoteFragment not found for FAB trigger")
         } catch (e: Exception) {
             Log.e("Navigation", "Failed to trigger note FAB: ${e.message}")
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (currentUserId != 0) {
+            refreshNotes()
+        }
+    }
+    private fun refreshNotes() {
+        // Clear cache cũ
+        noteImagesMap.clear()
+
+        // Trigger lại observe để load fresh data
+        viewLifecycleOwner.lifecycleScope.launch {
+            noteViewModel.getAllNotes(currentUserId).collect { notes ->
+                allNotes = notes
+
+                loadImagesForPhotoNotesAndUpdate(notes)
+            }
         }
     }
 }

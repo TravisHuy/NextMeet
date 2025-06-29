@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="@dimen/elevation_small"
+        android:background="#FBF9F9"
         >
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/chip_group_filters"
