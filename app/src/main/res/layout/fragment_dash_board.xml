@@ -493,13 +493,69 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <androidx.fragment.app.FragmentContainerView
-                    android:id="@+id/map_fragment"
-                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                <!-- Map Statistics Layout -->
+                <LinearLayout
+                    android:id="@+id/layout_map_statistics"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/map_height"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_small"
-                    android:visibility="gone" />
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <!-- Location Count -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_geo"
+                            app:tint="#1976D2" />
+
+                        <TextView
+                            android:id="@+id/tv_location_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:fontFamily="@font/inter_semibold"
+                            android:text="5 địa điểm"
+                            android:textColor="#1976D2"
+                            android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                    <!-- Top Locations List -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_location_statistics"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never"
+                        tools:itemCount="3"
+                        tools:listitem="@layout/item_location_statistics" />
+
+                    <!-- Map Container -->
+                    <FrameLayout
+                        android:id="@+id/map_fragment_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="230dp"
+                        android:background="#F5F5F5">
+
+                        <androidx.fragment.app.FragmentContainerView
+                            android:id="@+id/map_fragment"
+                            android:name="com.google.android.gms.maps.SupportMapFragment"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                    </FrameLayout>
+
+                </LinearLayout>
+
 
                 <LinearLayout
                     android:id="@+id/layout_empty_map"
