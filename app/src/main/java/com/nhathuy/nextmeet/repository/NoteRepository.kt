@@ -1,13 +1,18 @@
 package com.nhathuy.nextmeet.repository
 
+import android.net.Uri
+import android.util.Log
 import com.nhathuy.nextmeet.dao.NoteDao
 import com.nhathuy.nextmeet.dao.NoteImageDao
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.ShareResult
+import com.nhathuy.nextmeet.utils.ImageManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +23,8 @@ import javax.inject.Singleton
 @Singleton
 class NoteRepository @Inject constructor(
     private val noteDao: NoteDao,
-    private val noteImageDao: NoteImageDao
+    private val noteImageDao: NoteImageDao,
+    private val imageManager: ImageManager
 ) {
 
     /**
@@ -203,9 +209,13 @@ class NoteRepository @Inject constructor(
      */
     suspend fun deleteNote(noteId: Int): Result<Unit> {
         return try {
-            val note = noteDao.getNoteById(noteId)
-                ?: return Result.failure(IllegalArgumentException("ghi chú không tồn tại"))
-            noteDao.deleteNote(note)
+            withContext(Dispatchers.IO) {
+                // Xóa tất cả ảnh của note trước
+                deleteImagesByNoteId(noteId)
+
+                // Xóa note
+                noteDao.deleteNoteById(noteId)
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -259,7 +269,27 @@ class NoteRepository @Inject constructor(
      */
     suspend fun insertImagesForNote(images: List<NoteImage>): Result<Unit> {
         return try {
-            noteImageDao.insertImages(images)
+            withContext(Dispatchers.IO) {
+
+                val savedImages = mutableListOf<NoteImage>()
+                for(image in images){
+                    val finalPath = if(image.imagePath.startsWith("content://")){
+                        val uri = Uri.parse(image.imagePath)
+                        imageManager.saveImageFromUri(uri,image.noteId)
+                    }
+                    else {
+                        image.imagePath
+                    }
+
+                    finalPath?.let {
+                        path ->
+                        savedImages.add(image.copy(imagePath =  path))
+                    }
+                }
+                if(savedImages.isNotEmpty()){
+                    noteImageDao.insertImages(savedImages)
+                }
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -283,19 +313,34 @@ class NoteRepository @Inject constructor(
      */
     suspend fun deleteImage(image: NoteImage): Result<Unit> {
         return try {
-            noteImageDao.deleteImage(image)
+            withContext(Dispatchers.IO) {
+                imageManager.deleteImage(image.imagePath)
+                noteImageDao.deleteImage(image)
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
+
+
     /**
      * Xóa tất cả ảnh của 1 ghi chú
      */
     suspend fun deleteImagesByNoteId(noteId: Int): Result<Unit> {
         return try {
-            noteImageDao.deleteImagesByNoteId(noteId)
+            withContext(Dispatchers.IO) {
+                // Lấy danh sách ảnh trước khi xóa
+                val images = noteImageDao.getImagesForNote(noteId)
+
+                // Xóa từng file ảnh
+                images.forEach { image ->
+                    imageManager.deleteImage(image.imagePath)
+                }
+
+                noteImageDao.deleteImagesByNoteId(noteId)
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -418,15 +463,25 @@ class NoteRepository @Inject constructor(
      */
     suspend fun deleteMultipleNotes(noteIds: List<Int>): Result<Int> {
         return try {
-            var deletedCount = 0
-            noteIds.forEach { noteId ->
-                val note = noteDao.getNoteById(noteId)
-                if (note != null) {
-                    noteDao.deleteNote(note)
-                    deletedCount++
+            withContext(Dispatchers.IO) {
+                var deletedCount = 0
+
+                noteIds.forEach { noteId ->
+                    try {
+                        // Xóa ảnh của từng note
+                        deleteImagesByNoteId(noteId)
+
+                        // Xóa note
+                        noteDao.deleteNoteById(noteId)
+                        deletedCount++
+                    } catch (e: Exception) {
+                        // Log error nhưng tiếp tục với các note khác
+                        Log.e("NoteRepository", "Error deleting note $noteId", e)
+                    }
                 }
+
+                Result.success(deletedCount)
             }
-            Result.success(deletedCount)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -449,6 +504,13 @@ class NoteRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * lấy tat ca anh cua paths
+     */
+    fun getAllImagePaths(): Flow<List<String>> {
+        return noteImageDao.getAllImagePaths()
     }
 }
 

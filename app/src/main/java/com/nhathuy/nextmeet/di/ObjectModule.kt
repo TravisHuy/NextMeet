@@ -20,6 +20,7 @@ import com.nhathuy.nextmeet.repository.NoteRepository
 import com.nhathuy.nextmeet.repository.SearchRepository
 import com.nhathuy.nextmeet.repository.TransactionRepository
 import com.nhathuy.nextmeet.repository.UserRepository
+import com.nhathuy.nextmeet.utils.ImageManager
 import com.nhathuy.nextmeet.utils.SessionManager
 import com.nhathuy.nextmeet.utils.UniversalSearchManager
 import dagger.Module
@@ -71,8 +72,8 @@ object ObjectModule {
 
     @Singleton
     @Provides
-    fun providerNoteRepository(noteDao: NoteDao, noteImageDao: NoteImageDao): NoteRepository {
-        return NoteRepository(noteDao, noteImageDao)
+    fun providerNoteRepository(noteDao: NoteDao, noteImageDao: NoteImageDao, imageManager: ImageManager): NoteRepository {
+        return NoteRepository(noteDao, noteImageDao, imageManager)
     }
 
     @Singleton
@@ -109,5 +110,13 @@ object ObjectModule {
         @ApplicationContext context: Context
     ): UniversalSearchManager {
         return UniversalSearchManager(searchRepository,context)
+    }
+
+    @Provides
+    @Singleton
+    fun providerImageManager(
+        @ApplicationContext context: Context
+    ): ImageManager {
+        return ImageManager(context)
     }
 }

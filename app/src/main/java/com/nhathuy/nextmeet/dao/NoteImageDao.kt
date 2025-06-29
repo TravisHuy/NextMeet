@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.nhathuy.nextmeet.model.NoteImage
+import kotlinx.coroutines.flow.Flow
 
 /**
  * DAO cho thao tác với bảng NoteImage
@@ -32,5 +33,9 @@ interface NoteImageDao {
     // Xóa tất cả ảnh của 1 note
     @Query("DELETE FROM note_images WHERE note_id = :noteId")
     suspend fun deleteImagesByNoteId(noteId: Int)
+
+    // Lấy tất cả cac ảnh
+    @Query("SELECT image_path FROM note_images")
+    fun getAllImagePaths() : Flow<List<String>>
 }
 
