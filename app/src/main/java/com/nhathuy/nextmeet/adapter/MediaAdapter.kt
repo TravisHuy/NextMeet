@@ -9,7 +9,7 @@ import com.nhathuy.nextmeet.databinding.ItemMediaBinding
 import com.nhathuy.nextmeet.model.NoteImage
 
 /**
- * Adapter hiển thị danh sách ảnh trong AddNoteActivity (giống Google Keep)
+ * Adapter hiển thị danh sách ảnh trong AddNoteActivity
  * @author TravisHuy
  * @since 03/06/2025
  */

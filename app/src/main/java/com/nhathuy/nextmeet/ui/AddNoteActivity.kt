@@ -72,6 +72,12 @@ class AddNoteActivity : AppCompatActivity() {
     private var isEditMode = false
     private var currentNote: Note? = null
 
+
+    private val originalImageList = mutableListOf<NoteImage>()
+    private val imagesToDelete = mutableListOf<NoteImage>()
+    private val imagesToAdd =  mutableListOf<NoteImage>()
+    private var hasUnsavedChanges = false
+
     // Image picker launcher
     private val pickMultipleImagesLauncher =
         registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
@@ -125,6 +131,7 @@ class AddNoteActivity : AppCompatActivity() {
         setupObservers()
         setupClickListeners()
         setupMediaSection()
+        setupTextChangeListeners()
 
         // Load note data nếu ở edit mode
         if (isEditMode) {
@@ -317,6 +324,12 @@ class AddNoteActivity : AppCompatActivity() {
      */
     private fun loadExistingImages(noteId: Int) {
         noteViewModel.getImagesForNote(noteId) { images ->
+
+            // lưu danh sách goc
+            originalImageList.clear()
+            originalImageList.addAll(images)
+
+            // hiển thị ảnh hien tại
             imageList.clear()
             imageList.addAll(images)
 
@@ -339,6 +352,7 @@ class AddNoteActivity : AppCompatActivity() {
      */
     private fun showSuccessAndFinish(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        setResult(RESULT_OK)
         finish()
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
@@ -361,10 +375,12 @@ class AddNoteActivity : AppCompatActivity() {
 
         binding.switchPin.setOnCheckedChangeListener { _, isChecked ->
             isPinned = isChecked
+            hasUnsavedChanges = true
         }
 
         binding.switchShare.setOnCheckedChangeListener { _, isChecked ->
             isShared = isChecked
+            hasUnsavedChanges = true
         }
     }
 
@@ -444,30 +460,145 @@ class AddNoteActivity : AppCompatActivity() {
     }
 
     /**
+     * Kiểm tra có thay đổi chưa lưu - New method
+     */
+    private fun hasUnsavedChanges(): Boolean {
+        if (!isEditMode) {
+            // Trong add mode, có content là có thay đổi
+            val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
+            if (title.isNotEmpty()) return true
+
+            when (noteType) {
+                NoteType.TEXT -> {
+                    val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+                    return content.isNotEmpty()
+                }
+                NoteType.CHECKLIST -> {
+                    return checklistItems.any { it.text.isNotEmpty() }
+                }
+                NoteType.PHOTO -> {
+                    return imageList.isNotEmpty()
+                }
+                else -> return false
+            }
+        } else {
+            // Trong edit mode, kiểm tra thay đổi so với dữ liệu gốc
+            currentNote?.let { note ->
+                val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
+                if (title != note.title) return true
+                if (selectedColorName != note.color) return true
+                if (isPinned != note.isPinned) return true
+                if (reminderTime != note.reminderTime) return true
+
+                when (noteType) {
+                    NoteType.TEXT -> {
+                        val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+                        return content != (note.content ?: "")
+                    }
+                    NoteType.CHECKLIST -> {
+                        val items = checklistAdapter.getItems()
+                        val checklistString = items.joinToString("\n") {
+                            (if (it.isChecked) "- [x] " else "- [ ] ") + it.text
+                        }
+                        return checklistString != (note.checkListItems ?: "")
+                    }
+                    NoteType.PHOTO -> {
+                        return hasUnsavedImageChanges()
+                    }
+                    else -> return false
+                }
+            }
+        }
+        return hasUnsavedChanges
+    }
+
+    /**
+     * Kiểm tra có thay đổi chưa lưu - New method
+     */
+    private fun hasUnsavedImageChanges(): Boolean {
+        return imagesToDelete.isNotEmpty() || imagesToAdd.isNotEmpty()
+    }
+
+    /**
+     * Áp dụng các thay đổi ảnh vào database - New method
+     */
+    private fun applyImageChanges() {
+        if (!isEditMode) return
+
+        // Xóa ảnh đã đánh dấu xóa
+        if (imagesToDelete.isNotEmpty()) {
+            imagesToDelete.forEach { image ->
+                noteViewModel.deleteImage(image)
+            }
+            Log.d("AddNoteActivity", "Deleted ${imagesToDelete.size} images")
+        }
+
+        // Thêm ảnh mới
+        if (imagesToAdd.isNotEmpty()) {
+            val imagesToSave = imagesToAdd.map { it.copy(noteId = noteId) }
+            noteViewModel.insertImagesForNote(imagesToSave)
+            Log.d("AddNoteActivity", "Added ${imagesToAdd.size} new images")
+        }
+
+        // Clear pending changes
+        imagesToDelete.clear()
+        imagesToAdd.clear()
+    }
+    /**
+     * Hủy bỏ các thay đổi ảnh - New method
+     */
+    private fun discardImageChanges() {
+        // Restore original image list
+        imageList.clear()
+        imageList.addAll(originalImageList)
+
+        // Clear pending changes
+        imagesToDelete.clear()
+        imagesToAdd.clear()
+
+        // Update UI
+        val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+        layoutManager.spanCount = calculateSpanCount(imageList.size)
+        mediaAdapter.notifyDataSetChanged()
+        binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
+
+        Log.d("AddNoteActivity", "Image changes discarded")
+    }
+
+    /**
      * Hiển thị dialog xác nhận thoát
      */
     private fun showDialogBack() {
+        if (!hasUnsavedChanges()) {
+            finish()
+            return
+        }
+
         val title = if (isEditMode) {
-            "Do you want to cancel editing this note?"
+            "Discard changes?"
         } else {
-            "Do you want to cancel creating this note?"
+            "Discard note?"
         }
 
         val message = if (isEditMode) {
-            "Your changes will not be saved."
+            "You have unsaved changes. Are you sure you want to discard them?"
         } else {
-            "Your note will not be saved."
+            "Your note will not be saved. Are you sure you want to discard it?"
         }
 
-        MaterialAlertDialogBuilder(this)
-            .setTitle(title)
+        MaterialAlertDialogBuilder(this).setTitle(title)
             .setMessage(message)
             .setIcon(R.drawable.ic_cancel)
-            .setNegativeButton("No") { dialog, _ ->
+            .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
             }
-            .setPositiveButton("Yes") { _, _ ->
+            .setPositiveButton("Discard") { _, _ ->
+                if (isEditMode && noteType == NoteType.PHOTO) {
+                    // Restore image changes if discarding
+                    discardImageChanges()
+                }
                 finish()
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
             }
             .show()
     }
@@ -477,17 +608,7 @@ class AddNoteActivity : AppCompatActivity() {
      */
     private fun setupMediaSection() {
         mediaAdapter = MediaAdapter(imageList) { noteImage ->
-            // Handle image removal
-            if (isEditMode && noteImage.id != 0) {
-                // Remove from database if it's an existing image
-                noteViewModel.deleteImage(noteImage)
-            }
-            mediaAdapter.removeImage(noteImage)
-
-            // Update layout after removal
-            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
-            layoutManager.spanCount = calculateSpanCount(imageList.size)
-            binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
+            handleImageRemoval(noteImage)
         }
 
         val gridLayoutManager = GridLayoutManager(this, calculateSpanCount(imageList.size))
@@ -502,6 +623,31 @@ class AddNoteActivity : AppCompatActivity() {
         binding.btnAddImage.setOnClickListener {
             pickMultipleImagesLauncher.launch("image/*")
         }
+    }
+
+    /**
+     * Xu ly xoa anh
+     */
+    private fun handleImageRemoval(noteImage: NoteImage){
+        hasUnsavedChanges = true
+
+        if (isEditMode && noteImage.id != 0) {
+            // Nếu là ảnh đã tồn tại trong database
+            imagesToDelete.add(noteImage)
+        } else {
+            // Nếu là ảnh mới thêm vào (chưa save)
+            imagesToAdd.remove(noteImage)
+        }
+
+        // Remove từ danh sách hiển thị
+        mediaAdapter.removeImage(noteImage)
+
+        // Update layout after removal
+        val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+        layoutManager.spanCount = calculateSpanCount(imageList.size)
+        binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
+
+        Log.d("AddNoteActivity", "Image marked for removal: ${noteImage.imagePath}")
     }
 
     /**
@@ -520,15 +666,20 @@ class AddNoteActivity : AppCompatActivity() {
      */
     private fun handleMultipleImageSelection(uris: List<Uri>) {
         try {
+            hasUnsavedChanges = true
+
             val noteImages = uris.map { uri ->
                 NoteImage(
-                    noteId = if (isEditMode) noteId else 0, // Set noteId nếu đang ở edit mode
+                    noteId = if (isEditMode) noteId else 0,
                     imagePath = uri.toString()
                 )
             }
 
             // Add to data source
             imageList.addAll(noteImages)
+
+            // Thêm vào danh sách ảnh cần thêm (chưa save vào database)
+            imagesToAdd.addAll(noteImages)
 
             // Update span count based on new size
             val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
@@ -540,13 +691,8 @@ class AddNoteActivity : AppCompatActivity() {
             // Force layout update
             binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
 
-            // Nếu đang ở edit mode, save images ngay lập tức
-            if (isEditMode) {
-                noteViewModel.insertImagesForNote(noteImages)
-            }
-
             val count = noteImages.size
-            Log.d("AddNoteActivity", "$count images added successfully")
+            Log.d("AddNoteActivity", "$count images added to pending list")
 
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -693,6 +839,7 @@ class AddNoteActivity : AppCompatActivity() {
                     color = selectedColorName
                 )
                 // Images are handled separately when added/removed
+                applyImageChanges()
             }
 
             else -> {
@@ -789,6 +936,26 @@ class AddNoteActivity : AppCompatActivity() {
             val formattedDate = formatter.format(Date(it))
             binding.tvReminderTime.text = formattedDate
             Log.d("AddNoteActivity", "Reminder set for: $formattedDate")
+        }
+    }
+
+    private fun setupTextChangeListeners() {
+        binding.textEditTitle.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                hasUnsavedChanges = true
+            }
+        })
+
+        if (noteType == NoteType.TEXT) {
+            binding.textEdContent.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    hasUnsavedChanges = true
+                }
+            })
         }
     }
 

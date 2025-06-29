@@ -163,7 +163,8 @@ class NotesAdapter(
                                 .into(mediaView)
                         } else {
                             android.util.Log.d("NotesAdapter", "No images found for note ${note.id}")
-                            mediaView.visibility = View.GONE
+                            mediaView.visibility = View.VISIBLE
+                            mediaView.setImageResource(R.drawable.ic_photo)
                         }
                     }
                 }

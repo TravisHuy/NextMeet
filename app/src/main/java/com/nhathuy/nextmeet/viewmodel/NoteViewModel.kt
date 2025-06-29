@@ -293,6 +293,8 @@ class NoteViewModel @Inject constructor(private val noteRepository: NoteReposito
         }
     }
 
+
+
     /**
      * Xóa 1 ảnh khỏi ghi chú
      */
