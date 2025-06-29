@@ -119,6 +119,9 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
 
         //setup recycler view
         setupRecyclerView()
+
+        // setup click view all
+        setupClickViewAll()
     }
 
     private fun setupCardClickListeners() {
@@ -140,7 +143,19 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
             navigateToAppointmentMap()
         }
     }
+    private fun setupClickViewAll(){
+        binding.viewAllNotes.setOnClickListener {
+            navigateToNotes()
+        }
 
+        binding.viewAllAppointment.setOnClickListener {
+            navigateToAppointmentMap()
+        }
+
+        binding.viewAllMap.setOnClickListener {
+            navigateToAppointmentMap()
+        }
+    }
     // sử ly khi empty state button
     private fun setupEmptyStateButtons() {
         binding.btnAddAppointment.setOnClickListener {

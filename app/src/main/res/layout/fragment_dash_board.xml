@@ -278,6 +278,7 @@
                         android:textSize="@dimen/text_size_body1" />
 
                     <TextView
+                        android:id="@+id/view_all_appointment"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
@@ -379,6 +380,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/view_all_notes"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
@@ -483,6 +485,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/view_all_map"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
