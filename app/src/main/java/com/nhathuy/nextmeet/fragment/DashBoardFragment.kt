@@ -11,13 +11,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.AppointmentTodayAdapter
+import com.nhathuy.nextmeet.adapter.LocationStatisticsAdapter
 import com.nhathuy.nextmeet.adapter.NoteRecentAdapter
 import com.nhathuy.nextmeet.databinding.FragmentDashBoardBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
+import com.nhathuy.nextmeet.model.LocationStatistics
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.NoteType
@@ -38,7 +47,7 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 @AndroidEntryPoint
-class DashBoardFragment : Fragment() {
+class DashBoardFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentDashBoardBinding? = null
     private val binding get() = _binding!!
@@ -52,6 +61,11 @@ class DashBoardFragment : Fragment() {
     //adapter
     private lateinit var todayAppointmentAdapter: AppointmentTodayAdapter
     private lateinit var noteRecentAdapter: NoteRecentAdapter
+    private lateinit var locationStatisticsAdapter: LocationStatisticsAdapter
+
+    // Google Maps
+    private var googleMap: GoogleMap? = null
+    private var mapFragment: SupportMapFragment? = null
 
     //
     private var currentUserId: Int = 0
@@ -61,6 +75,10 @@ class DashBoardFragment : Fragment() {
     private var contactCount = 0
     private var upcomingAppointmentCount = 0
 
+    // Map statistics
+    private var locationCount = 0
+    private var topLocations = listOf<LocationStatistics>()
+    private var allAppointments = listOf<AppointmentPlus>()
 
     private var allNotes = listOf<Note>()
     // Map lưu trữ danh sách ảnh cho mỗi note
@@ -80,6 +98,7 @@ class DashBoardFragment : Fragment() {
         initializeViewModels()
         setupUI()
         observeData()
+        setupGoogleMaps()
     }
 
     // khởi tao viewmodel
@@ -115,6 +134,11 @@ class DashBoardFragment : Fragment() {
         binding.cardAppointmentSoon.setOnClickListener {
             navigateToAppointment(Constant.FILTER_UPCOMING)
         }
+
+        // Thêm click listener cho card map
+        binding.cardMaps.setOnClickListener {
+            navigateToAppointmentMap()
+        }
     }
 
     // sử ly khi empty state button
@@ -130,6 +154,7 @@ class DashBoardFragment : Fragment() {
     private fun setupRecyclerView() {
         setupAppointmentTodayAdapter()
         setupNoteRecentAdapter()
+        setupLocationStatisticsAdapter()
     }
 
     private fun setupAppointmentTodayAdapter() {
@@ -142,6 +167,39 @@ class DashBoardFragment : Fragment() {
         binding.rvNoteRecents.layoutManager = LinearLayoutManager(requireContext())
         noteRecentAdapter = NoteRecentAdapter(notes = mutableListOf())
         binding.rvNoteRecents.adapter = noteRecentAdapter
+    }
+
+    private fun setupLocationStatisticsAdapter() {
+        binding.rvLocationStatistics.layoutManager = LinearLayoutManager(requireContext())
+        locationStatisticsAdapter = LocationStatisticsAdapter { location ->
+            onLocationClick(location)
+        }
+        binding.rvLocationStatistics.adapter = locationStatisticsAdapter
+    }
+
+    private fun setupGoogleMaps() {
+        mapFragment = childFragmentManager.findFragmentById(R.id.map_fragment) as? SupportMapFragment
+        mapFragment?.getMapAsync(this)
+    }
+
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
+
+        // Cấu hình map
+        googleMap?.apply {
+            uiSettings.apply {
+                isZoomControlsEnabled = false
+                isCompassEnabled = false
+                isMapToolbarEnabled = false
+                isMyLocationButtonEnabled = false
+            }
+
+            // Disable map interactions để tránh conflict với scroll
+            uiSettings.setAllGesturesEnabled(false)
+        }
+
+        // Cập nhật markers nếu đã có data
+        updateMapMarkers()
     }
 
     private fun observeData() {
@@ -190,13 +248,18 @@ class DashBoardFragment : Fragment() {
                 when (state) {
                     is AppointmentUiState.AppointmentsLoaded -> {
                         val appointments = state.appointments
+                        allAppointments = appointments
 
                         // tính toán cuộc hẹn
                         calculateAppointmentCount(appointments)
 
+                        // tính toán thống kê địa điểm
+                        calculateLocationStatistics(appointments)
+
                         // cập nhật ui
                         updateAppointmentCards()
                         updateTodayAppointmentsSection(appointments.filter { isToday(it.startDateTime) })
+                        updateMapSection()
 
                         // cập nhật trạng thái empty
                         updateOverallEmptyState()
@@ -209,6 +272,138 @@ class DashBoardFragment : Fragment() {
                     else -> {}
                 }
             }
+        }
+    }
+
+    // tính toán thống kê địa điểm
+    private fun calculateLocationStatistics(appointments: List<AppointmentPlus>) {
+        val now = System.currentTimeMillis()
+
+        // Lọc appointments có địa điểm
+        val appointmentsWithLocation = appointments.filter {
+            it.location.isNotBlank() && it.latitude != 0.0 && it.longitude != 0.0
+        }
+
+        if (appointmentsWithLocation.isEmpty()) {
+            locationCount = 0
+            topLocations = emptyList()
+            return
+        }
+
+        // Group theo địa điểm
+        val locationGroups = appointmentsWithLocation.groupBy { it.location }
+        locationCount = locationGroups.size
+
+        // Tính top locations
+        topLocations = locationGroups.map { (location, appointments) ->
+            val upcomingCount = appointments.count { it.startDateTime > now }
+            LocationStatistics(
+                locationName = location,
+                appointmentCount = appointments.size,
+                latitude = appointments.first().latitude,
+                longitude = appointments.first().longitude,
+                upcomingCount = upcomingCount
+            )
+        }.sortedByDescending { it.appointmentCount }
+            .take(3) // Lấy top 3
+    }
+
+    // cập nhật map section
+    private fun updateMapSection() {
+        if (locationCount > 0) {
+            binding.apply {
+                // Hiển thị statistics
+                layoutMapStatistics.visibility = View.VISIBLE
+                layoutEmptyMap.visibility = View.GONE
+                mapFragmentContainer.visibility = View.VISIBLE
+
+                // Cập nhật số liệu
+                tvLocationCount.text = "$locationCount địa điểm"
+
+                // Cập nhật danh sách top locations
+                locationStatisticsAdapter.submitList(topLocations)
+
+                // Cập nhật markers trên map
+                updateMapMarkers()
+            }
+        } else {
+            binding.apply {
+                layoutMapStatistics.visibility = View.GONE
+                layoutEmptyMap.visibility = View.VISIBLE
+                mapFragmentContainer.visibility = View.GONE
+            }
+        }
+    }
+
+    // cập nhật markers trên map
+    private fun updateMapMarkers() {
+        googleMap?.let { map ->
+            map.clear()
+
+            if (topLocations.isNotEmpty()) {
+                val boundsBuilder = LatLngBounds.Builder()
+
+                topLocations.forEach { location ->
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    map.addMarker(
+                        MarkerOptions()
+                            .position(latLng)
+                            .title(location.locationName)
+                            .snippet("${location.appointmentCount} cuộc hẹn")
+                    )
+                    boundsBuilder.include(latLng)
+                }
+
+                // Fit map để hiển thị tất cả markers
+                try {
+                    val bounds = boundsBuilder.build()
+                    val padding = 100 // padding in pixels
+                    map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
+                } catch (e: Exception) {
+                    // Fallback nếu có lỗi
+                    val firstLocation = topLocations.first()
+                    map.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(firstLocation.latitude, firstLocation.longitude),
+                            12f
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    // xử lý click vào location
+    private fun onLocationClick(location: LocationStatistics) {
+        // Focus map tại location được click
+        googleMap?.let { map ->
+            val latLng = LatLng(location.latitude, location.longitude)
+            map.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                1000,
+                null
+            )
+        }
+
+        // Có thể thêm hiệu ứng highlight marker
+        showMessage("Hiển thị ${location.locationName}")
+    }
+
+    // navigation đến appointment map
+    private fun navigateToAppointmentMap() {
+        try {
+            val bottomNavigation =
+                (activity as? AppCompatActivity)?.findViewById<BottomNavigationView>(R.id.nav_bottom_navigation)
+            if (bottomNavigation != null) {
+                val appointmentMenuItem = bottomNavigation.menu.findItem(R.id.nav_appointment)
+                if (appointmentMenuItem != null) {
+                    bottomNavigation.selectedItemId = appointmentMenuItem.itemId
+                    Log.d("Navigation", "Navigated to AppointmentMap")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Navigation", "Failed to navigate to AppointmentMapFragment: ${e.message}")
         }
     }
 
@@ -538,6 +733,7 @@ class DashBoardFragment : Fragment() {
             refreshNotes()
         }
     }
+
     private fun refreshNotes() {
         // Clear cache cũ
         noteImagesMap.clear()
@@ -550,5 +746,10 @@ class DashBoardFragment : Fragment() {
                 loadImagesForPhotoNotesAndUpdate(notes)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 }
