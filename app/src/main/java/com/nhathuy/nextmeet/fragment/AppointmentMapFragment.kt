@@ -567,6 +567,14 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
                 searchSuggestionsAdapter.submitList(suggestions)
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            searchViewModel.navigationFilter.collect { filter ->
+                if (filter.isNotEmpty() && currentUserId != 0) {
+                    handleNavigationFilter(filter)
+                }
+            }
+        }
     }
 
     private fun handleAppointmentUiState(state: AppointmentUiState) {
@@ -603,6 +611,25 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
             }
             else -> {}
         }
+    }
+
+
+    private fun handleNavigationFilter(filter: String) {
+        Log.d("AppointmentNavFilter", "Handling navigation filter: $filter")
+
+        // Set search mode
+        currentSearchQuery = filter
+        isSearchMode = true
+
+        // Update search bar
+        updateSearchBar(filter)
+        updateSearchBarMenu()
+
+        // Apply quick filter
+        performQuickFilter(filter)
+
+        // Clear navigation filter after handling
+        searchViewModel.clearNavigationFilter()
     }
 
     // MARK: - Selection Actions
@@ -791,12 +818,16 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         currentSearchQuery = filterText
         isSearchMode = true
 
-        // Apply contact filter
+        // Apply contact filterd
         applyContactFilter(contact)
 
         // Update UI state
         updateSearchBarMenu()
         updateUIState()
+    }
+
+    override fun onNavigateToAppointmentWithDashboard(filter: String) {
+        performQuickFilter(filter)
     }
 
     private fun applyContactFilter(contact: Contact) {

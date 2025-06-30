@@ -33,7 +33,9 @@ import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.NoteUiState
+import com.nhathuy.nextmeet.ui.SolutionActivity
 import com.nhathuy.nextmeet.ui.TestActivity
+import com.nhathuy.nextmeet.utils.AppointmentNavigationCallback
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.utils.NavigationCallback
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
@@ -81,6 +83,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
     private var allAppointments = listOf<AppointmentPlus>()
 
     private var allNotes = listOf<Note>()
+
     // Map lưu trữ danh sách ảnh cho mỗi note
     private val noteImagesMap = mutableMapOf<Int, List<NoteImage>>()
 
@@ -143,7 +146,8 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
             navigateToAppointmentMap()
         }
     }
-    private fun setupClickViewAll(){
+
+    private fun setupClickViewAll() {
         binding.viewAllNotes.setOnClickListener {
             navigateToNotes()
         }
@@ -156,6 +160,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
             navigateToAppointmentMap()
         }
     }
+
     // sử ly khi empty state button
     private fun setupEmptyStateButtons() {
         binding.btnAddAppointment.setOnClickListener {
@@ -193,7 +198,8 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupGoogleMaps() {
-        mapFragment = childFragmentManager.findFragmentById(R.id.map_fragment) as? SupportMapFragment
+        mapFragment =
+            childFragmentManager.findFragmentById(R.id.map_fragment) as? SupportMapFragment
         mapFragment?.getMapAsync(this)
     }
 
@@ -582,29 +588,40 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
     private fun navigateToAppointment(filter: String = "") {
         try {
             // set filter vào searchViewModel truoc khi navigate
-            if(filter.isNotEmpty()){
-                val searchQuery = when(filter){
-                    Constant.FILTER_TODAY -> "Today"
-                    Constant.FILTER_UPCOMING -> "Upcoming"
+            if (filter.isNotEmpty()) {
+                val searchQuery = when (filter) {
+                    Constant.FILTER_TODAY -> getString(R.string.today)
+                    Constant.FILTER_UPCOMING -> getString(R.string.upcoming)
                     else -> ""
                 }
                 if (searchQuery.isNotEmpty()) {
-                    val searchViewModel = ViewModelProvider(requireActivity())[SearchViewModel::class.java]
-                    searchViewModel.setNavigationFilter(searchQuery)
-                }
-            }
-            val bottomNavigation =
-                (activity as? AppCompatActivity)?.findViewById<BottomNavigationView>(R.id.nav_bottom_navigation)
-            if (bottomNavigation != null) {
-                val appointmentMenuItem = bottomNavigation.menu.findItem(R.id.nav_appointment)
-                if (appointmentMenuItem != null) {
-                    bottomNavigation.selectedItemId = appointmentMenuItem.itemId
-                    Log.d("Navigation", "Navigated to Appointment with filter: $filter")
-                    return
+//                    val searchViewModel = ViewModelProvider(requireActivity())[SearchViewModel::class.java]
+//                    searchViewModel.setNavigationFilter(searchQuery)
+                    (activity as? SolutionActivity)?.let { solutionActivity ->
+                        // Switch to appointment tab (index 1)
+                        solutionActivity.binding.viewPager2.setCurrentItem(1, true)
+                        solutionActivity.binding.navBottomNavigation.selectedItemId =
+                            R.id.nav_appointment
+
+                        // Post a delayed action to ensure fragment is ready
+                        solutionActivity.binding.root.postDelayed({
+                            triggerAppointmentWithContactNavigation(searchQuery)
+                        }, 200)
+                    }
                 }
             }
         } catch (e: Exception) {
             Log.e("Navigation", "Failed to navigate to AppointmentFragment: ${e.message}")
+        }
+    }
+
+    private fun triggerAppointmentWithContactNavigation(searchFilter:String) {
+        val fragments = requireActivity().supportFragmentManager.fragments
+        for (fragment in fragments) {
+            if (fragment is AppointmentNavigationCallback && fragment.isVisible) {
+                fragment.onNavigateToAppointmentWithDashboard(searchFilter)
+                break
+            }
         }
     }
 
@@ -646,10 +663,11 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun navigateToAddAppointment() {
-        try{
-            val bottomNavigation = (activity as? AppCompatActivity)?.findViewById<BottomNavigationView>(R.id.nav_bottom_navigation)
+        try {
+            val bottomNavigation =
+                (activity as? AppCompatActivity)?.findViewById<BottomNavigationView>(R.id.nav_bottom_navigation)
 
-            if(bottomNavigation != null){
+            if (bottomNavigation != null) {
                 val appointmentMenuItem = bottomNavigation.menu.findItem(R.id.nav_appointment)
                 if (appointmentMenuItem != null) {
                     bottomNavigation.selectedItemId = appointmentMenuItem.itemId
@@ -663,8 +681,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
                     return
                 }
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("Navigation", "Failed to navigate to add appointment: ${e.message}")
         }
     }
