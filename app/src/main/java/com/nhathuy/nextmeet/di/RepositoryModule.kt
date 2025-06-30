@@ -9,6 +9,7 @@ import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.dao.CustomerDao
 import com.nhathuy.nextmeet.dao.NoteDao
 import com.nhathuy.nextmeet.dao.NoteImageDao
+import com.nhathuy.nextmeet.dao.NotificationDao
 import com.nhathuy.nextmeet.dao.SearchHistoryDao
 import com.nhathuy.nextmeet.dao.TransactionDao
 import com.nhathuy.nextmeet.dao.UserDao
@@ -82,5 +83,9 @@ object RepositoryModule {
     @Provides
     fun providerSearchHistoryDao(database: AppDatabase): SearchHistoryDao {
         return database.searchHistoryDao()
+    }
+    @Provides
+    fun providerNotificationDao(database: AppDatabase) : NotificationDao {
+        return database.notificationDao()
     }
 }

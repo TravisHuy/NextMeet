@@ -32,14 +32,14 @@ import androidx.room.PrimaryKey
     foreignKeys = [ForeignKey(
         entity = User::class,
         parentColumns = ["id"],
-        childColumns = ["userId"],
+        childColumns = ["user_id"],
         onDelete = ForeignKey.CASCADE
     )],
     indices = [
-        Index("userId"),
-        Index("notificationType"),
-        Index("isRead"),
-        Index("scheduledTime")
+        Index("user_id"),
+        Index("notification_type"),
+        Index("is_read"),
+        Index("scheduled_time")
     ]
 )
 data class Notification(
