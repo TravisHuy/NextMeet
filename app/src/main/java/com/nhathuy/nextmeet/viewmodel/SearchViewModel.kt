@@ -36,8 +36,9 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
     private val _suggestions = MutableStateFlow<List<SearchSuggestion>>(emptyList())
     val suggestions: StateFlow<List<SearchSuggestion>> = _suggestions.asStateFlow()
 
-    private val _navigationFilter = MutableLiveData<String?>()
-    val navigationFilter: LiveData<String?> = _navigationFilter
+    private val _navigationFilter = MutableStateFlow("")
+    val navigationFilter: StateFlow<String> = _navigationFilter.asStateFlow()
+
 
     private var currentUserId: Int = 0
 
@@ -336,10 +337,10 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
         _navigationFilter.value = filter
     }
 
+    // THÊM: Method để clear navigation filter
     fun clearNavigationFilter() {
-        _navigationFilter.value = null
+        _navigationFilter.value = ""
     }
-
     override fun onCleared() {
         super.onCleared()
         searchManager.cleanup()
