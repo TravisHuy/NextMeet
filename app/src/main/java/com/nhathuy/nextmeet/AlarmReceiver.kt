@@ -13,118 +13,284 @@ import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.nhathuy.nextmeet.model.NotificationType
+import com.nhathuy.nextmeet.model.NotificationAction
+import com.nhathuy.nextmeet.utils.Constant
 
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val customerId = intent.getIntExtra("customer_id", -1)
-        val date = intent.getStringExtra("date")
-        val time = intent.getStringExtra("time")
-        val address = intent.getStringExtra("address")
-        val notes = intent.getStringExtra("notes")
+        // Extract new notification system extras
+        val notificationId = intent.getIntExtra("notification_id", -1)
+        val title = intent.getStringExtra("title") ?: "Reminder"
+        val message = intent.getStringExtra("message") ?: ""
+        val location = intent.getStringExtra("location")
+        val relatedId = intent.getIntExtra("related_id", -1)
+        val notificationTypeStr = intent.getStringExtra("notification_type") ?: NotificationType.APPOINTMENT_REMINDER.name
+        
+        // Parse notification type
+        val notificationType = try {
+            NotificationType.valueOf(notificationTypeStr)
+        } catch (e: IllegalArgumentException) {
+            Log.w("AlarmReceiver", "Unknown notification type: $notificationTypeStr, defaulting to APPOINTMENT_REMINDER")
+            NotificationType.APPOINTMENT_REMINDER
+        }
 
-        val title = "Appointment Reminder"
-        val content = "You have an appointment at $time on $date"
-        val bigText = "You have an appointment at $time on $date\nAddress: $address\nNotes: $notes"
+        Log.d("AlarmReceiver", "Received alarm for notification $notificationId, type: $notificationType, related_id: $relatedId")
 
-        Log.d("AlarmReceiver", "Received alarm for customer $customerId at $time on $date")
-
-
-        //wake up the device
-        val powerManager= context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        // Wake up the device with improved error handling
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = powerManager.newWakeLock(
             PowerManager.FULL_WAKE_LOCK or
                     PowerManager.ACQUIRE_CAUSES_WAKEUP or
-                    PowerManager.ON_AFTER_RELEASE, "TravisHuy:AlarmWakeLock")
-        wakeLock.acquire(10*60*1000L)
-
+                    PowerManager.ON_AFTER_RELEASE, 
+            "NextMeet:AlarmWakeLock"
+        )
+        
+        try {
+            wakeLock.acquire(5 * 60 * 1000L) // 5 minutes timeout
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Failed to acquire wake lock", e)
+        }
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+        // Get default alarm sound
+        val alarmSound: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
 
-
-        // get the default alram sound
-        val alarmSound : Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-
-        //create a notification channel for android 8.0 and above
+        // Create notification channels for Android 8.0 and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("appointment_channel", "Appointments", NotificationManager.IMPORTANCE_HIGH).apply {
-                description="Appointment reminders"
-                enableLights(true)
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0,1000,500,1000)
-                setSound(alarmSound,
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
-            }
-            notificationManager.createNotificationChannel(channel)
+            createNotificationChannels(context, notificationManager, alarmSound)
         }
 
-        // create an intent for opening the AlarmScreenActivity
-        val alarmScreenIntent = Intent(context,AlarmScreenActivity::class.java).apply {
-            flags=  Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-
-            putExtra("customer_id", customerId)
-            putExtra("date", date)
-            putExtra("time", time)
-            putExtra("address", address)
-            putExtra("notes", notes)
-        }
-
-        val alarmScreenPendingIntent = PendingIntent.getActivity(
-            context,
-            customerId,
-            alarmScreenIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        // Generate notification content based on type
+        val (notificationTitle, notificationContent, bigText) = generateNotificationContent(
+            title, message, location, notificationType
         )
 
-        // Log the alarm history
-        val alarmHistoryIntent = Intent(context, AlarmHistoryActivity::class.java).apply {
-            putExtra("customer_id", customerId)
-            putExtra("date", date)
-            putExtra("time", time)
-            putExtra("notes", notes)
+        // Create pending intents based on notification type
+        val contentIntent = createContentIntent(context, notificationType, relatedId, notificationId)
+        val dismissIntent = createDismissIntent(context, notificationId)
+        val snoozeIntent = createSnoozeIntent(context, intent, notificationId)
+
+        // Get appropriate channel ID
+        val channelId = when (notificationType) {
+            NotificationType.NOTE_REMINDER -> Constant.NOTE_CHANNEL_ID
+            else -> Constant.APPOINTMENT_CHANNEL_ID
         }
 
-
-
-        //create an intent for the swipe action
-        val dismissIntent= Intent(context,DismissAlarmReceiver::class.java).apply {
-            putExtra("notification_id",customerId)
-        }
-        val dismissPendingIntent = PendingIntent.getBroadcast(context,
-            customerId,
-            dismissIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-
-        val notification = NotificationCompat.Builder(context, "appointment_channel")
+        // Build the notification
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setStyle(NotificationCompat.BigTextStyle()
-                .bigText(bigText))
+            .setContentTitle(notificationTitle)
+            .setContentText(notificationContent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setOngoing(true)
-            .setVibrate(longArrayOf(0,1000,500,1000))
+            .setVibrate(longArrayOf(0, 1000, 500, 1000))
             .setSound(alarmSound)
-            .setFullScreenIntent(alarmScreenPendingIntent,true)
-            .build()
+            .setContentIntent(contentIntent)
+            .addAction(R.drawable.ic_dismiss, "Dismiss", dismissIntent)
+            .addAction(R.drawable.zzz, "Snooze", snoozeIntent)
 
+        // Add additional actions based on notification type
+        if (notificationType == NotificationType.APPOINTMENT_REMINDER && !location.isNullOrBlank()) {
+            val navigationIntent = createNavigationIntent(context, relatedId, notificationId)
+            notificationBuilder.addAction(R.drawable.ic_navigation, "Navigate", navigationIntent)
+        }
 
+        val notification = notificationBuilder.build()
         notification.flags = notification.flags or NotificationCompat.FLAG_INSISTENT
 
-        notificationManager.notify(customerId, notification)
-        Log.d("AlarmReceiver", "Notification sent for customer $customerId")
+        notificationManager.notify(notificationId, notification)
+        Log.d("AlarmReceiver", "Notification sent for ID $notificationId")
 
+        // Release wake lock safely
+        try {
+            if (wakeLock.isHeld) {
+                wakeLock.release()
+            }
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Failed to release wake lock", e)
+        }
+    }
 
-        context.startActivity(alarmHistoryIntent)
-        context.startActivity(alarmScreenIntent)
+    /**
+     * Create notification channels for both appointment and note reminders
+     */
+    private fun createNotificationChannels(context: Context, notificationManager: NotificationManager, alarmSound: Uri) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Appointment reminders channel
+            val appointmentChannel = NotificationChannel(
+                Constant.APPOINTMENT_CHANNEL_ID,
+                "Appointment Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications for appointment reminders"
+                enableLights(true)
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 1000, 500, 1000)
+                setSound(
+                    alarmSound,
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+            }
+
+            // Note reminders channel
+            val noteChannel = NotificationChannel(
+                Constant.NOTE_CHANNEL_ID,
+                "Note Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications for note reminders"
+                enableLights(true)
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 1000, 500, 1000)
+                setSound(
+                    alarmSound,
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+            }
+
+            notificationManager.createNotificationChannel(appointmentChannel)
+            notificationManager.createNotificationChannel(noteChannel)
+        }
+    }
+
+    /**
+     * Generate notification content based on notification type
+     */
+    private fun generateNotificationContent(
+        title: String,
+        message: String,
+        location: String?,
+        notificationType: NotificationType
+    ): Triple<String, String, String> {
+        val notificationTitle = when (notificationType) {
+            NotificationType.NOTE_REMINDER -> "Note Reminder"
+            NotificationType.APPOINTMENT_REMINDER -> "Appointment Reminder"
+            else -> title
+        }
+
+        val content = message.ifEmpty {
+            when (notificationType) {
+                NotificationType.NOTE_REMINDER -> "You have a note reminder"
+                NotificationType.APPOINTMENT_REMINDER -> "You have an upcoming appointment"
+                else -> "You have a reminder"
+            }
+        }
+
+        val bigText = buildString {
+            append(content)
+            if (!location.isNullOrBlank()) {
+                append("\n📍 Location: $location")
+            }
+        }
+
+        return Triple(notificationTitle, content, bigText)
+    }
+
+    /**
+     * Create content intent based on notification type
+     */
+    private fun createContentIntent(
+        context: Context,
+        notificationType: NotificationType,
+        relatedId: Int,
+        notificationId: Int
+    ): PendingIntent {
+        val intent = when (notificationType) {
+            NotificationType.NOTE_REMINDER -> {
+                // Intent to open note detail activity
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra(Constant.EXTRA_NOTE_ID, relatedId)
+                    putExtra("action", NotificationAction.OPEN_NOTE.name)
+                }
+            }
+            NotificationType.APPOINTMENT_REMINDER -> {
+                // Intent to open appointment detail activity
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra(Constant.EXTRA_APPOINTMENT_ID, relatedId)
+                    putExtra("action", NotificationAction.OPEN_APPOINTMENT.name)
+                }
+            }
+            else -> {
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+            }
+        }
+
+        return PendingIntent.getActivity(
+            context,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    /**
+     * Create dismiss intent
+     */
+    private fun createDismissIntent(context: Context, notificationId: Int): PendingIntent {
+        val dismissIntent = Intent(context, DismissAlarmReceiver::class.java).apply {
+            putExtra("notification_id", notificationId)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            notificationId,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    /**
+     * Create snooze intent
+     */
+    private fun createSnoozeIntent(context: Context, originalIntent: Intent, notificationId: Int): PendingIntent {
+        val snoozeIntent = Intent(context, SnoozeAlarmReceiver::class.java).apply {
+            // Pass through the original intent extras for snoozing
+            putExtra("notification_id", notificationId)
+            putExtra("title", originalIntent.getStringExtra("title"))
+            putExtra("message", originalIntent.getStringExtra("message"))
+            putExtra("location", originalIntent.getStringExtra("location"))
+            putExtra("related_id", originalIntent.getIntExtra("related_id", -1))
+            putExtra("notification_type", originalIntent.getStringExtra("notification_type"))
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            notificationId + 10000, // Offset to avoid conflicts
+            snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    /**
+     * Create navigation intent for appointments
+     */
+    private fun createNavigationIntent(context: Context, appointmentId: Int, notificationId: Int): PendingIntent {
+        val navigationIntent = Intent(context, TurnByTurnNavigationActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(Constant.EXTRA_APPOINTMENT_ID, appointmentId)
+            putExtra("action", NotificationAction.START_NAVIGATION.name)
+        }
+        return PendingIntent.getActivity(
+            context,
+            notificationId + 20000, // Offset to avoid conflicts
+            navigationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
 }

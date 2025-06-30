@@ -8,6 +8,10 @@ object Constant {
     const val EXTRA_NOTE_ID = "note_id"
     const val LOCATION_PERMISSION_REQUEST_CODE = 1001
     const val EXTRA_APPOINTMENT_ID= "extra_appointment_id"
+    
+    // Notification channel constants
+    const val APPOINTMENT_CHANNEL_ID = "appointment_reminders"
+    const val NOTE_CHANNEL_ID = "note_reminders"
 
     const val FILTER_TODAY = "Today"
     const val FILTER_PINNED = "Pinned"
