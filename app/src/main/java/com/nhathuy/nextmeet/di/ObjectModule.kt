@@ -17,10 +17,12 @@ import com.nhathuy.nextmeet.repository.AppointmentRepository
 import com.nhathuy.nextmeet.repository.ContactRepository
 import com.nhathuy.nextmeet.repository.CustomerRepository
 import com.nhathuy.nextmeet.repository.NoteRepository
+import com.nhathuy.nextmeet.repository.NotificationRepository
 import com.nhathuy.nextmeet.repository.SearchRepository
 import com.nhathuy.nextmeet.repository.TransactionRepository
 import com.nhathuy.nextmeet.repository.UserRepository
 import com.nhathuy.nextmeet.utils.ImageManager
+import com.nhathuy.nextmeet.utils.NotificationManagerService
 import com.nhathuy.nextmeet.utils.SessionManager
 import com.nhathuy.nextmeet.utils.UniversalSearchManager
 import dagger.Module
@@ -118,5 +120,14 @@ object ObjectModule {
         @ApplicationContext context: Context
     ): ImageManager {
         return ImageManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun providerNotificationManagerService(
+        @ApplicationContext context : Context,
+        notificationRepository: NotificationRepository
+    ) : NotificationManagerService{
+        return NotificationManagerService(context,notificationRepository)
     }
 }
