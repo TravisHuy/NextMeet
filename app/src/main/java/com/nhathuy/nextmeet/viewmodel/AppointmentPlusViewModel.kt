@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.nextmeet.model.AppointmentPlus
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AppointmentPlusViewModel @Inject constructor(
-    private val appointmentRepository: AppointmentPlusRepository
+    private val appointmentRepository: AppointmentPlusRepository,
+    private val notificationViewModel: NotificationViewModel
 ) : ViewModel() {
 
     private val _appointmentUiState = MutableStateFlow<AppointmentUiState>(AppointmentUiState.Idle)
@@ -63,6 +65,13 @@ class AppointmentPlusViewModel @Inject constructor(
                 )
 
                 if (result.isSuccess) {
+                    val createdAppointmentId = result.getOrThrow()
+
+                    // hẹn cuộc hẹn
+                    val appointmentWithId = appointment.copy(id = createdAppointmentId.toInt())
+                    scheduleAppointmentNotification(appointmentWithId, appointment.contactId)
+
+
                     _appointmentUiState.value = AppointmentUiState.AppointmentCreated(
                         result.getOrThrow(),
                         "Cuộc hẹn đã được tạo thành công"
@@ -162,6 +171,9 @@ class AppointmentPlusViewModel @Inject constructor(
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
+                // Hủy notifications đầu tiên
+                cancelAppointmentNotifications(appointmentId)
+
                 val result = appointmentRepository.deleteAppointment(appointmentId)
                 if (result.isSuccess) {
                     _appointmentUiState.value = AppointmentUiState.AppointmentDeleted(
@@ -212,8 +224,14 @@ class AppointmentPlusViewModel @Inject constructor(
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
+                // hủy cuộc hẹn cũ với notification
+                cancelAppointmentNotifications(appointment.id)
                 val result = appointmentRepository.updateAppointment(appointment)
                 if (result.isSuccess) {
+
+                    // tạo notification mới
+                    scheduleAppointmentNotification(appointment, appointment.contactId)
+
                     _appointmentUiState.value = AppointmentUiState.AppointmentUpdated(
                         "Cuộc hẹn đã được cập nhật thành công"
                     )
@@ -228,6 +246,60 @@ class AppointmentPlusViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Thông báo trước cuộc hẹn
+     */
+    fun scheduleAppointmentNotification(appointment: AppointmentPlus,contactId:Int?) {
+        viewModelScope.launch {
+            try {
+                val now = System.currentTimeMillis()
+                val notificationTime = appointment.startDateTime - (5 * 60 * 1000)
+
+                if (notificationTime > now) {
+                    val contactName = if (contactId != null) {
+                        "Liên hệ"
+                    } else {
+                        null
+                    }
+
+                    notificationViewModel.scheduleAppointmentNotification(
+                        userId = appointment.userId,
+                        appointmentId = appointment.id,
+                        title = "Nhắc nhở cuộc hẹn: ${appointment.title}",
+                        description = "Cuộc hẹn sẽ bắt đầu trong 5 phút",
+                        appointmentTime = appointment.startDateTime,
+                        location = appointment.location.takeIf { it.isNotEmpty() },
+                        contactName = contactName
+                    )
+                }
+            }
+            catch (e:Exception){
+                Log.e("AppointmentViewModel", "Failed to schedule notification: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Cancel all notifications for appointment
+     */
+    private fun cancelAppointmentNotifications(appointmentId: Int) {
+        viewModelScope.launch {
+            try {
+                notificationViewModel.cancelAppointmentNotifications(appointmentId)
+            } catch (e: Exception) {
+                // Log error but don't fail the appointment operation
+               Log.e("AppointmentViewModel", "Failed to cancel notifications: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Check notification permissions
+     */
+    fun checkNotificationPermissions(): Boolean {
+        return notificationViewModel.checkNotificationPermissions()
     }
 
     /**
@@ -496,4 +568,5 @@ class AppointmentPlusViewModel @Inject constructor(
             "cancelled" to allAppointments.count { it.status == AppointmentStatus.CANCELLED }
         )
     }
+
 }

@@ -38,8 +38,10 @@ import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
+import com.nhathuy.nextmeet.resource.NotificationUiState
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
+import com.nhathuy.nextmeet.viewmodel.NotificationViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -58,6 +60,7 @@ class AddAppointmentActivity : AppCompatActivity() {
     private lateinit var userViewModel: UserViewModel
     private lateinit var contactViewModel: ContactViewModel
     private lateinit var appointmentViewModel: AppointmentPlusViewModel
+    private lateinit var notificationViewModel : NotificationViewModel
 
     // Data variables
     private var currentUserId: Int = 0
@@ -84,6 +87,10 @@ class AddAppointmentActivity : AppCompatActivity() {
 
     // has show contact
     private var hasShownNoContactDialog = false
+
+    // Notification tracking
+    private var isNotificationScheduled = false
+    private var notificationPermissionChecked = false
 
     // Activity Result Launcher
     private val mapPickerLauncher = registerForActivityResult(
@@ -139,7 +146,7 @@ class AddAppointmentActivity : AppCompatActivity() {
         loadInitialData()
         setupUI()
         observeData()
-
+        checkNotificationPermissions()
     }
 
     private fun initializeData() {
@@ -185,6 +192,34 @@ class AddAppointmentActivity : AppCompatActivity() {
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
         contactViewModel = ViewModelProvider(this)[ContactViewModel::class.java]
         appointmentViewModel = ViewModelProvider(this)[AppointmentPlusViewModel::class.java]
+        notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
+    }
+
+    private fun checkNotificationPermissions() {
+        if (!notificationPermissionChecked) {
+            notificationPermissionChecked = true
+            val hasPermissions = appointmentViewModel.checkNotificationPermissions()
+
+            if (!hasPermissions) {
+                showNotificationPermissionDialog()
+            }
+        }
+    }
+
+    private fun showNotificationPermissionDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Quyền thông báo")
+            .setMessage("Ứng dụng cần quyền thông báo để nhắc nhở bạn về cuộc hẹn sắp tới. Bạn có muốn bật quyền này không?")
+            .setPositiveButton("Bật quyền") { dialog, _ ->
+                dialog.dismiss()
+                // Direct user to settings
+                showMessage("Vui lòng bật quyền thông báo trong Cài đặt > Ứng dụng > NextMeet > Thông báo")
+            }
+            .setNegativeButton("Bỏ qua") { dialog, _ ->
+                dialog.dismiss()
+                showMessage("Lưu ý: Sẽ không có thông báo nhắc nhở cho cuộc hẹn")
+            }
+            .show()
     }
 
     private fun setupUI() {
@@ -595,6 +630,13 @@ class AddAppointmentActivity : AppCompatActivity() {
                 handleContactUiState(state)
             }
         }
+
+        // Add notification observation
+        lifecycleScope.launch {
+            notificationViewModel.notificationUiState.collect { state ->
+                handleNotificationUiState(state)
+            }
+        }
     }
 
     private fun handleAppointmentUiState(state: AppointmentUiState) {
@@ -633,6 +675,20 @@ class AddAppointmentActivity : AppCompatActivity() {
             else -> {}
         }
     }
+    private fun handleNotificationUiState(state: NotificationUiState) {
+        when (state) {
+            is NotificationUiState.NotificationScheduled -> {
+                isNotificationScheduled = true
+                Log.d("AddAppointment", "Notification scheduled: ${state.message}")
+            }
+            is NotificationUiState.Error -> {
+                isNotificationScheduled = false
+                Log.e("AddAppointment", "Notification error: ${state.message}")
+                // Don't show error to user as notification is secondary feature
+            }
+            else -> {}
+        }
+    }
 
     private fun loadInitialData() {
         if (currentUserId != 0) {
@@ -642,6 +698,7 @@ class AddAppointmentActivity : AppCompatActivity() {
             }
 
             contactViewModel.getContactNamesAndIds(currentUserId)
+            notificationViewModel.setCurrentUserId(currentUserId)
         }
     }
 
