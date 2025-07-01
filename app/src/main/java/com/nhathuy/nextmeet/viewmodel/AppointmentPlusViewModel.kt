@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.nextmeet.model.AppointmentPlus
@@ -42,7 +43,12 @@ class AppointmentPlusViewModel @Inject constructor(
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
+                Log.d("AppointmentPlusViewModel", "Creating new appointment: ${appointment.title}")
+                Log.d("AppointmentPlusViewModel", "Contact ID: ${appointment.contactId}, User ID: ${appointment.userId}")
+                Log.d("AppointmentPlusViewModel", "Start time: ${appointment.startDateTime}")
+                
                 if (appointment.contactId == null) {
+                    Log.e("AppointmentPlusViewModel", "Cannot create appointment: contactId is null")
                     _appointmentUiState.value = AppointmentUiState.Error("Vui lòng chọn liên hệ cho cuộc hẹn")
                     return@launch
                 }
@@ -63,16 +69,20 @@ class AppointmentPlusViewModel @Inject constructor(
                 )
 
                 if (result.isSuccess) {
+                    val appointmentId = result.getOrThrow()
+                    Log.d("AppointmentPlusViewModel", "Appointment created successfully with ID: $appointmentId")
                     _appointmentUiState.value = AppointmentUiState.AppointmentCreated(
-                        result.getOrThrow(),
+                        appointmentId,
                         "Cuộc hẹn đã được tạo thành công"
                     )
                 } else {
+                    Log.e("AppointmentPlusViewModel", "Failed to create appointment: ${result.exceptionOrNull()?.message}")
                     _appointmentUiState.value = AppointmentUiState.Error(
                         result.exceptionOrNull()?.message ?: "Lỗi không xác định"
                     )
                 }
             } catch (e: Exception) {
+                Log.e("AppointmentPlusViewModel", "Exception during appointment creation", e)
                 _appointmentUiState.value = AppointmentUiState.Error(
                     e.message ?: "Lỗi khi tạo cuộc hẹn"
                 )
@@ -212,17 +222,24 @@ class AppointmentPlusViewModel @Inject constructor(
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
+                Log.d("AppointmentPlusViewModel", "Updating appointment ID: ${appointment.id}")
+                Log.d("AppointmentPlusViewModel", "Title: ${appointment.title}, Contact ID: ${appointment.contactId}")
+                Log.d("AppointmentPlusViewModel", "Start time: ${appointment.startDateTime}")
+                
                 val result = appointmentRepository.updateAppointment(appointment)
                 if (result.isSuccess) {
+                    Log.d("AppointmentPlusViewModel", "Appointment updated successfully")
                     _appointmentUiState.value = AppointmentUiState.AppointmentUpdated(
                         "Cuộc hẹn đã được cập nhật thành công"
                     )
                 } else {
+                    Log.e("AppointmentPlusViewModel", "Failed to update appointment: ${result.exceptionOrNull()?.message}")
                     _appointmentUiState.value = AppointmentUiState.Error(
                         result.exceptionOrNull()?.message ?: "Lỗi khi cập nhật cuộc hẹn"
                     )
                 }
             } catch (e: Exception) {
+                Log.e("AppointmentPlusViewModel", "Exception during appointment update", e)
                 _appointmentUiState.value = AppointmentUiState.Error(
                     e.message ?: "Lỗi khi cập nhật cuộc hẹn"
                 )

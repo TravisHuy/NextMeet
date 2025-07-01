@@ -704,6 +704,17 @@ class AddAppointmentActivity : AppCompatActivity() {
             return
         }
 
+        // Validate that the appointment time is in the future
+        val currentTime = System.currentTimeMillis()
+        val reminderTime = appointmentTime - (5 * 60 * 1000) // 5 minutes before
+        
+        if (reminderTime <= currentTime) {
+            Log.w("AddAppointment", "Skipping notification scheduling: reminder time is in the past")
+            Log.w("AddAppointment", "Reminder time: $reminderTime, Current time: $currentTime")
+            showMessage("⚠️ Thời gian nhắc nhở đã qua, không thể đặt lịch thông báo")
+            return
+        }
+
         // Get contact name for notification
         val contactName = if (currentContactId != 0) {
             contactMap.values.find { it.id == currentContactId }?.name
@@ -713,7 +724,7 @@ class AddAppointmentActivity : AppCompatActivity() {
 
         Log.d("AddAppointment", "Scheduling notification for appointment $appointmentId")
         Log.d("AddAppointment", "Title: $title, Contact: $contactName, Location: $appointmentLocation")
-        Log.d("AddAppointment", "Appointment time: $appointmentTime")
+        Log.d("AddAppointment", "Appointment time: $appointmentTime, Reminder time: $reminderTime")
         
         // Schedule notification in a separate coroutine to avoid blocking UI
         lifecycleScope.launch {
