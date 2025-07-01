@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.util.Log
@@ -61,8 +62,9 @@ class AlarmReceiver : BroadcastReceiver() {
             val location = intent.getStringExtra("location")
             val relatedId = intent.getIntExtra("related_id", -1)
             val notificationTypeString = intent.getStringExtra("notification_type") ?: ""
+            val isAlarm = intent.getBooleanExtra("is_alarm", false) // QUAN TRỌNG: Phân biệt reminder và alarm
 
-            Log.d(TAG, "Processing notification: ID=$notificationId, Type=$notificationTypeString")
+            Log.d(TAG, "Processing notification: ID=$notificationId, Type=$notificationTypeString, IsAlarm=$isAlarm")
 
             if (notificationId == -1 || notificationTypeString.isEmpty()) {
                 Log.e(TAG, "Invalid notification data received")
@@ -76,27 +78,30 @@ class AlarmReceiver : BroadcastReceiver() {
                 return
             }
 
-            // Show notification
-            showNotification(
-                context = context,
-                notificationId = notificationId,
-                title = title,
-                message = message,
-                location = location,
-                relatedId = relatedId,
-                notificationType = notificationType
-            )
-
-            // Launch AlarmScreenActivity for full-screen experience
-            launchAlarmScreen(
-                context = context,
-                notificationId = notificationId,
-                title = title,
-                message = message,
-                location = location,
-                relatedId = relatedId,
-                notificationType = notificationType
-            )
+            // Xử lý khác nhau cho reminder và alarm
+            if (isAlarm) {
+                // ĐÂY LÀ ALARM - Báo thức đúng giờ (cần toàn màn hình + âm thanh to)
+                handleAlarmNotification(
+                    context = context,
+                    notificationId = notificationId,
+                    title = title,
+                    message = message,
+                    location = location,
+                    relatedId = relatedId,
+                    notificationType = notificationType
+                )
+            } else {
+                // ĐÂY LÀ REMINDER - Thông báo nhắc nhở (chỉ notification thường)
+                handleReminderNotification(
+                    context = context,
+                    notificationId = notificationId,
+                    title = title,
+                    message = message,
+                    location = location,
+                    relatedId = relatedId,
+                    notificationType = notificationType
+                )
+            }
 
             // Update notification status in database
             updateNotificationStatus(notificationId)
@@ -110,7 +115,72 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun showNotification(
+    /**
+     * Xử lý thông báo REMINDER (5 phút trước) - Chỉ hiển thị notification thường
+     */
+    private fun handleReminderNotification(
+        context: Context,
+        notificationId: Int,
+        title: String,
+        message: String,
+        location: String?,
+        relatedId: Int,
+        notificationType: NotificationType
+    ) {
+        Log.d(TAG, "Handling REMINDER notification")
+
+        showReminderNotification(
+            context = context,
+            notificationId = notificationId,
+            title = title,
+            message = message,
+            location = location,
+            relatedId = relatedId,
+            notificationType = notificationType
+        )
+    }
+
+    /**
+     * Xử lý thông báo ALARM (đúng giờ) - Hiển thị toàn màn hình + âm thanh báo thức
+     */
+    private fun handleAlarmNotification(
+        context: Context,
+        notificationId: Int,
+        title: String,
+        message: String,
+        location: String?,
+        relatedId: Int,
+        notificationType: NotificationType
+    ) {
+        Log.d(TAG, "Handling ALARM notification")
+
+        // 1. Hiển thị notification với âm thanh báo thức mạnh
+        showAlarmNotification(
+            context = context,
+            notificationId = notificationId,
+            title = title,
+            message = message,
+            location = location,
+            relatedId = relatedId,
+            notificationType = notificationType
+        )
+
+        // 2. Mở màn hình báo thức toàn màn hình
+        launchAlarmScreen(
+            context = context,
+            notificationId = notificationId,
+            title = title,
+            message = message,
+            location = location,
+            relatedId = relatedId,
+            notificationType = notificationType
+        )
+    }
+
+    /**
+     * Hiển thị notification REMINDER (nhẹ nhàng hơn)
+     */
+    private fun showReminderNotification(
         context: Context,
         notificationId: Int,
         title: String,
@@ -121,11 +191,71 @@ class AlarmReceiver : BroadcastReceiver() {
     ) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Determine channel ID based on notification type
         val channelId = when (notificationType) {
             NotificationType.APPOINTMENT_REMINDER -> NotificationManagerService.APPOINTMENT_CHANNEL_ID
             NotificationType.NOTE_REMINDER -> NotificationManagerService.NOTE_CHANNEL_ID
             else -> NotificationManagerService.APPOINTMENT_CHANNEL_ID
+        }
+
+        // Intent để mở app khi tap vào notification
+        val openAppIntent = Intent(context, SolutionActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("action", "open_appointment")
+            putExtra("appointment_id", relatedId)
+        }
+        val openAppPendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId,
+            openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val notificationSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.notification}")
+
+        val notificationContent = formatReminderContent(title, message, location, notificationType)
+
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(getShortContent(message))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(notificationContent))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT) // Ưu tiên thấp hơn alarm
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setSound(notificationSoundUri)
+            .setAutoCancel(true) // Tự động tắt khi tap
+            .setOngoing(false) // Không cố định
+            .setVibrate(longArrayOf(0, 150, 100, 150)) // Rung nhẹ hơn
+            .setContentIntent(openAppPendingIntent)
+            .setOnlyAlertOnce(true)
+
+        // Thêm action cho reminder
+//        addReminderActions(context, notificationBuilder, notificationType, relatedId, location, notificationId)
+
+//        val notification = notificationBuilder.build()
+//        notification.flags = notification.flags and NotificationCompat.FLAG_INSISTENT.inv()
+
+        notificationManager.notify(notificationId, notificationBuilder.build())
+        Log.d(TAG, "Reminder notification shown for ID: $notificationId")
+    }
+
+    /**
+     * Hiển thị notification ALARM (mạnh mẽ hơn)
+     */
+    private fun showAlarmNotification(
+        context: Context,
+        notificationId: Int,
+        title: String,
+        message: String,
+        location: String?,
+        relatedId: Int,
+        notificationType: NotificationType
+    ) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val channelId = when (notificationType) {
+            NotificationType.APPOINTMENT_REMINDER -> NotificationManagerService.APPOINTMENT_ALARM_CHANNEL_ID // Dùng alarm channel
+            NotificationType.NOTE_REMINDER -> NotificationManagerService.NOTE_CHANNEL_ID
+            else -> NotificationManagerService.APPOINTMENT_ALARM_CHANNEL_ID
         }
 
         // Create AlarmScreen intent
@@ -139,7 +269,7 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Create dismiss intent
+        // Dismiss intent
         val dismissIntent = Intent(context, DismissAlarmReceiver::class.java).apply {
             putExtra("notification_id", notificationId)
             putExtra("related_id", relatedId)
@@ -152,37 +282,35 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Get alarm sound
+        // Âm thanh báo thức mạnh
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
 
-        // Build notification content
-        val notificationContent = formatNotificationContent(title, message, location, notificationType)
+        val notificationContent = formatAlarmContent(title, message, location, notificationType)
 
-        // Build notification
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(title)
-            .setContentText(getShortContent(message))
+            .setContentTitle("⏰ $title")
+            .setContentText("ĐÃ ĐẾN GIỜ CUỘC HẸN!")
             .setStyle(NotificationCompat.BigTextStyle().bigText(notificationContent))
-            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setPriority(NotificationCompat.PRIORITY_MAX) // Ưu tiên cao nhất
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setAutoCancel(false)
-            .setOngoing(true)
-            .setVibrate(longArrayOf(0, 1000, 500, 1000))
-            .setSound(alarmSound)
+            .setAutoCancel(false) // Không tự động tắt
+            .setOngoing(true) // Cố định trên thanh thông báo
+            .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000)) // Rung mạnh
+            .setSound(alarmSound) // Âm thanh báo thức
             .setContentIntent(alarmScreenPendingIntent)
             .setDeleteIntent(dismissPendingIntent)
-            .setFullScreenIntent(alarmScreenPendingIntent, true)
+            .setFullScreenIntent(alarmScreenPendingIntent, true) // Toàn màn hình
 
-        // Add action buttons
-        addNotificationActions(context, notificationBuilder, notificationType, relatedId, location, notificationId, title, message)
+        // Thêm action cho alarm
+        addAlarmActions(context, notificationBuilder, notificationType, relatedId, location, notificationId, title, message)
 
         val notification = notificationBuilder.build()
-        notification.flags = notification.flags or NotificationCompat.FLAG_INSISTENT
+        notification.flags = notification.flags or NotificationCompat.FLAG_INSISTENT // Lặp lại âm thanh
 
         notificationManager.notify(notificationId, notification)
-        Log.d(TAG, "Notification shown for ID: $notificationId")
+        Log.d(TAG, "Alarm notification shown for ID: $notificationId")
     }
 
     private fun launchAlarmScreen(
@@ -221,16 +349,13 @@ class AlarmReceiver : BroadcastReceiver() {
                     Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP
 
-            // New notification system data
             putExtra("notification_id", notificationId)
             putExtra("title", title)
             putExtra("message", message)
             putExtra("location", location)
             putExtra("related_id", relatedId)
             putExtra("notification_type", notificationType.name)
-
-            // Legacy compatibility for AlarmScreenActivity
-            putExtra("customer_id", notificationId) // Use notification_id as customer_id for compatibility
+            putExtra("customer_id", notificationId)
 
             when (notificationType) {
                 NotificationType.APPOINTMENT_REMINDER -> {
@@ -255,7 +380,51 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun addNotificationActions(
+    /**
+     * Thêm action cho REMINDER (ít action hơn)
+     */
+    private fun addReminderActions(
+        context: Context,
+        builder: NotificationCompat.Builder,
+        notificationType: NotificationType,
+        relatedId: Int,
+        location: String?,
+        notificationId: Int
+    ) {
+        // Action xem chi tiết
+        val viewIntent = Intent(context, SolutionActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("action", "view_appointment")
+            putExtra("appointment_id", relatedId)
+        }
+        val viewPendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId + 1000,
+            viewIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(R.drawable.ic_eye, "Xem", viewPendingIntent)
+
+        // Action điều hướng (chỉ khi có địa chỉ)
+        if (!location.isNullOrBlank()) {
+            val navIntent = Intent(context, SolutionActivity::class.java).apply {
+                putExtra("location", location)
+                putExtra("notification_id", notificationId)
+            }
+            val navPendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId + 2000,
+                navIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(R.drawable.ic_navigation, "Dẫn đường", navPendingIntent)
+        }
+    }
+
+    /**
+     * Thêm action cho ALARM (nhiều action hơn)
+     */
+    private fun addAlarmActions(
         context: Context,
         builder: NotificationCompat.Builder,
         notificationType: NotificationType,
@@ -287,8 +456,6 @@ class AlarmReceiver : BroadcastReceiver() {
             putExtra("title", title)
             putExtra("message", message)
             putExtra("location", location)
-
-            // Legacy compatibility
             putExtra("customer_id", notificationId)
             putExtra("date", extractDateFromMessage(message))
             putExtra("time", extractTimeFromMessage(message))
@@ -303,62 +470,53 @@ class AlarmReceiver : BroadcastReceiver() {
         )
         builder.addAction(R.drawable.zzz, "Báo lại", snoozePendingIntent)
 
-        // Type-specific actions
-        when (notificationType) {
-            NotificationType.APPOINTMENT_REMINDER -> {
-                if (!location.isNullOrBlank()) {
-                    val navigationIntent = Intent(context, SolutionActivity::class.java).apply {
-                        putExtra("location", location)
-                        putExtra("notification_id", notificationId)
-                    }
-                    val navigationPendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        notificationId + 3000,
-                        navigationIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                    builder.addAction(R.drawable.ic_navigation, "Dẫn đường", navigationPendingIntent)
-                }
+        // Navigation action (chỉ cho appointment)
+        if (notificationType == NotificationType.APPOINTMENT_REMINDER && !location.isNullOrBlank()) {
+            val navigationIntent = Intent(context, SolutionActivity::class.java).apply {
+                putExtra("location", location)
+                putExtra("notification_id", notificationId)
             }
-            NotificationType.NOTE_REMINDER -> {
-                val openNoteIntent = Intent(context, SolutionActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra("action", "open_note")
-                    putExtra("note_id", relatedId)
-                }
-                val openNotePendingIntent = PendingIntent.getActivity(
-                    context,
-                    notificationId + 3000,
-                    openNoteIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                builder.addAction(R.drawable.ic_note, "Mở ghi chú", openNotePendingIntent)
-            }
-            else -> {}
+            val navigationPendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId + 3000,
+                navigationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(R.drawable.ic_navigation, "Dẫn đường", navigationPendingIntent)
         }
     }
 
-    private fun formatNotificationContent(
+    private fun formatReminderContent(
         title: String,
         message: String,
         location: String?,
         notificationType: NotificationType
     ): String {
         return buildString {
-            val icon = when (notificationType) {
-                NotificationType.APPOINTMENT_REMINDER -> "📅"
-                NotificationType.NOTE_REMINDER -> "📝"
-                else -> "🔔"
-            }
-
-            append("$icon $title\n")
+//            append("🔔 NHẮC NHỞ: Còn 5 phút nữa!\n\n")
+//            append("📅 $title\n")
             append(message)
+//            if (!location.isNullOrBlank()) {
+//                append("\n📍 $location")
+//            }
+            append("\n💡 Hãy chuẩn bị để bắt đầu cuộc hẹn!")
+        }
+    }
 
+    private fun formatAlarmContent(
+        title: String,
+        message: String,
+        location: String?,
+        notificationType: NotificationType
+    ): String {
+        return buildString {
+            append("🚨 ĐÃ ĐẾN GIỜ!\n\n")
+            append("📅 $title\n")
+            append(message)
             if (!location.isNullOrBlank()) {
                 append("\n📍 $location")
             }
-
-            append("\n\n⏰ ${getCurrentTime()}")
+            append("\n\n⚡ Cuộc hẹn đã bắt đầu!")
         }
     }
 
@@ -381,7 +539,7 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     private fun getCurrentDate(): String {
-        val formatter =SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         return formatter.format(Date())
     }
 

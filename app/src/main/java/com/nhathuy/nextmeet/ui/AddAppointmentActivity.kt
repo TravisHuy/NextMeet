@@ -198,11 +198,11 @@ class AddAppointmentActivity : AppCompatActivity() {
     private fun checkNotificationPermissions() {
         if (!notificationPermissionChecked) {
             notificationPermissionChecked = true
-            val hasPermissions = appointmentViewModel.checkNotificationPermissions()
+//            val hasPermissions = appointmentViewModel.checkNotificationPermissions()
 
-            if (!hasPermissions) {
-                showNotificationPermissionDialog()
-            }
+//            if (!hasPermissions) {
+//                showNotificationPermissionDialog()
+//            }
         }
     }
 
@@ -731,7 +731,12 @@ class AddAppointmentActivity : AppCompatActivity() {
             isPinned = isPinned
         )
 
-        appointmentViewModel.createAppointment(appointment)
+        if(reminderTime != null) {
+            appointmentViewModel.createAppointment(appointment,true)
+        }
+        else{
+            appointmentViewModel.createAppointment(appointment,false)
+        }
     }
 
     private fun updateAppointment() {
@@ -764,7 +769,12 @@ class AddAppointmentActivity : AppCompatActivity() {
             isPinned = isPinned
         )
 
-        appointmentViewModel.updateAppointment(updatedAppointment)
+        if(reminderTime != null){
+            appointmentViewModel.updateAppointment(updatedAppointment,true)
+        }
+        else{
+            appointmentViewModel.updateAppointment(updatedAppointment,false)
+        }
     }
 
     private fun validateAppointmentInput(title: String): Boolean {

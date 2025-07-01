@@ -5,8 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.Contact
+import com.nhathuy.nextmeet.model.NotificationType
 import com.nhathuy.nextmeet.repository.AppointmentPlusRepository
+import com.nhathuy.nextmeet.repository.ContactRepository
 import com.nhathuy.nextmeet.resource.AppointmentUiState
+import com.nhathuy.nextmeet.utils.NotificationManagerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AppointmentPlusViewModel @Inject constructor(
     private val appointmentRepository: AppointmentPlusRepository,
-    private val notificationViewModel: NotificationViewModel
+    private val contactRepository : ContactRepository,
+    private val notificationManagerService: NotificationManagerService
 ) : ViewModel() {
 
     private val _appointmentUiState = MutableStateFlow<AppointmentUiState>(AppointmentUiState.Idle)
@@ -39,7 +44,8 @@ class AppointmentPlusViewModel @Inject constructor(
      * Tạo cuộc hẹn mới
      */
     fun createAppointment(
-        appointment: AppointmentPlus
+        appointment: AppointmentPlus,
+        shouldSetReminder: Boolean = false,
     ) {
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
@@ -69,8 +75,12 @@ class AppointmentPlusViewModel @Inject constructor(
 
                     // hẹn cuộc hẹn
                     val appointmentWithId = appointment.copy(id = createdAppointmentId.toInt())
-                    scheduleAppointmentNotification(appointmentWithId, appointment.contactId)
-
+                    if (shouldSetReminder) {
+                        scheduleAppointmentNotification(
+                            appointmentWithId,
+                            appointment.contactId
+                        )
+                    }
 
                     _appointmentUiState.value = AppointmentUiState.AppointmentCreated(
                         result.getOrThrow(),
@@ -172,7 +182,7 @@ class AppointmentPlusViewModel @Inject constructor(
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
                 // Hủy notifications đầu tiên
-                cancelAppointmentNotifications(appointmentId)
+                cancelAppointmentNotification(appointmentId)
 
                 val result = appointmentRepository.deleteAppointment(appointmentId)
                 if (result.isSuccess) {
@@ -218,26 +228,35 @@ class AppointmentPlusViewModel @Inject constructor(
     }
 
     /**
-     * Cập nhật thông tin cuộc hẹn
+     * Cập nhật cuộc hẹn
      */
-    fun updateAppointment(appointment: AppointmentPlus) {
+    fun updateAppointment(
+        appointment: AppointmentPlus,
+        shouldSetReminder: Boolean = false,
+    ) {
         viewModelScope.launch {
             _appointmentUiState.value = AppointmentUiState.Loading
             try {
-                // hủy cuộc hẹn cũ với notification
-                cancelAppointmentNotifications(appointment.id)
                 val result = appointmentRepository.updateAppointment(appointment)
-                if (result.isSuccess) {
 
-                    // tạo notification mới
-                    scheduleAppointmentNotification(appointment, appointment.contactId)
+                if (result.isSuccess) {
+                    // Xóa notification cũ trước (nếu có)
+                    cancelAppointmentNotification(appointment.id)
+
+                    // Tạo notification mới nếu user chọn reminder
+                    if (shouldSetReminder && appointment.contactId != null) {
+                        scheduleAppointmentNotification(
+                            appointment,
+                            appointment.contactId
+                        )
+                    }
 
                     _appointmentUiState.value = AppointmentUiState.AppointmentUpdated(
                         "Cuộc hẹn đã được cập nhật thành công"
                     )
                 } else {
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        result.exceptionOrNull()?.message ?: "Lỗi khi cập nhật cuộc hẹn"
+                        result.exceptionOrNull()?.message ?: "Lỗi không xác định"
                     )
                 }
             } catch (e: Exception) {
@@ -249,57 +268,62 @@ class AppointmentPlusViewModel @Inject constructor(
     }
 
     /**
-     * Thông báo trước cuộc hẹn
+     * Lên lịch thông báo cho cuộc hẹn
      */
-    fun scheduleAppointmentNotification(appointment: AppointmentPlus,contactId:Int?) {
+    fun scheduleAppointmentNotification(
+        appointment: AppointmentPlus,
+        contactId: Int
+    ) {
         viewModelScope.launch {
             try {
                 val now = System.currentTimeMillis()
                 val notificationTime = appointment.startDateTime - (5 * 60 * 1000)
 
-                if (notificationTime > now) {
-                    val contactName = if (contactId != null) {
-                        "Liên hệ"
+                if(notificationTime > now){
+                    // Lấy thông tin contact để hiển thị trong notification
+                    val contactResult = contactRepository.getContactById(contactId)
+                    val contactName = if (contactResult.isSuccess) {
+                        contactResult.getOrNull()?.name ?: "Không rõ"
                     } else {
-                        null
+                        "Không rõ"
                     }
 
-                    notificationViewModel.scheduleAppointmentNotification(
+                    val success = notificationManagerService.scheduleAppointmentNotification(
                         userId = appointment.userId,
                         appointmentId = appointment.id,
-                        title = "Nhắc nhở cuộc hẹn: ${appointment.title}",
-                        description = "Cuộc hẹn sẽ bắt đầu trong 5 phút",
+                        title = appointment.title,
+                        description = appointment.description ?: "",
                         appointmentTime = appointment.startDateTime,
-                        location = appointment.location.takeIf { it.isNotEmpty() },
+                        location = appointment.location,
                         contactName = contactName
                     )
+
+                    if (!success) {
+                        // Log lỗi nhưng không fail toàn bộ process tạo appointment
+                        Log.w("AppointmentViewModel", "Không thể tạo notification cho cuộc hẹn ${appointment.id}")
+                    }
                 }
-            }
-            catch (e:Exception){
-                Log.e("AppointmentViewModel", "Failed to schedule notification: ${e.message}")
-            }
-        }
-    }
 
-    /**
-     * Cancel all notifications for appointment
-     */
-    private fun cancelAppointmentNotifications(appointmentId: Int) {
-        viewModelScope.launch {
-            try {
-                notificationViewModel.cancelAppointmentNotifications(appointmentId)
             } catch (e: Exception) {
-                // Log error but don't fail the appointment operation
-               Log.e("AppointmentViewModel", "Failed to cancel notifications: ${e.message}")
+                Log.e("AppointmentViewModel", "Lỗi khi tạo notification", e)
             }
         }
     }
 
+
     /**
-     * Check notification permissions
+     * Hủy thông báo cho cuộc hẹn
      */
-    fun checkNotificationPermissions(): Boolean {
-        return notificationViewModel.checkNotificationPermissions()
+    private suspend fun cancelAppointmentNotification(appointmentId: Int) {
+        try {
+            // Xóa tất cả notification liên quan đến appointment này
+            notificationManagerService.cancelNotificationsByRelatedId(
+                appointmentId,
+                NotificationType.APPOINTMENT_REMINDER
+            )
+        } catch (e: Exception) {
+            Log.e("AppointmentViewModel", "Lỗi khi hủy notification", e)
+        }
     }
 
     /**

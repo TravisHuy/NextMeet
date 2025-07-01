@@ -134,7 +134,7 @@
             android:src="@drawable/ic_alarm"
             android:padding="12dp"
             android:background="@drawable/circle_background"
-            app:tint="@android:color/white" />
+            />
 
         <!-- Dismiss Icon -->
         <ImageView

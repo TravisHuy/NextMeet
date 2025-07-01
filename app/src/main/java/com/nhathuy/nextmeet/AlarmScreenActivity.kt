@@ -182,11 +182,13 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         typeTextView.text = typeText
 
         // Set appropriate icon based on type
-        val iconResource = when (notificationType) {
-            NotificationType.APPOINTMENT_REMINDER -> R.drawable.ic_appointment
-            NotificationType.NOTE_REMINDER -> R.drawable.ic_note
-            else -> R.drawable.ic_alarm
-        }
+//        val iconResource = when (notificationType) {
+//            NotificationType.APPOINTMENT_REMINDER -> R.drawable.ic_appointment
+//            NotificationType.NOTE_REMINDER -> R.drawable.ic_note
+//            else -> R.drawable.ic_alarm
+//        }
+        val iconResource = R.drawable.ic_alarm
+
         alarmIcon.setImageDrawable(ContextCompat.getDrawable(this, iconResource))
     }
 
