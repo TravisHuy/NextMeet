@@ -8,9 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import com.nhathuy.nextmeet.AlarmReceiver
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.Notification
 import com.nhathuy.nextmeet.model.NotificationAction
 import com.nhathuy.nextmeet.model.NotificationType
@@ -21,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,10 +49,15 @@ class NotificationManagerService @Inject constructor(
 
     companion object {
         const val APPOINTMENT_CHANNEL_ID = "appointment_reminders"
+        const val APPOINTMENT_ALARM_CHANNEL_ID = "appointment_alarms"
         const val NOTE_CHANNEL_ID = "note_reminders"
         const val REMINDER_MINUTES_DEFAULT = 5L // Nhắc nhở trước 5 phút
         const val MAX_RETRIES = 3 // Số lần thử lại khi lên lịch báo thức
         const val RETRY_DELAY_MS = 100L // Thời gian chờ giữa các lần thử
+
+        // Thêm constant để phân biệt reminder và alarm
+        const val NOTIFICATION_TYPE_REMINDER = "reminder"
+        const val NOTIFICATION_TYPE_ALARM = "alarm"
     }
 
     init {
@@ -62,20 +70,44 @@ class NotificationManagerService @Inject constructor(
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            val audioAttributes = AudioAttributes.Builder()
+            val notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+            val notificationSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.notification}")
+
+            val alarmAudioAttributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
 
+            val notificationAudioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+
             val channels = listOf(
+                // Kênh cho thông báo nhắc nhở (5 phút trước)
                 NotificationChannel(
                     APPOINTMENT_CHANNEL_ID,
                     "Nhắc nhở cuộc hẹn",
-                    NotificationManager.IMPORTANCE_HIGH
+                    NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
                     description = "Thông báo nhắc nhở về các cuộc hẹn sắp tới"
                     enableVibration(true)
-                    setSound(alarmSound, audioAttributes)
+                    vibrationPattern = longArrayOf(0, 250, 100, 250)
+                    setSound(notificationSoundUri, notificationAudioAttributes)
+                    setShowBadge(true)
+                    enableLights(true)
+                },
+                // Kênh cho báo thức (đúng giờ)
+                NotificationChannel(
+                    APPOINTMENT_ALARM_CHANNEL_ID,
+                    "Báo thức cuộc hẹn",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "Báo thức khi đến giờ cuộc hẹn"
+                    enableVibration(true)
+                    vibrationPattern = longArrayOf(0, 1000, 500, 1000, 500, 1000)
+                    setSound(alarmSound, alarmAudioAttributes)
                 },
                 NotificationChannel(
                     NOTE_CHANNEL_ID,
@@ -84,7 +116,7 @@ class NotificationManagerService @Inject constructor(
                 ).apply {
                     description = "Thông báo nhắc nhở về các ghi chú sắp tới"
                     enableVibration(true)
-                    setSound(alarmSound, audioAttributes)
+                    setSound(alarmSound, alarmAudioAttributes)
                 }
             )
 
@@ -104,7 +136,7 @@ class NotificationManagerService @Inject constructor(
     }
 
     /**
-     * Lên lịch thông báo nhắc cuộc hẹn trước thời gian đã đặt
+     * Lên lịch cả thông báo nhắc nhở (5 phút trước) và báo thức (đúng giờ) cho cuộc hẹn
      */
     suspend fun scheduleAppointmentNotification(
         userId: Int,
@@ -123,39 +155,83 @@ class NotificationManagerService @Inject constructor(
 
             cancelPendingOperation(appointmentId)
 
+            val currentTime = System.currentTimeMillis()
             val reminderTime = appointmentTime - REMINDER_MINUTES_DEFAULT * 60 * 1000
-            if (reminderTime <= System.currentTimeMillis()) {
-                Log.w("NotificationManager", "Không thể đặt báo thức trong quá khứ")
-                return@withContext false
+
+            var reminderSuccess = true
+            var alarmSuccess = true
+
+            // 1. Lên lịch thông báo nhắc nhở (5 phút trước) nếu chưa quá giờ
+            if (reminderTime > currentTime) {
+                val reminderNotification = Notification(
+                    id = 0,
+                    userId = userId,
+                    title = "🔔 Nhắc nhở cuộc hẹn",
+                    message = buildReminderMessage(title, description, location, contactName, appointmentTime),
+                    notificationType = NotificationType.APPOINTMENT_REMINDER,
+                    relatedId = appointmentId,
+                    scheduledTime = reminderTime,
+                    actionType = NotificationAction.OPEN_APPOINTMENT
+                )
+
+                val reminderNotificationId = notificationRepository.insertNotification(reminderNotification).getOrThrow().toInt()
+
+                reminderSuccess = scheduleAlarmWithRetry(
+                    reminderNotificationId,
+                    reminderTime,
+                    reminderNotification.title,
+                    reminderNotification.message,
+                    location,
+                    appointmentId,
+                    NotificationType.APPOINTMENT_REMINDER,
+                    isAlarm = false
+                )
+
+                if (!reminderSuccess) {
+                    notificationRepository.deleteNotificationById(reminderNotificationId)
+                    Log.e("NotificationManager", "Lỗi lên lịch reminder, xoá thông báo đã lưu")
+                }
             }
 
-            val notification = Notification(
-                id = 0,
-                userId = userId,
-                title = "🕐 Cuộc hẹn sắp diễn ra",
-                message = buildAppointmentMessage(title, description, location, contactName, appointmentTime),
-                notificationType = NotificationType.APPOINTMENT_REMINDER,
-                relatedId = appointmentId,
-                scheduledTime = reminderTime,
-                actionType = NotificationAction.OPEN_APPOINTMENT
-            )
+            // 2. Lên lịch báo thức (đúng giờ cuộc hẹn) nếu chưa quá giờ
+            if (appointmentTime > currentTime) {
+                val alarmNotification = Notification(
+                    id = 0,
+                    userId = userId,
+                    title = "⏰ Đến giờ cuộc hẹn!",
+                    message = buildAlarmMessage(title, description, location, contactName),
+                    notificationType = NotificationType.APPOINTMENT_REMINDER,
+                    relatedId = appointmentId,
+                    scheduledTime = appointmentTime,
+                    actionType = NotificationAction.OPEN_APPOINTMENT
+                )
 
-            // Chuyển đổi Long sang Int an toàn
-            val notificationId = notificationRepository.insertNotification(notification).getOrThrow().toInt()
+                val alarmNotificationId = notificationRepository.insertNotification(alarmNotification).getOrThrow().toInt()
 
-            val success = scheduleAlarmWithRetry(
-                notificationId, reminderTime, notification.title, notification.message,
-                location, appointmentId, NotificationType.APPOINTMENT_REMINDER
-            )
+                alarmSuccess = scheduleAlarmWithRetry(
+                    alarmNotificationId,
+                    appointmentTime,
+                    alarmNotification.title,
+                    alarmNotification.message,
+                    location,
+                    appointmentId,
+                    NotificationType.APPOINTMENT_REMINDER,
+                    isAlarm = true
+                )
 
-            if (success) {
-                Log.d("NotificationManager", "Đã lên lịch nhắc cuộc hẹn lúc $reminderTime")
-                true
-            } else {
-                notificationRepository.deleteNotificationById(notificationId)
-                Log.e("NotificationManager", "Lỗi lên lịch, xoá thông báo đã lưu")
-                false
+                if (!alarmSuccess) {
+                    notificationRepository.deleteNotificationById(alarmNotificationId)
+                    Log.e("NotificationManager", "Lỗi lên lịch alarm, xoá thông báo đã lưu")
+                }
             }
+
+            val overallSuccess = reminderSuccess && alarmSuccess
+
+            if (overallSuccess) {
+                Log.d("NotificationManager", "Đã lên lịch reminder lúc $reminderTime và alarm lúc $appointmentTime")
+            }
+
+            return@withContext overallSuccess
 
         } catch (e: Exception) {
             Log.e("NotificationManager", "Lỗi khi đặt lịch cuộc hẹn", e)
@@ -196,12 +272,11 @@ class NotificationManagerService @Inject constructor(
                 actionType = NotificationAction.OPEN_NOTE
             )
 
-            // Chuyển đổi Long sang Int an toàn
             val notificationId = notificationRepository.insertNotification(notification).getOrThrow().toInt()
 
             val success = scheduleAlarmWithRetry(
                 notificationId, reminderTime, notification.title, notification.message,
-                null, noteId, NotificationType.NOTE_REMINDER
+                null, noteId, NotificationType.NOTE_REMINDER, isAlarm = true
             )
 
             if (success) {
@@ -251,11 +326,12 @@ class NotificationManagerService @Inject constructor(
         message: String,
         location: String?,
         relatedId: Int,
-        notificationType: NotificationType
+        notificationType: NotificationType,
+        isAlarm: Boolean = false
     ): Boolean {
         repeat(MAX_RETRIES) { attempt ->
             try {
-                scheduleAlarm(notificationId, triggerTime, title, message, location, relatedId, notificationType)
+                scheduleAlarm(notificationId, triggerTime, title, message, location, relatedId, notificationType, isAlarm)
                 return true
             } catch (e: SecurityException) {
                 Log.e("NotificationManager", "Lỗi quyền trên lần thử ${attempt + 1}: ${e.message}")
@@ -278,7 +354,8 @@ class NotificationManagerService @Inject constructor(
         message: String,
         location: String?,
         relatedId: Int,
-        notificationType: NotificationType
+        notificationType: NotificationType,
+        isAlarm: Boolean = false
     ) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("notification_id", notificationId)
@@ -287,6 +364,7 @@ class NotificationManagerService @Inject constructor(
             putExtra("location", location)
             putExtra("related_id", relatedId)
             putExtra("notification_type", notificationType.name)
+            putExtra("is_alarm", isAlarm) // Thêm flag để phân biệt reminder và alarm
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -311,7 +389,8 @@ class NotificationManagerService @Inject constructor(
                 }
             }
 
-            Log.d("NotificationManager", "Đặt báo thức thành công lúc $triggerTime")
+            val type = if (isAlarm) "alarm" else "reminder"
+            Log.d("NotificationManager", "Đặt $type thành công lúc $triggerTime")
         } catch (e: SecurityException) {
             Log.e("NotificationManager", "Thiếu quyền khi đặt báo thức: ${e.message}")
             throw e
@@ -322,9 +401,9 @@ class NotificationManagerService @Inject constructor(
     }
 
     /**
-     * Tạo nội dung thông báo cho cuộc hẹn
+     * Tạo nội dung thông báo nhắc nhở (5 phút trước)
      */
-    private fun buildAppointmentMessage(
+    private fun buildReminderMessage(
         title: String,
         description: String,
         location: String?,
@@ -332,11 +411,78 @@ class NotificationManagerService @Inject constructor(
         appointmentTime: Long
     ): String = buildString {
         val appointmentTimeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(appointmentTime))
-        append("⏰ Cuộc hẹn lúc $appointmentTimeStr\n")
+        append("⏰ Cuộc hẹn sắp bắt đầu lúc $appointmentTimeStr\n")
+        append("📅 Tiêu đề: $title")
+        if (description.isNotBlank()) append("\n📝 Nội dung: $description")
+        if (!contactName.isNullOrBlank()) append("\n👤 Với: $contactName")
+        if (!location.isNullOrBlank()) append("\n📍 Tại: $location")
+        append("\n💡 Bạn có 5 phút để chuẩn bị!")
+    }
+
+    /**
+     * Tạo nội dung báo thức (đúng giờ)
+     */
+    private fun buildAlarmMessage(
+        title: String,
+        description: String,
+        location: String?,
+        contactName: String?
+    ): String = buildString {
+        append("🚨 ĐÃ ĐẾN GIỜ CUỘC HẸN!\n")
         append("📅 $title")
         if (description.isNotBlank()) append("\n📝 $description")
         if (!contactName.isNullOrBlank()) append("\n👤 Với: $contactName")
         if (!location.isNullOrBlank()) append("\n📍 Tại: $location")
+        append("\n\n⚡ Hãy bắt đầu cuộc hẹn ngay!")
+    }
+
+    /**
+     * Huỷ tất cả thông báo theo relatedId và loại thông báo
+     */
+    suspend fun cancelNotificationsByRelatedId(
+        relatedId: Int,
+        notificationType: NotificationType
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val notificationList = notificationRepository
+                .getNotificationsByRelatedId(relatedId, notificationType)
+                .first()
+
+            notificationList.forEach { notification ->
+                try {
+                    cancelPendingOperation(notification.id)
+
+                    val intent = Intent(context, AlarmReceiver::class.java)
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        notification.id,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    alarmManager.cancel(pendingIntent)
+                    notificationManager.cancel(notification.id)
+
+                    Log.d("NotificationManager", "Đã huỷ thông báo ${notification.id}")
+                } catch (e: Exception) {
+                    Log.e("NotificationManager", "Lỗi khi huỷ thông báo ${notification.id}", e)
+                }
+            }
+
+            val result = notificationRepository.deleteNotificationsByRelatedId(relatedId, notificationType)
+
+            if (result.isSuccess) {
+                Log.d("NotificationManager", "Đã huỷ tất cả thông báo cho relatedId: $relatedId, type: $notificationType")
+                result.getOrDefault(false)
+            } else {
+                Log.e("NotificationManager", "Lỗi khi xoá thông báo từ database", result.exceptionOrNull())
+                false
+            }
+
+        } catch (e: Exception) {
+            Log.e("NotificationManager", "Lỗi khi huỷ thông báo theo relatedId", e)
+            false
+        }
     }
 
     /**

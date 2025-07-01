@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".AlarmScreenActivity"
-    android:background="@android:color/black"
-    >
+    android:background="@android:color/black">
 
+    <!-- Current Time Display -->
     <TextView
         android:id="@+id/timeTextView"
         android:layout_width="wrap_content"
@@ -15,72 +15,194 @@
         android:text="10:39"
         android:textColor="@android:color/white"
         android:textSize="64sp"
-        android:layout_marginTop="50dp"
-        app:layout_constraintBottom_toTopOf="@+id/alarmTextView"
+        android:fontFamily="sans-serif-light"
+        android:layout_marginTop="40dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Notification Type Indicator -->
+    <TextView
+        android:id="@+id/typeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔔 Nhắc nhở"
+        android:textColor="#CCFFFFFF"
+        android:textSize="16sp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timeTextView" />
+
+    <!-- Notification Title -->
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Tiêu đề nhắc nhở"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/typeTextView" />
+
+    <!-- Notification Message -->
+    <TextView
+        android:id="@+id/messageTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Nội dung chi tiết của nhắc nhở sẽ hiển thị ở đây"
+        android:textColor="#E6FFFFFF"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:maxLines="3"
+        android:ellipsize="end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/titleTextView" />
+
+    <!-- Location (if available) -->
+    <TextView
+        android:id="@+id/locationTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="📍 Địa điểm cuộc hẹn"
+        android:textColor="#CCFFFFFF"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/messageTextView" />
+
+    <!-- Legacy Alarm Label (kept for compatibility) -->
     <TextView
         android:id="@+id/alarmTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Alarm"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:textColor="#99FFFFFF"
+        android:textSize="16sp"
+        android:layout_marginTop="24dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/timeTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/locationTextView" />
 
+    <!-- Gesture Control Icons -->
     <LinearLayout
         android:id="@+id/iconsLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/swipeInstructionTextView"
+        android:gravity="center"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/alarmTextView">
 
+        <!-- Snooze Icon -->
         <ImageView
             android:id="@+id/snoozeIcon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:src="@drawable/zzz"
             android:alpha="0.3"
-            app:tint="@android:color/white" />
+            android:padding="8dp"
+            android:background="@drawable/circle_background"
+            app:tint="#FFC107" />
 
+        <!-- Main Alarm Icon (draggable) -->
         <ImageView
             android:id="@+id/alarmIcon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginLeft="100dp"
-            android:layout_marginRight="100dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginStart="60dp"
+            android:layout_marginEnd="60dp"
             android:src="@drawable/ic_alarm"
-            app:tint="@android:color/white" />
+            android:padding="12dp"
+            android:background="@drawable/circle_background"
+            />
 
+        <!-- Dismiss Icon -->
         <ImageView
             android:id="@+id/dismissIcon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:src="@drawable/alarm_off"
             android:alpha="0.3"
-            app:tint="@android:color/white" />
+            android:padding="8dp"
+            android:background="@drawable/circle_background"
+            app:tint="#F44336" />
 
     </LinearLayout>
 
+    <!-- Action Labels -->
+    <LinearLayout
+        android:id="@+id/actionLabelsLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iconsLayout">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Báo lại"
+            android:textColor="#99FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:alpha="0.5" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text=""
+            android:gravity="center" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tắt"
+            android:textColor="#99FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:alpha="0.5" />
+
+    </LinearLayout>
+
+    <!-- Swipe Instructions -->
     <TextView
         android:id="@+id/swipeInstructionTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="Swipe right to dismiss"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"
+        android:layout_marginBottom="24dp"
+        android:text="⬅️ Vuốt trái để báo lại • Vuốt phải để tắt ➡️"
+        android:textColor="#80FFFFFF"
+        android:textSize="12sp"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
