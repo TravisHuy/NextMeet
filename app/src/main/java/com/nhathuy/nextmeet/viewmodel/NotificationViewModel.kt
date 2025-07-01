@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhathuy.nextmeet.model.Notification
@@ -111,6 +112,10 @@ class NotificationViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
+                Log.d("NotificationViewModel", "Starting notification scheduling...")
+                Log.d("NotificationViewModel", "Parameters - UserId: $userId, AppointmentId: $appointmentId")
+                Log.d("NotificationViewModel", "Title: $title, Contact: $contactName, Location: $location")
+                
                 _notificationUiState.value = NotificationUiState.Loading
 
                 val success = notificationManagerService.scheduleAppointmentNotification(
@@ -124,13 +129,16 @@ class NotificationViewModel @Inject constructor(
                 )
 
                 if (success) {
+                    Log.d("NotificationViewModel", "Notification scheduled successfully")
                     _notificationUiState.value =
                         NotificationUiState.NotificationScheduled("Đã đặt nhắc nhở cho cuộc hẹn 5 phút trước")
                 } else {
+                    Log.e("NotificationViewModel", "Failed to schedule notification")
                     _notificationUiState.value =
                         NotificationUiState.Error("Không thể đặt nhắc nhở. Kiểm tra quyền hoặc thời gian")
                 }
             } catch (e: Exception) {
+                Log.e("NotificationViewModel", "Exception during notification scheduling", e)
                 _notificationUiState.value = NotificationUiState.Error(
                     "Loi dat nhac nho : ${e.message}"
                 )

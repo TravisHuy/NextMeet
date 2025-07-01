@@ -97,8 +97,11 @@ class NotificationManagerService @Inject constructor(
      */
     private fun canScheduleExactAlarms(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            alarmManager.canScheduleExactAlarms()
+            val canSchedule = alarmManager.canScheduleExactAlarms()
+            Log.d("NotificationManager", "Can schedule exact alarms: $canSchedule")
+            canSchedule
         } else {
+            Log.d("NotificationManager", "Android version < 12, exact alarms allowed by default")
             true
         }
     }
@@ -116,6 +119,11 @@ class NotificationManagerService @Inject constructor(
         contactName: String? = null
     ): Boolean = withContext(Dispatchers.IO) {
         try {
+            Log.d("NotificationManager", "Starting appointment notification scheduling...")
+            Log.d("NotificationManager", "UserId: $userId, AppointmentId: $appointmentId")
+            Log.d("NotificationManager", "Title: $title, ContactName: $contactName")
+            Log.d("NotificationManager", "AppointmentTime: $appointmentTime, Location: $location")
+            
             if (!canScheduleExactAlarms()) {
                 Log.w("NotificationManager", "Không có quyền báo thức chính xác")
                 return@withContext false
@@ -124,8 +132,12 @@ class NotificationManagerService @Inject constructor(
             cancelPendingOperation(appointmentId)
 
             val reminderTime = appointmentTime - REMINDER_MINUTES_DEFAULT * 60 * 1000
+            Log.d("NotificationManager", "Calculated reminder time: $reminderTime")
+            Log.d("NotificationManager", "Current time: ${System.currentTimeMillis()}")
+            
             if (reminderTime <= System.currentTimeMillis()) {
                 Log.w("NotificationManager", "Không thể đặt báo thức trong quá khứ")
+                Log.w("NotificationManager", "Reminder time: $reminderTime, Current time: ${System.currentTimeMillis()}")
                 return@withContext false
             }
 
@@ -140,8 +152,11 @@ class NotificationManagerService @Inject constructor(
                 actionType = NotificationAction.OPEN_APPOINTMENT
             )
 
+            Log.d("NotificationManager", "Created notification: ${notification.message}")
+
             // Chuyển đổi Long sang Int an toàn
             val notificationId = notificationRepository.insertNotification(notification).getOrThrow().toInt()
+            Log.d("NotificationManager", "Saved notification to database with ID: $notificationId")
 
             val success = scheduleAlarmWithRetry(
                 notificationId, reminderTime, notification.title, notification.message,
@@ -280,6 +295,10 @@ class NotificationManagerService @Inject constructor(
         relatedId: Int,
         notificationType: NotificationType
     ) {
+        Log.d("NotificationManager", "Setting up alarm for notification $notificationId")
+        Log.d("NotificationManager", "Trigger time: $triggerTime, Related ID: $relatedId")
+        Log.d("NotificationManager", "Notification type: ${notificationType.name}")
+        
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("notification_id", notificationId)
             putExtra("title", title)
@@ -299,15 +318,18 @@ class NotificationManagerService @Inject constructor(
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                     if (alarmManager.canScheduleExactAlarms()) {
                         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                        Log.d("NotificationManager", "Scheduled exact alarm for Android 12+ with permission")
                     } else {
                         throw SecurityException("Chưa cấp quyền SCHEDULE_EXACT_ALARM")
                     }
                 }
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                    Log.d("NotificationManager", "Scheduled exact alarm for Android 6-11")
                 }
                 else -> {
                     alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                    Log.d("NotificationManager", "Scheduled exact alarm for Android < 6")
                 }
             }
 

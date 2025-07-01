@@ -38,8 +38,10 @@ import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
+import com.nhathuy.nextmeet.resource.NotificationUiState
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
+import com.nhathuy.nextmeet.viewmodel.NotificationViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -58,6 +60,7 @@ class AddAppointmentActivity : AppCompatActivity() {
     private lateinit var userViewModel: UserViewModel
     private lateinit var contactViewModel: ContactViewModel
     private lateinit var appointmentViewModel: AppointmentPlusViewModel
+    private lateinit var notificationViewModel: NotificationViewModel
 
     // Data variables
     private var currentUserId: Int = 0
@@ -185,6 +188,16 @@ class AddAppointmentActivity : AppCompatActivity() {
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
         contactViewModel = ViewModelProvider(this)[ContactViewModel::class.java]
         appointmentViewModel = ViewModelProvider(this)[AppointmentPlusViewModel::class.java]
+        notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
+        
+        Log.d("AddAppointment", "Initializing ViewModels with user ID: $currentUserId")
+        
+        // Set current user ID for notification scheduling
+        if (currentUserId != 0) {
+            notificationViewModel.setCurrentUserId(currentUserId)
+        } else {
+            Log.w("AddAppointment", "Current user ID is 0, notification scheduling may fail")
+        }
     }
 
     private fun setupUI() {
@@ -595,6 +608,13 @@ class AddAppointmentActivity : AppCompatActivity() {
                 handleContactUiState(state)
             }
         }
+
+        // Add notification observation
+        lifecycleScope.launch {
+            notificationViewModel.notificationUiState.collect { state ->
+                handleNotificationUiState(state)
+            }
+        }
     }
 
     private fun handleAppointmentUiState(state: AppointmentUiState) {
@@ -602,11 +622,17 @@ class AddAppointmentActivity : AppCompatActivity() {
             is AppointmentUiState.Loading -> showLoading()
 
             is AppointmentUiState.AppointmentCreated -> {
+                Log.d("AddAppointment", "Appointment created successfully with ID: ${state.appointmentId}")
+                // Schedule notification for the newly created appointment
+                scheduleAppointmentNotification(state.appointmentId.toInt())
                 hideLoading()
                 setResultAndFinish(state.message)
             }
 
             is AppointmentUiState.AppointmentUpdated -> {
+                Log.d("AddAppointment", "Appointment updated successfully")
+                // Schedule notification for the updated appointment
+                scheduleAppointmentNotification(appointmentId)
                 hideLoading()
                 setResultAndFinish(state.message)
             }
@@ -634,6 +660,28 @@ class AddAppointmentActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleNotificationUiState(state: NotificationUiState) {
+        when (state) {
+            is NotificationUiState.Loading -> {
+                Log.d("AddAppointment", "Scheduling notification...")
+            }
+
+            is NotificationUiState.NotificationScheduled -> {
+                Log.d("AddAppointment", "Notification scheduled successfully: ${state.message}")
+                showMessage("✅ ${state.message}")
+                notificationViewModel.resetUiState()
+            }
+
+            is NotificationUiState.Error -> {
+                Log.e("AddAppointment", "Failed to schedule notification: ${state.message}")
+                showMessage("⚠️ Lỗi đặt nhắc nhở: ${state.message}")
+                notificationViewModel.resetUiState()
+            }
+
+            else -> {}
+        }
+    }
+
     private fun loadInitialData() {
         if (currentUserId != 0) {
             // Đặt flag trước khi load data để tránh hiển thị dialog sai
@@ -642,6 +690,43 @@ class AddAppointmentActivity : AppCompatActivity() {
             }
 
             contactViewModel.getContactNamesAndIds(currentUserId)
+        }
+    }
+
+    private fun scheduleAppointmentNotification(appointmentId: Int) {
+        val title = binding.etAppointmentTitle.text?.toString()?.trim() ?: ""
+        val description = binding.etNotes.text?.toString()?.trim() ?: ""
+        val appointmentLocation = location
+        val appointmentTime = reminderTime
+        
+        if (appointmentTime == null) {
+            Log.w("AddAppointment", "Cannot schedule notification: reminder time is null")
+            return
+        }
+
+        // Get contact name for notification
+        val contactName = if (currentContactId != 0) {
+            contactMap.values.find { it.id == currentContactId }?.name
+        } else {
+            null
+        }
+
+        Log.d("AddAppointment", "Scheduling notification for appointment $appointmentId")
+        Log.d("AddAppointment", "Title: $title, Contact: $contactName, Location: $appointmentLocation")
+        Log.d("AddAppointment", "Appointment time: $appointmentTime")
+        
+        // Schedule notification in a separate coroutine to avoid blocking UI
+        lifecycleScope.launch {
+            delay(500) // Small delay to ensure appointment is fully saved
+            notificationViewModel.scheduleAppointmentNotification(
+                userId = currentUserId,
+                appointmentId = appointmentId,
+                title = title,
+                description = description,
+                appointmentTime = appointmentTime,
+                location = appointmentLocation,
+                contactName = contactName
+            )
         }
     }
 
