@@ -59,6 +59,8 @@ class NotesAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         private var checklistAdapter = ChecklistAdapter(emptyList<ChecklistItem>().toMutableList())
+        private var isClickHandled = false
+        private val clickHandler = Handler(Looper.getMainLooper())
 
         fun bind(note: Note) {
             with(binding) {
@@ -88,7 +90,7 @@ class NotesAdapter(
 
                 // click listener
                 root.setOnClickListener {
-                    onNoteClick(note)
+                    handleNoteClick(note)
                 }
 
                 root.setOnLongClickListener {
@@ -100,6 +102,18 @@ class NotesAdapter(
                 ivPin.setOnClickListener { onPinClick(note) }
 
                 btnMoreOptions.setOnClickListener { onMoreClick(note) }
+            }
+        }
+
+        private fun handleNoteClick(note: Note) {
+            if (!isClickHandled) {
+                isClickHandled = true
+                onNoteClick(note)
+
+                // Reset click flag sau 300ms để tránh spam clicks
+                clickHandler.postDelayed({
+                    isClickHandled = false
+                }, 300)
             }
         }
 
@@ -163,7 +177,7 @@ class NotesAdapter(
                                 .placeholder(R.drawable.ic_photo)
                                 .into(mediaView)
                         } else {
-                            android.util.Log.d("NotesAdapter", "No images found for note ${note.id}")
+                            Log.d("NotesAdapter", "No images found for note ${note.id}")
                             mediaView.visibility = View.VISIBLE
                             mediaView.setImageResource(R.drawable.ic_photo)
                         }
@@ -179,21 +193,39 @@ class NotesAdapter(
                     if (rvChecklistPreview.layoutManager == null) {
                         rvChecklistPreview.layoutManager = LinearLayoutManager(binding.root.context)
                     }
+
+                    rvChecklistPreview.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                    rvChecklistPreview.isNestedScrollingEnabled = false
+
+//                    //
+//                    rvChecklistPreview.setOnClickListener {
+//                        handleNoteClick(note)
+//                    }
+
+
                     val maxItems = 3
                     val visibleItems = checklistItems.take(maxItems)
 
-                    checklistAdapter = ChecklistAdapter(visibleItems.toMutableList(), isPreviewMode = true)
+                    checklistAdapter = ChecklistAdapter(
+                        visibleItems.toMutableList(),
+                        isPreviewMode = true,
+                        onNoteClick = {
+                            handleNoteClick(note)
+                        }
+                    )
                     rvChecklistPreview.adapter = checklistAdapter
 
                     val remainingCount = checklistItems.size - maxItems
-                    if(remainingCount>0){
+                    if (remainingCount > 0) {
                         tvChecklistCount.visibility = View.VISIBLE
                         tvChecklistCount.text = "+$remainingCount more"
+                        tvChecklistCount.setOnClickListener {
+                            handleNoteClick(note)
+                        }
                     } else {
                         tvChecklistCount.visibility = View.GONE
                     }
-                }
-                else{
+                } else {
                     rvChecklistPreview.adapter = null
                     tvChecklistCount.visibility = View.GONE
                 }

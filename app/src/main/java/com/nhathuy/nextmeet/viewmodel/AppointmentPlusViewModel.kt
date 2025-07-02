@@ -277,9 +277,8 @@ class AppointmentPlusViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val now = System.currentTimeMillis()
-                val notificationTime = appointment.startDateTime - (5 * 60 * 1000)
 
-                if(notificationTime > now){
+                if(appointment.startDateTime > now){
                     // Lấy thông tin contact để hiển thị trong notification
                     val contactResult = contactRepository.getContactById(contactId)
                     val contactName = if (contactResult.isSuccess) {

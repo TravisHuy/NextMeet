@@ -134,6 +134,8 @@ class AddAppointmentActivity : AppCompatActivity() {
             R.color.color_brown to "color_brown",
             R.color.color_gray to "color_gray"
         )
+
+        val colorNamesToRes = colorSourceNames.entries.associate { (res, name) -> name to res }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -519,7 +521,14 @@ class AddAppointmentActivity : AppCompatActivity() {
 
         // Đặt màu ban đầu cho chế độ chỉnh sửa
         if (isEditMode) {
-            colorAdapter.setSelectedColor(selectedColorName)
+            binding.rvColorPicker.post {
+                colorAdapter.setSelectedColors(selectedColorName)
+
+                // Đặt lại màu nền cho layout
+                val colorResId = colorNamesToRes[selectedColorName] ?: R.color.color_white
+                val color = ContextCompat.getColor(this@AddAppointmentActivity, colorResId)
+                binding.layoutAddAppointment.setBackgroundColor(color)
+            }
         }
     }
 

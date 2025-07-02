@@ -100,15 +100,13 @@
         app:layout_constraintTop_toBottomOf="@+id/locationTextView" />
 
     <!-- Gesture Control Icons -->
-    <LinearLayout
-        android:id="@+id/iconsLayout"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/iconsConstraintLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
         android:layout_marginTop="40dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/alarmTextView">
@@ -118,36 +116,61 @@
             android:id="@+id/snoozeIcon"
             android:layout_width="56dp"
             android:layout_height="56dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:maxWidth="80dp"
+            android:maxHeight="80dp"
             android:src="@drawable/zzz"
             android:alpha="0.3"
             android:padding="8dp"
             android:background="@drawable/circle_background"
-            app:tint="#FFC107" />
+            android:scaleType="centerInside"
+            app:tint="#FFC107"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/alarmIcon"
+            app:layout_constraintHorizontal_chainStyle="spread" />
 
         <!-- Main Alarm Icon (draggable) -->
         <ImageView
             android:id="@+id/alarmIcon"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:layout_marginStart="60dp"
-            android:layout_marginEnd="60dp"
+            android:minWidth="60dp"
+            android:minHeight="60dp"
+            android:maxWidth="100dp"
+            android:maxHeight="100dp"
             android:src="@drawable/ic_alarm"
             android:padding="12dp"
             android:background="@drawable/circle_background"
-            />
+            android:scaleType="centerInside"
+            app:layout_constraintStart_toEndOf="@+id/snoozeIcon"
+            app:layout_constraintEnd_toStartOf="@+id/dismissIcon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <!-- Dismiss Icon -->
         <ImageView
             android:id="@+id/dismissIcon"
             android:layout_width="56dp"
             android:layout_height="56dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:maxWidth="80dp"
+            android:maxHeight="80dp"
             android:src="@drawable/alarm_off"
             android:alpha="0.3"
             android:padding="8dp"
             android:background="@drawable/circle_background"
-            app:tint="#F44336" />
+            android:scaleType="centerInside"
+            app:tint="#F44336"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/alarmIcon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Action Labels -->
     <LinearLayout
