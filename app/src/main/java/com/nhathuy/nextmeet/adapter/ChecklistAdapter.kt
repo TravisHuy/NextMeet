@@ -38,10 +38,17 @@ class ChecklistAdapter(
                 binding.ivCheck.isEnabled = false
                 binding.etCheckItem.isEnabled = false
                 binding.etCheckItem.clearFocus()
+                // Make views non-clickable to ensure touch events bubble up to parent
+                binding.ivCheck.isClickable = false
+                binding.etCheckItem.isClickable = false
+                binding.etCheckItem.isFocusable = false
             } else {
                 binding.ivDelete.visibility = View.VISIBLE
                 binding.ivCheck.isEnabled = true
                 binding.etCheckItem.isEnabled = true
+                binding.ivCheck.isClickable = true
+                binding.etCheckItem.isClickable = true
+                binding.etCheckItem.isFocusable = true
             }
 
             // Focus vào EditText nếu là item cuối cùng (mới thêm)
@@ -50,45 +57,49 @@ class ChecklistAdapter(
                 shouldRequestFocus = false
             }
 
-            binding.ivCheck.setOnClickListener {
-                if (!isPreviewMode) {
+            // Only set click listeners when not in preview mode to allow touch events to bubble up
+            if (!isPreviewMode) {
+                binding.ivCheck.setOnClickListener {
                     item.isChecked = !item.isChecked
                     notifyItemChanged(position)
                     onItemChanged?.invoke()
                 }
-            }
 
-            binding.ivDelete.setOnClickListener {
-                if (!isPreviewMode) {
+                binding.ivDelete.setOnClickListener {
                     items.removeAt(position)
                     notifyItemRemoved(position)
                     notifyItemRangeChanged(position, items.size)
                     onItemChanged?.invoke()
                 }
+            } else {
+                // In preview mode, remove any existing click listeners to ensure touch events bubble up
+                binding.ivCheck.setOnClickListener(null)
+                binding.ivDelete.setOnClickListener(null)
             }
 
-            binding.etCheckItem.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(
-                    p0: CharSequence?,
-                    p1: Int,
-                    p2: Int,
-                    p3: Int
-                ) {
-                }
+            // Only add text watcher when not in preview mode
+            if (!isPreviewMode) {
+                binding.etCheckItem.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(
+                        p0: CharSequence?,
+                        p1: Int,
+                        p2: Int,
+                        p3: Int
+                    ) {
+                    }
 
-                override fun onTextChanged(
-                    s: CharSequence?, start: Int,
-                    before: Int,
-                    count: Int
-                ) {
-                    if (!isPreviewMode) {
+                    override fun onTextChanged(
+                        s: CharSequence?, start: Int,
+                        before: Int,
+                        count: Int
+                    ) {
                         item.text = s?.toString() ?: ""
                         onItemChanged?.invoke()
                     }
-                }
 
-                override fun afterTextChanged(p0: Editable?) {}
-            })
+                    override fun afterTextChanged(p0: Editable?) {}
+                })
+            }
         }
     }
 
