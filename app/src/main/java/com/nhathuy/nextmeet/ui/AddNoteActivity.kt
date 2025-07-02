@@ -265,9 +265,7 @@ class AddNoteActivity : AppCompatActivity() {
         binding.layoutAddNote.setBackgroundColor(color)
 
         // Set reminder display
-        reminderTime?.let {
-            updateReminderDisplay()
-        }
+        updateReminderDisplay()
 
         // Show content dựa trên note type
         showContentBasedOnType(note.noteType)
@@ -989,11 +987,14 @@ class AddNoteActivity : AppCompatActivity() {
      * Cập nhật hiển thị reminder time
      */
     private fun updateReminderDisplay() {
-        reminderTime?.let {
+        if (reminderTime != null) {
             val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
-            val formattedDate = formatter.format(Date(it))
+            val formattedDate = formatter.format(Date(reminderTime!!))
             binding.tvReminderTime.text = formattedDate
             Log.d("AddNoteActivity", "Reminder set for: $formattedDate")
+        } else {
+            binding.tvReminderTime.text = ""
+            Log.d("AddNoteActivity", "No reminder set - cleared display")
         }
     }
 
