@@ -254,7 +254,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val channelId = when (notificationType) {
             NotificationType.APPOINTMENT_REMINDER -> NotificationManagerService.APPOINTMENT_ALARM_CHANNEL_ID // Dùng alarm channel
-            NotificationType.NOTE_REMINDER -> NotificationManagerService.NOTE_CHANNEL_ID
+            NotificationType.NOTE_REMINDER -> NotificationManagerService.NOTE_ALARM_CHANNEL_ID
             else -> NotificationManagerService.APPOINTMENT_ALARM_CHANNEL_ID
         }
 
@@ -282,8 +282,8 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Âm thanh báo thức mạnh
-        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+//        // Âm thanh báo thức mạnh
+//        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
 
         val notificationContent = formatAlarmContent(title, message, location, notificationType)
 
@@ -298,7 +298,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setAutoCancel(false) // Không tự động tắt
             .setOngoing(true) // Cố định trên thanh thông báo
             .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000)) // Rung mạnh
-            .setSound(alarmSound) // Âm thanh báo thức
+//            .setSound(alarmSound) // Âm thanh báo thức
             .setContentIntent(alarmScreenPendingIntent)
             .setDeleteIntent(dismissPendingIntent)
             .setFullScreenIntent(alarmScreenPendingIntent, true) // Toàn màn hình
@@ -307,7 +307,7 @@ class AlarmReceiver : BroadcastReceiver() {
         addAlarmActions(context, notificationBuilder, notificationType, relatedId, location, notificationId, title, message)
 
         val notification = notificationBuilder.build()
-        notification.flags = notification.flags or NotificationCompat.FLAG_INSISTENT // Lặp lại âm thanh
+//        notification.flags = notification.flags or NotificationCompat.FLAG_INSISTENT // Lặp lại âm thanh
 
         notificationManager.notify(notificationId, notification)
         Log.d(TAG, "Alarm notification shown for ID: $notificationId")

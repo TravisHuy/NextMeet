@@ -30,8 +30,10 @@ import com.nhathuy.nextmeet.model.ChecklistItem
 import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.Photo
 import com.nhathuy.nextmeet.resource.NoteUiState
+import com.nhathuy.nextmeet.resource.NotificationUiState
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
+import com.nhathuy.nextmeet.viewmodel.NotificationViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -68,6 +70,7 @@ class AddNoteActivity : AppCompatActivity() {
     // ViewModels
     private val noteViewModel: NoteViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
+    private val notificationViewModel : NotificationViewModel by viewModels()
 
     // Edit mode variables
     private var noteId: Int = -1
@@ -79,6 +82,7 @@ class AddNoteActivity : AppCompatActivity() {
     private val imagesToDelete = mutableListOf<NoteImage>()
     private val imagesToAdd =  mutableListOf<NoteImage>()
     private var hasUnsavedChanges = false
+    private var isNotificationScheduled = false
 
     // Image picker launcher
 //    private val pickMultipleImagesLauncher =
@@ -219,7 +223,6 @@ class AddNoteActivity : AppCompatActivity() {
                         Log.d("AddNoteActivity", "Images inserted successfully")
                         // Images được insert thành công, có thể finish ngay
                     }
-
                     is NoteUiState.Error -> {
                         Log.e("AddNoteActivity", "Error: ${state.message}")
                         Toast.makeText(this@AddNoteActivity, state.message, Toast.LENGTH_SHORT).show()
@@ -235,11 +238,35 @@ class AddNoteActivity : AppCompatActivity() {
         userViewModel.getCurrentUser().observe(this) { user ->
             user?.let {
                 currentUserId = user.id
+                notificationViewModel.setCurrentUserId(user.id)
                 Log.d("AddNoteActivity", "Current user ID: ${user.id}")
             }
         }
+
+
+        // Add notification observation
+        lifecycleScope.launch {
+            notificationViewModel.notificationUiState.collect { state ->
+                handleNotificationUiState(state)
+            }
+        }
+
     }
 
+    private fun handleNotificationUiState(state: NotificationUiState) {
+        when (state) {
+            is NotificationUiState.NotificationScheduled -> {
+                isNotificationScheduled = true
+                Log.d("AddAppointment", "Notification scheduled: ${state.message}")
+            }
+            is NotificationUiState.Error -> {
+                isNotificationScheduled = false
+                Log.e("AddAppointment", "Notification error: ${state.message}")
+                // Don't show error to user as notification is secondary feature
+            }
+            else -> {}
+        }
+    }
     /**
      * Populate UI với dữ liệu note đã load (cho edit mode)
      */
@@ -792,7 +819,12 @@ class AddNoteActivity : AppCompatActivity() {
                     isShared = isShared,
                     reminderTime = reminderTime
                 )
-                noteViewModel.createNote(note)
+                if(reminderTime != null){
+                    noteViewModel.createNote(note,true)
+                }
+                else{
+                    noteViewModel.createNote(note,false)
+                }
             }
 
             NoteType.PHOTO -> {
@@ -813,8 +845,12 @@ class AddNoteActivity : AppCompatActivity() {
                     isShared = isShared,
                     reminderTime = reminderTime
                 )
-                noteViewModel.createNote(note)
-                // Images will be saved in the observer when note creation is successful
+                if(reminderTime != null){
+                    noteViewModel.createNote(note,true)
+                }
+                else{
+                    noteViewModel.createNote(note,false)
+                }
             }
 
             NoteType.CHECKLIST -> {
@@ -838,7 +874,12 @@ class AddNoteActivity : AppCompatActivity() {
                     reminderTime = reminderTime,
                     checkListItems = checklistString
                 )
-                noteViewModel.createNote(note)
+                if(reminderTime != null){
+                    noteViewModel.createNote(note,true)
+                }
+                else{
+                    noteViewModel.createNote(note,false)
+                }
             }
 
             else -> {
@@ -854,12 +895,26 @@ class AddNoteActivity : AppCompatActivity() {
         when (noteType) {
             NoteType.TEXT -> {
                 val content = binding.textEdContent.text?.toString()?.trim() ?: ""
-                noteViewModel.updateNote(
-                    noteId = noteId,
-                    title = title,
-                    content = content,
-                    color = selectedColorName
-                )
+                if(reminderTime!=null){
+                    noteViewModel.updateNote(
+                        noteId = noteId,
+                        title = title,
+                        content = content,
+                        color = selectedColorName,
+                        reminderTime = reminderTime,
+                        shouldSetReminder = true
+                    )
+                }
+                else{
+                    noteViewModel.updateNote(
+                        noteId = noteId,
+                        title = title,
+                        content = content,
+                        color = selectedColorName,
+                        reminderTime = reminderTime,
+                        shouldSetReminder = false
+                    )
+                }
             }
 
             NoteType.CHECKLIST -> {
@@ -873,12 +928,26 @@ class AddNoteActivity : AppCompatActivity() {
                     (if (it.isChecked) "- [x] " else "- [ ] ") + it.text
                 }
 
-                noteViewModel.updateNote(
-                    noteId = noteId,
-                    title = title,
-                    color = selectedColorName,
-                    checkListItems = checklistString
-                )
+                if(reminderTime != null){
+                    noteViewModel.updateNote(
+                        noteId = noteId,
+                        title = title,
+                        color = selectedColorName,
+                        checkListItems = checklistString,
+                        reminderTime = reminderTime,
+                        shouldSetReminder = true
+                    )
+                }
+                else {
+                    noteViewModel.updateNote(
+                        noteId = noteId,
+                        title = title,
+                        color = selectedColorName,
+                        checkListItems = checklistString,
+                        reminderTime = reminderTime,
+                        shouldSetReminder = false
+                    )
+                }
             }
 
             NoteType.PHOTO -> {
@@ -890,12 +959,26 @@ class AddNoteActivity : AppCompatActivity() {
                     return
                 }
 
-                noteViewModel.updateNote(
-                    noteId = noteId,
-                    title = title,
-                    content = content,
-                    color = selectedColorName
-                )
+                if(reminderTime != null){
+                    noteViewModel.updateNote(
+                        noteId = noteId,
+                        title = title,
+                        content = content,
+                        color = selectedColorName,
+                        reminderTime = reminderTime,
+                        shouldSetReminder = true
+                    )
+                }
+                else{
+                    noteViewModel.updateNote(
+                        noteId = noteId,
+                        title = title,
+                        content = content,
+                        color = selectedColorName,
+                        reminderTime = reminderTime,
+                        shouldSetReminder = false
+                    )
+                }
                 // Images are handled separately when added/removed
                 applyImageChanges()
             }
@@ -989,11 +1072,17 @@ class AddNoteActivity : AppCompatActivity() {
      * Cập nhật hiển thị reminder time
      */
     private fun updateReminderDisplay() {
-        reminderTime?.let {
-            val formatter = SimpleDateFormat("dd MM yyyy, HH:mm", Locale.getDefault())
-            val formattedDate = formatter.format(Date(it))
+        if (reminderTime != null) {
+            val formatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+            val formattedDate = formatter.format(Date(reminderTime!!))
             binding.tvReminderTime.text = formattedDate
+            binding.tvReminderTime.visibility = View.VISIBLE
             Log.d("AddNoteActivity", "Reminder set for: $formattedDate")
+        } else {
+            // Clear text khi không có reminder
+            binding.tvReminderTime.text = ""
+            binding.tvReminderTime.visibility = View.GONE
+            Log.d("AddNoteActivity", "No reminder set")
         }
     }
 

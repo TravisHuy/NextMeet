@@ -162,12 +162,48 @@ class NoteRepository @Inject constructor(
     /**
      * Cập nhật ghi chú với validation
      */
+//    suspend fun updateNote(note:Note):Result<Unit>{
+//        return try {
+//            val existingNote = noteDao.getNoteById(note.id)
+//                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn tại"))
+//
+//            // Kiểm tra nhập input
+//            note.color.let {
+//                if (!isValidHexColor(it)) {
+//                    return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
+//                }
+//            }
+//            val updatedNote = existingNote.copy(
+//                title = note.title.trim(),
+//                content = note.content.trim(),
+//                noteType = note.noteType,
+//                color = note.color,
+//                checkListItems =  note.checkListItems?.trim()?.takeIf { it.isNotEmpty() },
+//                updatedAt = System.currentTimeMillis()
+//            )
+//
+//            // kiểm tra hợp lệ với note
+//            if (updatedNote.title.isBlank() && updatedNote.content.isBlank() &&
+//                updatedNote.checkListItems.isNullOrBlank()
+//            ) {
+//                return Result.failure(IllegalArgumentException("Ghi chú không thể trống"))
+//            }
+//
+//            noteDao.updateNote(updatedNote)
+//
+//            Result.success(Unit)
+//        }
+//        catch (e: Exception){
+//            Result.failure(e)
+//        }
+//    }
     suspend fun updateNote(
         noteId: Int,
         title: String? = null,
         content: String? = null,
         noteType: NoteType? = null,
         color: String? = null,
+        reminderTime: Long? = null,
         checkListItems: String? = null
     ): Result<Unit> {
         return try {
@@ -186,6 +222,7 @@ class NoteRepository @Inject constructor(
                 content = content?.trim() ?: existingNote.content,
                 noteType = noteType ?: existingNote.noteType,
                 color = color ?: existingNote.color,
+                reminderTime = reminderTime ?: existingNote.createdAt,
                 checkListItems = checkListItems ?: existingNote.checkListItems,
                 updatedAt = System.currentTimeMillis()
             )
