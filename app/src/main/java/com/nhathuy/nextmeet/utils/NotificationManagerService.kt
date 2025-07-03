@@ -106,9 +106,8 @@ class NotificationManagerService @Inject constructor(
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = "Báo thức khi đến giờ cuộc hẹn"
-                    enableVibration(true)
-                    vibrationPattern = longArrayOf(0, 1000, 500, 1000, 500, 1000)
-                    setSound(alarmSound, alarmAudioAttributes)
+                    enableVibration(false)
+                    setSound(null,null)
                 },
                 NotificationChannel(
                     NOTE_CHANNEL_ID,
@@ -126,10 +125,8 @@ class NotificationManagerService @Inject constructor(
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = "Thông báo nhắc nhở về các ghi chú đến giờ"
-                    enableVibration(true)
-                    vibrationPattern = longArrayOf(0, 1000, 500, 1000, 500, 1000)
-                    enableVibration(true)
-                    setSound(alarmSound, alarmAudioAttributes)
+                    enableVibration(false)
+                    setSound(null,null)
                 }
             )
 
@@ -296,7 +293,7 @@ class NotificationManagerService @Inject constructor(
 
                 if (!reminderSuccess) {
                     Log.e("NotificationManager",
-                            "Lỗi lên lịch, xoá thông báo đã lưu")
+                        "Lỗi lên lịch, xoá thông báo đã lưu")
                     notificationRepository.deleteNotificationById(notificationId)
                 }
             }

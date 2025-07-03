@@ -243,21 +243,26 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
     }
 
-    override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-        val diffX = e2.x - e1.x
-        val diffY = e2.y - e1.y
-
-        if (abs(diffX) > abs(diffY)) {
-            if (diffX > 0 && diffX > screenWidth / 3) {
-                // Swipe right - dismiss
-                dismissAlarm()
-            } else if (diffX < 0 && abs(diffX) > screenWidth / 3) {
-                // Swipe left - snooze
-                snoozeAlarm()
-            } else {
-                resetIconAlarm()
-            }
-        }
+    override fun onFling(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        velocityX: Float,
+        velocityY: Float
+    ): Boolean {
+//        val diffX = e2.x - e1.x
+//        val diffY = e2.y - e1.y
+//
+//        if (abs(diffX) > abs(diffY)) {
+//            if (diffX > 0 && diffX > screenWidth / 3) {
+//                // Swipe right - dismiss
+//                dismissAlarm()
+//            } else if (diffX < 0 && abs(diffX) > screenWidth / 3) {
+//                // Swipe left - snooze
+//                snoozeAlarm()
+//            } else {
+//                resetIconAlarm()
+//            }
+//        }
         return true
     }
 
@@ -274,8 +279,14 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         dismissIcon.alpha = 0.3f
     }
 
-    override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
-        val scrollX = e2.x - e1.x
+    override fun onScroll(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        distanceX: Float,
+        distanceY: Float
+    ): Boolean {
+//        val scrollX = e2.x - e1.x
+        val scrollX = e2.x - iconInitialX
         val maxScroll = screenWidth / 2f
 
         // Calculate the percentage of the swipe

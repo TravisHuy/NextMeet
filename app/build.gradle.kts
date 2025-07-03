@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.nhathuy.nextmeet"
-    compileSdk = 33
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.nhathuy.nextmeet"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 35
         versionCode = 2
         versionName = "2.0"
 

@@ -26,7 +26,7 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
-@AndroidEntryPoint
+//@AndroidEntryPoint
 class AlarmReceiver : BroadcastReceiver() {
 
     @Inject
@@ -297,12 +297,13 @@ class AlarmReceiver : BroadcastReceiver() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false) // Không tự động tắt
             .setOngoing(true) // Cố định trên thanh thông báo
-            .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000)) // Rung mạnh
-//            .setSound(alarmSound) // Âm thanh báo thức
+//            .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000)) // Rung mạnh
+            .setSound(null) // Âm thanh báo thức
+            .setVibrate(null)
             .setContentIntent(alarmScreenPendingIntent)
             .setDeleteIntent(dismissPendingIntent)
             .setFullScreenIntent(alarmScreenPendingIntent, true) // Toàn màn hình
-
+            .setOnlyAlertOnce(true)
         // Thêm action cho alarm
         addAlarmActions(context, notificationBuilder, notificationType, relatedId, location, notificationId, title, message)
 

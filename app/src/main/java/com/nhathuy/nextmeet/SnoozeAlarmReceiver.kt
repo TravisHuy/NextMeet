@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
-@AndroidEntryPoint
+//@AndroidEntryPoint
 class SnoozeAlarmReceiver : BroadcastReceiver() {
 
     @Inject
