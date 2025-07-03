@@ -178,6 +178,12 @@
 
     <!-- Profile -->
     <string name="edit_profile">Edit Profile</string>
+    <string name="full_name">Full Name</string>
+    <string name="input_full_name">Input full name...</string>
+    <string name="phone">Phone</string>
+    <string name="email">Email</string>
+    <string name="edit">Edit</string>
+    <string name="hint_enter_address_or_select_from_map">Nhập địa chỉ hoặc chọn từ bản đồ...</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

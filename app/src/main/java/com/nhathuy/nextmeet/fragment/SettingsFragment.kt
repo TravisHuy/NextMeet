@@ -23,6 +23,7 @@ import com.nhathuy.nextmeet.model.User
 import com.nhathuy.nextmeet.resource.Resource
 import com.nhathuy.nextmeet.ui.LoginActivity
 import com.nhathuy.nextmeet.ui.ProfileEditActivity
+import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -44,7 +45,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private lateinit var userViewModel: UserViewModel
     private lateinit var sharedPreferences: SharedPreferences
-
+    private var currentUserId: Int = 0
     companion object {
         private const val PREF_LANGUAGE = "pref_language"
         private const val PREF_THEME = "pref_theme"
@@ -56,6 +57,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         private const val LANG_VIETNAMESE = "vi"
         private const val LANG_ENGLISH = "en"
+
     }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -85,6 +87,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         // Quan sát thông tin người dùng hiện tại từ ViewModel
         userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->
             user?.let {
+                currentUserId = user.id
                 displayUserInfo(it)
             } ?: run {
                 // Nếu không có thông tin người dùng, chuyển về màn hình đăng nhập
@@ -126,7 +129,10 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
             //edit button
             btnEditProfile.setOnClickListener {
-                startActivity(Intent(requireContext(), ProfileEditActivity::class.java))
+                val intent = Intent(requireContext(), ProfileEditActivity::class.java).apply {
+                    putExtra(Constant.EXTRA_USER_ID,currentUserId)
+                }
+                startActivity(intent)
             }
 
             //language setting
