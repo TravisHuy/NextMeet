@@ -1,22 +1,28 @@
 package com.nhathuy.nextmeet.fragment
 
 import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.preference.PreferenceManager
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.FragmentSettingsBinding
 import com.nhathuy.nextmeet.model.User
 import com.nhathuy.nextmeet.resource.Resource
 import com.nhathuy.nextmeet.ui.LoginActivity
+import com.nhathuy.nextmeet.ui.ProfileEditActivity
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -26,9 +32,10 @@ import java.util.Locale
 
 
 /**
- * A simple [Fragment] subclass.
- * Use the [SettingsFragment.newInstance] factory method to
- * create an instance of this fragment.
+ * Fragment quản lý cài đặt ứng dụng
+ *
+ * @author TravisHuy(Ho Nhat Huy)
+ * @since 30.06.2025
  */
 @AndroidEntryPoint
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
@@ -36,7 +43,20 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private val binding get() = _binding!!
 
     private lateinit var userViewModel: UserViewModel
+    private lateinit var sharedPreferences: SharedPreferences
 
+    companion object {
+        private const val PREF_LANGUAGE = "pref_language"
+        private const val PREF_THEME = "pref_theme"
+        private const val PREF_NOTIFICATIONS = "pref_notifications"
+
+        private const val THEME_LIGHT = "light"
+        private const val THEME_DARK = "dark"
+        private const val THEME_SYSTEM = "system"
+
+        private const val LANG_VIETNAMESE = "vi"
+        private const val LANG_ENGLISH = "en"
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -49,13 +69,16 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
-
+        initializeComponents()
         setupUserInfo()
-        setupLogoutButton()
+        setupClickListeners()
+        setupInitialStates()
         observeLogoutState()
-        displayLoginTime()
 
+    }
+    private fun initializeComponents() {
+        userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
     }
 
     private fun setupUserInfo() {
@@ -79,34 +102,90 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             tvUserPhone.text = user.phone
             tvUserEmail.text = user.email
 
-            // Hiển thị trạng thái Remember Me
-            val rememberMeStatus = if (userViewModel.isRememberMeEnabled()) {
-                getString(R.string.enabled)
-            } else {
-                getString(R.string.disabled)
-            }
-            tvRememberMeStatus.text = getString(R.string.remember_me_status, rememberMeStatus)
-
-            // Hiển thị thông tin về địa chỉ nếu có
-            if (user.defaultLatitude != null && user.defaultLongitude != null) {
-                tvUserLocation.visibility = View.VISIBLE
-                tvUserLocation.text = getString(
-                    R.string.location_format,
-                    user.defaultLatitude.toString(),
-                    user.defaultLongitude.toString()
-                )
-            } else {
-                tvUserLocation.visibility = View.GONE
-            }
+            val initials = getInitials(user.name)
+            binding.ivUserAvatar.text = initials
         }
     }
 
     /**
-     * Thiết lập sự kiện cho nút đăng xuất
+     * Lay user 2 chu
      */
-    private fun setupLogoutButton() {
-        binding.btnLogout.setOnClickListener {
-            showLogoutConfirmation()
+    private fun getInitials(contactName: String): String {
+        return contactName.split(" ")
+            .mapNotNull { it.firstOrNull()?.toString()?.uppercase() }
+            .take(2)
+            .joinToString("")
+            .ifEmpty { "?" }
+    }
+
+    /**
+     * setup click
+     */
+    private fun setupClickListeners(){
+        binding.apply {
+
+            //edit button
+            btnEditProfile.setOnClickListener {
+                startActivity(Intent(requireContext(), ProfileEditActivity::class.java))
+            }
+
+            //language setting
+            llLanguageSetting.setOnClickListener {
+                showLanguageDialog()
+            }
+
+            // Theme setting
+            llThemeSetting.setOnClickListener {
+                showThemeDialog()
+            }
+
+            // Notifications switch
+            switchNotifications.setOnCheckedChangeListener { _, isChecked ->
+                handleNotificationToggle(isChecked)
+            }
+
+            // Rate app
+            llRateApp.setOnClickListener {
+                rateApp()
+            }
+
+            // Feedback
+            llFeedback.setOnClickListener {
+                sendFeedback()
+            }
+
+            // About
+            llAbout.setOnClickListener {
+                showAboutDialog()
+            }
+
+            // Logout button
+            btnLogout.setOnClickListener {
+                showLogoutConfirmation()
+            }
+        }
+    }
+
+    // init state
+    private fun setupInitialStates(){
+        // set ngon ngu hien tại
+        val currentLanguage = sharedPreferences.getString(PREF_LANGUAGE,LANG_VIETNAMESE)
+        updateLanguageDisplay(currentLanguage ?: LANG_VIETNAMESE)
+
+        // cai dat theme hiện tại
+        val currentTheme = sharedPreferences.getString(PREF_THEME, THEME_SYSTEM)
+        updateThemeDisplay(currentTheme ?: THEME_SYSTEM)
+
+        // cài đặt trạng thái của thông báo
+        val notificationEnabled = sharedPreferences.getBoolean(PREF_NOTIFICATIONS,true)
+        binding.switchNotifications.isChecked = notificationEnabled
+
+        //cài đặt app
+        try {
+            val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
+            binding.tvAppVersion.text = getString(R.string.version_format, packageInfo.versionName)
+        } catch (e: Exception) {
+            binding.tvAppVersion.text = getString(R.string.version_unknown)
         }
     }
 
@@ -122,6 +201,184 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             }
             .setNegativeButton(R.string.no, null)
             .show()
+    }
+
+    /**
+     * Hiển thị dialog voi ngôn ngu
+     */
+    private fun showLanguageDialog(){
+        val languages = arrayOf(
+            getString(R.string.viet_namese),
+            getString(R.string.english)
+        )
+
+        val languageCodes = arrayOf(LANG_VIETNAMESE,LANG_ENGLISH)
+        val currentLanguage = sharedPreferences.getString(PREF_LANGUAGE,LANG_VIETNAMESE)
+        val selectedIndex = languageCodes.indexOf(currentLanguage)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.select_language))
+            .setSingleChoiceItems(languages,selectedIndex) {
+                dialog, which ->
+                val selectedLanguage = languageCodes[which]
+                if(selectedLanguage != currentLanguage){
+                    changeLanguage(selectedLanguage)
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel),null)
+            .show()
+    }
+
+    /**
+     * thay đổi ngôn ngữ
+     */
+    private fun changeLanguage(languageCode: String) {
+        sharedPreferences.edit().putString(PREF_LANGUAGE,languageCode).apply()
+        updateLanguageDisplay(languageCode)
+
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+
+        requireActivity().recreate()
+    }
+
+    // cap nhat hien thị ngôn ngữ
+    private fun updateLanguageDisplay(languageCode: String) {
+        val languageText = when(languageCode){
+            LANG_VIETNAMESE -> getString(R.string.viet_namese)
+            LANG_ENGLISH -> getString(R.string.english)
+            else -> getString(R.string.viet_namese)
+        }
+        binding.tvCurrentLanguage.text = languageText
+    }
+
+    // hiển thị theme dialog
+    private fun showThemeDialog(){
+        val themes = arrayOf(
+            getString(R.string.light_theme),
+            getString(R.string.dark_theme),
+            getString(R.string.system_theme)
+        )
+
+        val themeCodes = arrayOf(THEME_LIGHT,THEME_DARK,THEME_SYSTEM)
+        val currentTheme = sharedPreferences.getString(PREF_THEME,THEME_SYSTEM)
+        val selectedIndex = themeCodes.indexOf(currentTheme)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.select_theme))
+            .setSingleChoiceItems(themes,selectedIndex) {
+                dialog, which ->
+                val selectedTheme = themeCodes[which]
+                if(selectedTheme != currentTheme){
+                    changeTheme(selectedTheme)
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel),null)
+            .show()
+    }
+
+    // thay đổi theme
+    private fun changeTheme(themeCode: String) {
+        sharedPreferences.edit().putString(PREF_THEME, themeCode).apply()
+        updateThemeDisplay(themeCode)
+
+        // ap dung theme thay doi
+        val mode = when (themeCode) {
+            THEME_LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+            THEME_DARK -> AppCompatDelegate.MODE_NIGHT_YES
+            THEME_SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+        AppCompatDelegate.setDefaultNightMode(mode)
+    }
+
+    // cập nhật theme
+    private fun updateThemeDisplay(themeCode: String) {
+        val themeText = when (themeCode) {
+            THEME_LIGHT -> getString(R.string.light_theme)
+            THEME_DARK -> getString(R.string.dark_theme)
+            THEME_SYSTEM -> getString(R.string.system_theme)
+            else -> getString(R.string.system_theme)
+        }
+        binding.tvCurrentTheme.text = themeText
+    }
+
+    // xử lý handle notification
+    private fun handleNotificationToggle(isEnabled: Boolean) {
+        sharedPreferences.edit().putBoolean(PREF_NOTIFICATIONS, isEnabled).apply()
+
+        if (isEnabled) {
+            // Enable notifications
+//            Toast.makeText(requireContext(), R.string.notifications_enabled, Toast.LENGTH_SHORT).show()
+            // TODO: Register for push notifications or enable local notifications
+        } else {
+            // Disable notifications
+//            Toast.makeText(requireContext(), R.string.notifications_disabled, Toast.LENGTH_SHORT).show()
+            // TODO: Unregister from push notifications or disable local notifications
+        }
+    }
+
+    //đánh giá app
+    private fun rateApp(){
+        try {
+            val uri = Uri.parse("market://details?id=${requireContext().packageName}")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+        }
+        catch(e:Exception){
+            val uri = Uri.parse("https://play.google.com/store/apps/details?id=${requireContext().packageName}")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+        }
+    }
+
+    // gửi send feed back
+    private fun sendFeedback(){
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:")
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("honhathuy098@gmail.com"))
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.feedback_subject))
+            putExtra(Intent.EXTRA_TEXT, getString(R.string.feedback_template))
+        }
+
+        try {
+            startActivity(Intent.createChooser(intent, getString(R.string.send_feedback)))
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), R.string.no_email_app, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showAboutDialog() {
+        val packageInfo = try {
+            requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
+        } catch (e: Exception) {
+            null
+        }
+
+        val aboutMessage = getString(
+            R.string.about_message,
+            packageInfo?.versionName ?: "Unknown",
+            packageInfo?.versionCode ?: 0
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.about)
+            .setMessage(aboutMessage)
+            .setPositiveButton(R.string.ok, null)
+            .setNeutralButton(R.string.privacy_policy) { _, _ ->
+                openPrivacyPolicy()
+            }
+            .show()
+    }
+
+    private fun openPrivacyPolicy() {
+        val uri = Uri.parse("https://nextmeet.com/privacy-policy")
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+        startActivity(intent)
     }
 
     /**
@@ -170,9 +427,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
 
     private fun displayLoginTime() {
-        val currentTime =
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-        binding.tvLoginTime.text = getString(R.string.login_time_format, currentTime)
+//        val currentTime =
+//            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+//        binding.tvLoginTime.text = getString(R.string.login_time_format, currentTime)
     }
 
     override fun onDestroyView() {
