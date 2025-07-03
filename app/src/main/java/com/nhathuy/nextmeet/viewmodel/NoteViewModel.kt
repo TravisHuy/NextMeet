@@ -335,6 +335,7 @@ class NoteViewModel @Inject constructor(
 
             noteRepository.deleteNote(noteId)
                 .onSuccess {
+                    cancelNoteNotification(noteId)
                     _uiState.value = NoteUiState.NoteDeleted("Ghi chú đã được xóa")
                 }
                 .onFailure { error ->
