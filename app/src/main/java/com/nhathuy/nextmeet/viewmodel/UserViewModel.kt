@@ -12,7 +12,9 @@ import com.nhathuy.nextmeet.repository.UserRepository
 import com.nhathuy.nextmeet.resource.Resource
 import com.nhathuy.nextmeet.utils.ValidationUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,8 +28,8 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
     private val _loginState = MutableStateFlow<Resource<User>>(Resource.Loading())
     val loginState :StateFlow<Resource<User>> = _loginState
 
-    private val _updateState = MutableStateFlow<Resource<Boolean>>(Resource.Loading())
-    val updateState : StateFlow<Resource<Boolean>> =_updateState
+    private val _updateState = MutableStateFlow<Resource<Boolean>?>(null)
+    val updateState : StateFlow<Resource<Boolean>?> = _updateState
 
     private val _logoutState = MutableStateFlow<Resource<Boolean>>(Resource.Loading())
     val logoutState : StateFlow<Resource<Boolean>> =_logoutState
@@ -48,6 +50,10 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
     // Remember me state
     private val _rememberMeState = MutableStateFlow(repository.isRememberMeEnabled())
     val rememberMeState: StateFlow<Boolean> = _rememberMeState
+
+    //update user
+    private val _userEditFormState = MutableStateFlow<Map<String, ValidationResult>>(emptyMap())
+    val userEditFormState: StateFlow<Map<String, ValidationResult>> = _userEditFormState
 
     fun register(user: User) = viewModelScope.launch {
         repository.register(user).collect{
@@ -187,6 +193,31 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
 
         return isValid
     }
+    /**
+     * validate va update user information
+     * @param user User object containing updated information
+     * @return Whether validation passed
+     */
+    fun validateAndUpdateUser(user: User): Boolean {
+        val nameValidation = ValidationUtils.validateName(user.name)
+        val emailValidation = ValidationUtils.validateEmail(user.email)
+        val phoneValidation = ValidationUtils.validatePhone(user.phone)
+//        val addressValidation = ValidationUtils.validateAddress(user.defaultAddress)
+
+        val validationResults = mapOf(
+            "name" to nameValidation,
+            "email" to emailValidation,
+            "phone" to phoneValidation
+        )
+
+        _userEditFormState.value = validationResults
+
+        val isValid = validationResults.all { it.value.isValid }
+        if (isValid){
+            updateUser(user)
+        }
+        return isValid
+    }
 
     /**
      * Checks if a user is currently logged in
@@ -222,6 +253,12 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
      */
     fun getUserPhone(): String {
         return repository.getUserPhone()
+    }
+    /**
+     * Cập nhật trạng thái và thông tin người dùng
+     */
+    fun resetUpdateState() {
+        _updateState.value = null
     }
 
 

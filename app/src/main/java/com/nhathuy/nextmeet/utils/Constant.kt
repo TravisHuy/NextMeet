@@ -8,6 +8,7 @@ object Constant {
     const val EXTRA_NOTE_ID = "note_id"
     const val LOCATION_PERMISSION_REQUEST_CODE = 1001
     const val EXTRA_APPOINTMENT_ID= "extra_appointment_id"
+    const val EXTRA_USER_ID = "user_id"
 
     const val FILTER_TODAY = "Today"
     const val FILTER_PINNED = "Pinned"

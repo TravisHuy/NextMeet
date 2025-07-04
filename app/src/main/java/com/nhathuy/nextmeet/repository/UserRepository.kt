@@ -30,6 +30,10 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
     suspend fun register(user:User) : Flow<Resource<Boolean>> = flow{
         emit(Resource.Loading())
         try {
+            if(userDao.isPhoneExists(user.phone)){
+                emit(Resource.Error("Phone number already registered"))
+                return@flow
+            }
             val userId = userDao.register(user)
             emit(Resource.Success(userId > 0))
         }
@@ -65,6 +69,11 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
     suspend fun  updateUser(user: User) : Flow<Resource<Boolean>> = flow{
         emit(Resource.Loading())
         try{
+            // kiểm tra số điện thoại đã tồn tại cho người dùng khác
+            if (userDao.isPhoneExistsForOtherUser(user.phone, user.id)) {
+                emit(Resource.Error("Số điện thoại đã được sử dụng bởi người dùng khác"))
+                return@flow
+            }
             userDao.updateUser(user)
             emit(Resource.Success(true))
         }
@@ -142,5 +151,12 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
      */
     fun getUserPhone(): String {
         return sessionManager.getUserPhone()
+    }
+
+    /**
+     * Kiểm tra số điện thoại đã tồn tại chưa
+     */
+    suspend fun isPhoneExists(phone: String): Boolean {
+        return userDao.isPhoneExists(phone)
     }
 }
