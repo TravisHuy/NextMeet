@@ -27,11 +27,12 @@ import com.nhathuy.nextmeet.fragment.PhotoAlbumBottomSheet
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.model.ChecklistItem
-import com.nhathuy.nextmeet.model.NoteImage
+import com.nhathuy.nextmeet.model.ImageItem
 import com.nhathuy.nextmeet.model.Photo
 import com.nhathuy.nextmeet.resource.NoteUiState
 import com.nhathuy.nextmeet.resource.NotificationUiState
 import com.nhathuy.nextmeet.utils.Constant
+import com.nhathuy.nextmeet.utils.ImagePathUtils
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
 import com.nhathuy.nextmeet.viewmodel.NotificationViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
@@ -57,7 +58,7 @@ class AddNoteActivity : AppCompatActivity() {
 
     // Data collections
     private val checklistItems = mutableListOf<ChecklistItem>()
-    private val imageList = mutableListOf<NoteImage>()
+    private val imagePaths = mutableListOf<String>()
 
     // Note properties
     private var noteType: NoteType? = null
@@ -77,10 +78,6 @@ class AddNoteActivity : AppCompatActivity() {
     private var isEditMode = false
     private var currentNote: Note? = null
 
-
-    private val originalImageList = mutableListOf<NoteImage>()
-    private val imagesToDelete = mutableListOf<NoteImage>()
-    private val imagesToAdd =  mutableListOf<NoteImage>()
     private var hasUnsavedChanges = false
     private var isNotificationScheduled = false
 
@@ -206,11 +203,6 @@ class AddNoteActivity : AppCompatActivity() {
 
                     is NoteUiState.NoteCreated -> {
                         Log.d("AddNoteActivity", "Note created with ID: ${state.noteId}")
-                        if (noteType == NoteType.PHOTO && imageList.isNotEmpty()) {
-                            val noteId = state.noteId.toInt()
-                            val imagesToSave = imageList.map { it.copy(noteId = noteId) }
-                            noteViewModel.insertImagesForNote(imagesToSave)
-                        }
                         showSuccessAndFinish(state.message)
                     }
 
@@ -311,7 +303,7 @@ class AddNoteActivity : AppCompatActivity() {
 
             NoteType.PHOTO -> {
                 binding.textEdPhotoContent.setText(note.content)
-                loadExistingImages(note.id)
+                loadImagePathsFromNote(note.imagePaths)
             }
 
             else -> {
@@ -350,31 +342,30 @@ class AddNoteActivity : AppCompatActivity() {
     }
 
     /**
-     * Load existing images cho PHOTO note
+     * Load image paths from note's imagePaths field
      */
-    private fun loadExistingImages(noteId: Int) {
-        noteViewModel.getImagesForNote(noteId) { images ->
-
-            // lưu danh sách goc
-            originalImageList.clear()
-            originalImageList.addAll(images)
-
-            // hiển thị ảnh hien tại
-            imageList.clear()
-            imageList.addAll(images)
-
-            // Update layout manager span count
-            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
-            layoutManager.spanCount = calculateSpanCount(imageList.size)
-
-            // Update adapter
-            mediaAdapter.notifyDataSetChanged()
-            binding.rvMediaItems.post {
-                binding.rvMediaItems.requestLayout()
-            }
-
-            Log.d("AddNoteActivity", "Loaded ${images.size} existing images")
+    private fun loadImagePathsFromNote(imagePathsString: String?) {
+        // Parse image paths from string
+        val paths = ImagePathUtils.parseImagePaths(imagePathsString)
+        
+        // Update local paths list
+        imagePaths.clear()
+        imagePaths.addAll(paths)
+        
+        // Convert to ImageItem objects for adapter
+        val imageItems = paths.map { ImageItem(it) }
+        
+        // Update layout manager span count
+        val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
+        layoutManager.spanCount = calculateSpanCount(imagePaths.size)
+        
+        // Update adapter
+        mediaAdapter.setImages(imageItems)
+        binding.rvMediaItems.post {
+            binding.rvMediaItems.requestLayout()
         }
+        
+        Log.d("AddNoteActivity", "Loaded ${paths.size} image paths from note")
     }
 
     /**
@@ -551,47 +542,18 @@ class AddNoteActivity : AppCompatActivity() {
         return imagesToDelete.isNotEmpty() || imagesToAdd.isNotEmpty() || content != (note.content ?: "")
     }
 
-    /**
-     * Áp dụng các thay đổi ảnh vào database - New method
-     */
-    private fun applyImageChanges() {
-        if (!isEditMode) return
 
-        // Xóa ảnh đã đánh dấu xóa
-        if (imagesToDelete.isNotEmpty()) {
-            imagesToDelete.forEach { image ->
-                noteViewModel.deleteImage(image)
-            }
-            Log.d("AddNoteActivity", "Deleted ${imagesToDelete.size} images")
-        }
-
-        // Thêm ảnh mới
-        if (imagesToAdd.isNotEmpty()) {
-            val imagesToSave = imagesToAdd.map { it.copy(noteId = noteId) }
-            noteViewModel.insertImagesForNote(imagesToSave)
-            Log.d("AddNoteActivity", "Added ${imagesToAdd.size} new images")
-        }
-
-        // Clear pending changes
-        imagesToDelete.clear()
-        imagesToAdd.clear()
-    }
     /**
      * Hủy bỏ các thay đổi ảnh - New method
      */
     private fun discardImageChanges() {
-        // Restore original image list
-        imageList.clear()
-        imageList.addAll(originalImageList)
-
-        // Clear pending changes
-        imagesToDelete.clear()
-        imagesToAdd.clear()
+        // Clear image paths
+        imagePaths.clear()
 
         // Update UI
         val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
-        layoutManager.spanCount = calculateSpanCount(imageList.size)
-        mediaAdapter.notifyDataSetChanged()
+        layoutManager.spanCount = calculateSpanCount(imagePaths.size)
+        mediaAdapter.setImages(emptyList())
         binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
 
         Log.d("AddNoteActivity", "Image changes discarded")
@@ -639,11 +601,11 @@ class AddNoteActivity : AppCompatActivity() {
      * Setup media section (RecyclerView cho images)
      */
     private fun setupMediaSection() {
-        mediaAdapter = MediaAdapter(imageList) { noteImage ->
-            handleImageRemoval(noteImage)
+        mediaAdapter = MediaAdapter(mutableListOf()) { imageItem ->
+            handleImageRemoval(imageItem)
         }
 
-        val gridLayoutManager = GridLayoutManager(this, calculateSpanCount(imageList.size))
+        val gridLayoutManager = GridLayoutManager(this, calculateSpanCount(imagePaths.size))
 
         binding.rvMediaItems.apply {
             layoutManager = gridLayoutManager
@@ -670,30 +632,25 @@ class AddNoteActivity : AppCompatActivity() {
         try {
             hasUnsavedChanges = true
 
-            val noteImages = selectedPhotos.map { photo ->
-                NoteImage(
-                    noteId = if (isEditMode) noteId else 0,
-                    imagePath = photo.uri
-                )
-            }
-
+            val newImagePaths = selectedPhotos.map { photo -> photo.uri }
+            
             // Add to data source
-            imageList.addAll(noteImages)
-
-            // Add to pending list for edit mode
-            imagesToAdd.addAll(noteImages)
+            imagePaths.addAll(newImagePaths)
 
             // Update span count based on new size
             val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
-            layoutManager.spanCount = calculateSpanCount(imageList.size)
+            layoutManager.spanCount = calculateSpanCount(imagePaths.size)
 
+            // Convert to ImageItem objects for adapter
+            val imageItems = newImagePaths.map { ImageItem(it) }
+            
             // Update adapter
-            mediaAdapter.addMultipleImages(noteImages)
+            mediaAdapter.addMultipleImages(imageItems)
 
             // Force layout update
             binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
 
-            val count = noteImages.size
+            val count = newImagePaths.size
             Toast.makeText(this, "$count photos added", Toast.LENGTH_SHORT).show()
             Log.d("AddNoteActivity", "$count photos selected from gallery")
 
@@ -706,26 +663,21 @@ class AddNoteActivity : AppCompatActivity() {
     /**
      * Xu ly xoa anh
      */
-    private fun handleImageRemoval(noteImage: NoteImage){
+    private fun handleImageRemoval(imageItem: ImageItem){
         hasUnsavedChanges = true
 
-        if (isEditMode && noteImage.id != 0) {
-            // Nếu là ảnh đã tồn tại trong database
-            imagesToDelete.add(noteImage)
-        } else {
-            // Nếu là ảnh mới thêm vào (chưa save)
-            imagesToAdd.remove(noteImage)
-        }
-
-        // Remove từ danh sách hiển thị
-        mediaAdapter.removeImage(noteImage)
+        // Remove from the paths list
+        imagePaths.remove(imageItem.imagePath)
+        
+        // Remove from adapter
+        mediaAdapter.removeImage(imageItem)
 
         // Update layout after removal
         val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
-        layoutManager.spanCount = calculateSpanCount(imageList.size)
+        layoutManager.spanCount = calculateSpanCount(imagePaths.size)
         binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
 
-        Log.d("AddNoteActivity", "Image marked for removal: ${noteImage.imagePath}")
+        Log.d("AddNoteActivity", "Image removed: ${imageItem.imagePath}")
     }
 
     /**
@@ -830,7 +782,7 @@ class AddNoteActivity : AppCompatActivity() {
             NoteType.PHOTO -> {
                 val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
 
-                if (imageList.isEmpty()) {
+                if (imagePaths.isEmpty()) {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
                     return
                 }
@@ -843,7 +795,8 @@ class AddNoteActivity : AppCompatActivity() {
                     color = selectedColorName,
                     isPinned = isPinned,
                     isShared = isShared,
-                    reminderTime = reminderTime
+                    reminderTime = reminderTime,
+                    imagePaths = ImagePathUtils.imagePathsToString(imagePaths)
                 )
                 if(reminderTime != null){
                     noteViewModel.createNote(note,true)
@@ -954,7 +907,7 @@ class AddNoteActivity : AppCompatActivity() {
 
                 val content = binding.textEdContent.text?.toString()?.trim() ?: ""
 
-                if (imageList.isEmpty()) {
+                if (imagePaths.isEmpty()) {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
                     return
                 }
@@ -966,7 +919,8 @@ class AddNoteActivity : AppCompatActivity() {
                         content = content,
                         color = selectedColorName,
                         reminderTime = reminderTime,
-                        shouldSetReminder = true
+                        shouldSetReminder = true,
+                        imagePaths = ImagePathUtils.imagePathsToString(imagePaths)
                     )
                 }
                 else{
@@ -976,11 +930,10 @@ class AddNoteActivity : AppCompatActivity() {
                         content = content,
                         color = selectedColorName,
                         reminderTime = reminderTime,
-                        shouldSetReminder = false
+                        shouldSetReminder = false,
+                        imagePaths = ImagePathUtils.imagePathsToString(imagePaths)
                     )
                 }
-                // Images are handled separately when added/removed
-                applyImageChanges()
             }
 
             else -> {
