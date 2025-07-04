@@ -13,7 +13,7 @@ import com.nhathuy.nextmeet.databinding.ItemNoteLayoutBinding
 import com.nhathuy.nextmeet.model.ChecklistItem
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
-import com.nhathuy.nextmeet.model.NoteImage
+import com.nhathuy.nextmeet.utils.ImagePathUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -53,7 +53,6 @@ class NotesAdapter(
 
     private val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val reminderFormatter = SimpleDateFormat("MMM dd", Locale.getDefault())
-    private var noteImagesMap: MutableMap<Int, List<NoteImage>> = mutableMapOf()
 
     inner class NoteViewHolder(val binding: ItemNoteLayoutBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -167,12 +166,12 @@ class NotesAdapter(
 
                         // Hiển thị ảnh đầu tiên nếu có
                         val mediaView = binding.ivMediaPreview
-                        val images = noteImagesMap[note.id] ?: emptyList()
-                        if (images.isNotEmpty()) {
-                            Log.d("NotesAdapter", "Loading image: ${images[0].imagePath}")
+                        val imagePaths = ImagePathUtils.parseImagePaths(note.imagePaths)
+                        if (imagePaths.isNotEmpty()) {
+                            Log.d("NotesAdapter", "Loading image: ${imagePaths[0]}")
                             mediaView.visibility = View.VISIBLE
                             Glide.with(mediaView.context)
-                                .load(images[0].imagePath)
+                                .load(imagePaths[0])
                                 .centerCrop()
                                 .placeholder(R.drawable.ic_photo)
                                 .into(mediaView)
@@ -340,15 +339,6 @@ class NotesAdapter(
         notes.clear()
         notes.addAll(newNotes)
         diffResult.dispatchUpdatesTo(this)
-    }
-
-    // New: update notes and images map directly, no DB/DAO logic here
-    fun updateNotesWithImages(newNotes: List<Note>, noteImagesMap: Map<Int, List<NoteImage>>) {
-        notes.clear()
-        notes.addAll(newNotes)
-        this.noteImagesMap.clear()
-        this.noteImagesMap.putAll(noteImagesMap)
-        notifyDataSetChanged()
     }
 
     //lấy vị trí của note

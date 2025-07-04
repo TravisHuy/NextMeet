@@ -19,6 +19,7 @@ import androidx.room.PrimaryKey
  * @property isArchived Kiểm tra có lưu trữ không
  * @property reminderTime Thời gian nhắc nhỡ
  * @property checkListItems Danh sách công việc (lưu json)
+ * @property imagePaths Đường dẫn các ảnh (lưu dạng chuỗi phân cách)
  * @property createdAt Thời gian tạo
  * @property updatedAt Thời gian update
  *
@@ -57,6 +58,8 @@ data class Note(
     val reminderTime: Long? = null,
     @ColumnInfo(name = "check_list_items")
     val checkListItems : String? = null,
+    @ColumnInfo(name = "image_paths")
+    val imagePaths: String? = null,
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at")

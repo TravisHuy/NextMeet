@@ -204,7 +204,8 @@ class NoteRepository @Inject constructor(
         noteType: NoteType? = null,
         color: String? = null,
         reminderTime: Long? = null,
-        checkListItems: String? = null
+        checkListItems: String? = null,
+        imagePaths: String? = null
     ): Result<Unit> {
         return try {
             val existingNote = noteDao.getNoteById(noteId)
@@ -224,6 +225,7 @@ class NoteRepository @Inject constructor(
                 color = color ?: existingNote.color,
                 reminderTime = reminderTime ?: existingNote.createdAt,
                 checkListItems = checkListItems ?: existingNote.checkListItems,
+                imagePaths = imagePaths ?: existingNote.imagePaths,
                 updatedAt = System.currentTimeMillis()
             )
 

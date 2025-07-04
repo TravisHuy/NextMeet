@@ -214,15 +214,15 @@ class NotesFragment : Fragment() , NavigationCallback{
         }
         combinedNotes.addAll(unpinnedNotes)
 
-        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
-        notesAdapter.updateNotesWithImages(combinedNotes, noteImagesMap)
+        // Use updateNotes instead of updateNotesWithImages
+        notesAdapter.updateNotes(combinedNotes)
         updateEmptyState(combinedNotes.isEmpty())
     }
 
     // hiển thị note pin
     private fun showPinnedNotes() {
-        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
-        notesAdapter.updateNotesWithImages(pinnedNotes, noteImagesMap)
+        // Use updateNotes instead of updateNotesWithImages
+        notesAdapter.updateNotes(pinnedNotes)
         updateEmptyState(pinnedNotes.isEmpty())
     }
 
@@ -232,8 +232,8 @@ class NotesFragment : Fragment() , NavigationCallback{
             it.reminderTime != null && it.reminderTime > System.currentTimeMillis()
         }
 
-        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
-        notesAdapter.updateNotesWithImages(reminderNotes, noteImagesMap)
+        // Use updateNotes instead of updateNotesWithImages
+        notesAdapter.updateNotes(reminderNotes)
         updateEmptyState(reminderNotes.isEmpty())
     }
 

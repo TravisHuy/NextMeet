@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.nhathuy.nextmeet.databinding.ItemMediaBinding
-import com.nhathuy.nextmeet.model.NoteImage
+import com.nhathuy.nextmeet.model.ImageItem
 
 /**
  * Adapter hiển thị danh sách ảnh trong AddNoteActivity
@@ -14,19 +14,19 @@ import com.nhathuy.nextmeet.model.NoteImage
  * @since 03/06/2025
  */
 class MediaAdapter(
-    private val images: MutableList<NoteImage>,
-    private val onRemovedClick : (NoteImage)  -> Unit
+    private val images: MutableList<ImageItem>,
+    private val onRemovedClick : (ImageItem)  -> Unit
 ) : RecyclerView.Adapter<MediaAdapter.MediaViewHolder>() {
 
     inner class MediaViewHolder(val binding: ItemMediaBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(noteImage: NoteImage) {
+        fun bind(imageItem: ImageItem) {
             Glide.with(itemView.context)
-                .load(noteImage.imagePath)
+                .load(imageItem.imagePath)
                 .centerCrop()
                 .into(binding.ivMedia)
             binding.btnRemoveImage.setOnClickListener {
-                onRemovedClick(noteImage)
+                onRemovedClick(imageItem)
             }
         }
     }
@@ -48,8 +48,8 @@ class MediaAdapter(
 
     override fun getItemCount(): Int = images.size
 
-    fun removeImage(noteImage: NoteImage){
-        val index = images.indexOf(noteImage)
+    fun removeImage(imageItem: ImageItem){
+        val index = images.indexOf(imageItem)
         if(index != -1){
             images.removeAt(index)
             
@@ -89,10 +89,10 @@ class MediaAdapter(
         }
     }
 
-    fun addImages(noteImage: NoteImage){
+    fun addImages(imageItem: ImageItem){
         // Kiểm tra xem ảnh đã tồn tại chưa
-        if (!images.any { it.imagePath == noteImage.imagePath }) {
-            images.add(noteImage)
+        if (!images.any { it.imagePath == imageItem.imagePath }) {
+            images.add(imageItem)
             
             // Update span count if needed
             updateSpanCount()
@@ -101,7 +101,7 @@ class MediaAdapter(
         }
     }
 
-    fun addMultipleImages(newImages: List<NoteImage>) {
+    fun addMultipleImages(newImages: List<ImageItem>) {
         val uniqueImages = newImages.filter { newImage ->
             // Kiểm tra trùng lặp dựa trên imagePath
             !images.any { existingImage -> existingImage.imagePath == newImage.imagePath }
@@ -133,13 +133,13 @@ class MediaAdapter(
         }
     }
 
-    fun setImages(newImages : List<NoteImage>){
+    fun setImages(newImages : List<ImageItem>){
         images.clear()
         images.addAll(newImages)
         notifyDataSetChanged()
     }
 
-    fun replaceAllImages(newImages: List<NoteImage>) {
+    fun replaceAllImages(newImages: List<ImageItem>) {
         images.clear()
         images.addAll(newImages)
         notifyDataSetChanged()
