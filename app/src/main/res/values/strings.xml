@@ -10,6 +10,7 @@
     <string name="close">Close</string>
     <string name="delete">Delete</string>
     <string name="share">Share</string>
+    <string name="ok">OK</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="today">Today</string>
@@ -142,6 +143,47 @@
     <string name="permission_required_message">Permission required message</string>
     <string name="no_photos_found">No photos found</string>
     <string name="no_albums_found">No albums found</string>
+    <string name="account_actions">Account actions</string>
+    <string name="version">Version</string>
+    <string name="version_format">Version %1$s</string>
+    <string name="version_unknown">Version unknown</string>
+    <string name="feedback_description">Feedback description</string>
+    <string name="feedback">Feedback</string>
+    <string name="rate_app_description">Rate app description</string>
+    <string name="rate_app">Rate app</string>
+    <string name="support">Support</string>
+    <string name="receive_notifications">Receive notifications</string>
+    <string name="notifications">Notifications</string>
+    <string name="is_system">Theo hệ thống</string>
+    <string name="theme">Theme</string>
+    <string name="language">Language</string>
+    <string name="app_settings">App settings</string>
+    <string name="viet_namese">Tiếng Việt</string>
+    <string name="english">English</string>
+    <string name="select_language">Select language</string>
+    <string name="light_theme">Light theme</string>
+    <string name="dark_theme">Dark theme</string>
+    <string name="system_theme">System theme</string>
+    <string name="select_theme">Select theme</string>
+
+    <!-- Feedback -->
+    <string name="feedback_subject">NextMeet App Feedback</string>
+    <string name="feedback_template">Hello NextMeet team,\n\nI would like to provide feedback about the app:\n\n</string>
+    <string name="send_feedback">Send Feedback</string>
+    <string name="no_email_app">No email app found</string>
+
+    <!-- About -->
+    <string name="about_message">NextMeet\nVersion: %1$s (Build: %2$d)\n\nA meeting management application that helps you organize and track your appointments efficiently.\n\nDeveloped by TravisHuy\n© 2025 NextMeet</string>
+    <string name="privacy_policy">Privacy Policy</string>
+
+    <!-- Profile -->
+    <string name="edit_profile">Edit Profile</string>
+    <string name="full_name">Full Name</string>
+    <string name="input_full_name">Input full name...</string>
+    <string name="phone">Phone</string>
+    <string name="email">Email</string>
+    <string name="edit">Edit</string>
+    <string name="hint_enter_address_or_select_from_map">Nhập địa chỉ hoặc chọn từ bản đồ...</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

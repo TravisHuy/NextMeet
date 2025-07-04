@@ -49,11 +49,26 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
         binding = ActivityGoogleMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
+        getIntentData()
+
         initializeMap()
         initializeFusedLocation()
         setupSearchView()
         setupSaveButton()
         setupFilterButton()
+    }
+
+    // lấy dữ liệu từ intent
+    private fun getIntentData(){
+        val lat = intent.getDoubleExtra(EXTRA_SELECTED_LAT, 0.0)
+        val lng = intent.getDoubleExtra(EXTRA_SELECTED_LNG, 0.0)
+        val address = intent.getStringExtra(EXTRA_SELECTED_ADDRESS)
+
+        if (lat != 0.0 && lng != 0.0) {
+            selectedLatLng = LatLng(lat, lng)
+            selectAddress = address
+        }
     }
 
     private fun initializeMap() {
@@ -180,7 +195,9 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
         ) {
             mMap.isMyLocationEnabled = true
 
-            getCurrentLocationAndSetMarker()
+            if (selectedLatLng == null) {
+                getCurrentLocationAndSetMarker()
+            }
 
             mMap.setOnMyLocationButtonClickListener {
                 getCurrentLocationAndSetMarker()

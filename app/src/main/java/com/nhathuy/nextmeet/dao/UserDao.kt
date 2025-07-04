@@ -37,4 +37,23 @@ interface UserDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM users WHERE phone = :phone)")
     suspend fun isPhoneRegistered(phone: String): Boolean
+
+    /**
+     * Kiểm tra số điện thoại đã tồn tại trong hệ thống chưa
+     * @param phone Số điện thoại cần kiểm tra
+     * @return true nếu số điện thoại đã tồn tại, false nếu chưa
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE phone = :phone)")
+    suspend fun isPhoneExists(phone: String): Boolean
+
+    /**
+     * Kiểm tra số điện thoại đã tồn tại cho user khác (dùng cho update)
+     * @param phone Số điện thoại cần kiểm tra
+     * @param userId ID của user hiện tại (để loại trừ)
+     * @return true nếu số điện thoại đã được user khác sử dụng
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE phone = :phone AND id != :userId)")
+    suspend fun isPhoneExistsForOtherUser(phone: String, userId: Int): Boolean
+
+
 }

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.location.Geocoder
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -144,13 +145,15 @@ class AddAppointmentActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddAppointmentBinding.inflate(layoutInflater)
-        enableEdgeToEdge()
         setContentView(binding.root)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.layout_add_appointment)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
         }
 
         initializeData()
@@ -520,7 +523,7 @@ class AddAppointmentActivity : AppCompatActivity() {
     private fun setupColorPicker() {
         colorAdapter = ColorPickerAdapter(listColor, colorSourceNames) { colorResId, colorName ->
             val color = ContextCompat.getColor(this, colorResId)
-            binding.layoutAddAppointment.setBackgroundColor(color)
+            binding.root.setBackgroundColor(color)
             selectedColorName = colorName
         }
 
@@ -537,7 +540,7 @@ class AddAppointmentActivity : AppCompatActivity() {
                 // Đặt lại màu nền cho layout
                 val colorResId = colorNamesToRes[selectedColorName] ?: R.color.color_white
                 val color = ContextCompat.getColor(this@AddAppointmentActivity, colorResId)
-                binding.layoutAddAppointment.setBackgroundColor(color)
+                binding.root.setBackgroundColor(color)
             }
         }
     }

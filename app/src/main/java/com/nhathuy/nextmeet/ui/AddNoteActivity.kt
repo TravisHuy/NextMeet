@@ -1,6 +1,7 @@
 package com.nhathuy.nextmeet.ui
 
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -133,14 +134,16 @@ class AddNoteActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddNoteBinding.inflate(layoutInflater)
-        enableEdgeToEdge()
         setContentView(binding.root)
 
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.layout_add_note)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
         }
 
         initializeFromIntent()
@@ -963,7 +966,7 @@ class AddNoteActivity : AppCompatActivity() {
 
             NoteType.PHOTO -> {
 
-                val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+                val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
 
                 if (imageList.isEmpty()) {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
@@ -1118,6 +1121,7 @@ class AddNoteActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
         showDialogBack()
     }
 
