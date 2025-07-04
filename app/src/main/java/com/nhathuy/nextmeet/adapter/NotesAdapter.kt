@@ -22,6 +22,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.google.android.material.imageview.ShapeableImageView
+import com.nhathuy.nextmeet.utils.MediaGridLayoutManager
 
 /**
 * Adapter hiển thị danh sách ghi chú trong RecyclerView.
@@ -59,6 +60,7 @@ class NotesAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         private var checklistAdapter = ChecklistAdapter(emptyList<ChecklistItem>().toMutableList())
+        private var mediaPreviewAdapter: MediaPreviewAdapter? = null
         private var isClickHandled = false
         private val clickHandler = Handler(Looper.getMainLooper())
 
@@ -149,38 +151,24 @@ class NotesAdapter(
                         rvChecklistPreview.visibility = View.GONE
                         tvChecklistCount.visibility = View.GONE
                         tvContent.text = note.content
-                        ivMediaPreview.visibility = View.GONE
+                        rvMediaPreview.visibility = View.GONE
                     }
 
                     NoteType.CHECKLIST -> {
                         tvContent.visibility = View.GONE
                         rvChecklistPreview.visibility = View.VISIBLE
                         setupCheckListPreview(note)
-                        ivMediaPreview.visibility = View.GONE
+                        rvMediaPreview.visibility = View.GONE
                     }
 
                     NoteType.PHOTO, NoteType.VIDEO -> {
-                        tvContent.visibility = View.VISIBLE
+                        tvContent.visibility = if (note.content.isNotEmpty()) View.VISIBLE else View.GONE
                         tvContent.text = note.content
                         rvChecklistPreview.visibility = View.GONE
                         tvChecklistCount.visibility = View.GONE
+                        rvMediaPreview.visibility = View.VISIBLE
 
-                        // Hiển thị ảnh đầu tiên nếu có
-                        val mediaView = binding.ivMediaPreview
-                        val images = noteImagesMap[note.id] ?: emptyList()
-                        if (images.isNotEmpty()) {
-                            Log.d("NotesAdapter", "Loading image: ${images[0].imagePath}")
-                            mediaView.visibility = View.VISIBLE
-                            Glide.with(mediaView.context)
-                                .load(images[0].imagePath)
-                                .centerCrop()
-                                .placeholder(R.drawable.ic_photo)
-                                .into(mediaView)
-                        } else {
-                            Log.d("NotesAdapter", "No images found for note ${note.id}")
-                            mediaView.visibility = View.VISIBLE
-                            mediaView.setImageResource(R.drawable.ic_photo)
-                        }
+                        setupMediaPreview(note)
                     }
                 }
             }
@@ -196,11 +184,6 @@ class NotesAdapter(
 
                     rvChecklistPreview.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
                     rvChecklistPreview.isNestedScrollingEnabled = false
-
-//                    //
-//                    rvChecklistPreview.setOnClickListener {
-//                        handleNoteClick(note)
-//                    }
 
 
                     val maxItems = 3
@@ -249,6 +232,43 @@ class NotesAdapter(
                     else -> null
                 }
             }.filter { it.text.isNotBlank() }
+        }
+
+        private fun setupMediaPreview(note : Note) {
+            with(binding){
+                val images = noteImagesMap[note.id] ?: emptyList()
+                if(images.isNotEmpty()){
+                    Log.d("NoteAdapter","Setting up media preview for note ${note.id} with ${images.size} images")
+
+                    val maxDisplayImages = 4
+                    val displayImages = images.take(maxDisplayImages)
+                        .toMutableList()
+
+                    val layoutManager = MediaGridLayoutManager(root.context, displayImages.size)
+                    rvMediaPreview.layoutManager = layoutManager
+
+
+                    // Setup adapter
+                    mediaPreviewAdapter = MediaPreviewAdapter(displayImages) { image, position ->
+                        // Xử lý click vào ảnh - có thể mở gallery hoặc full screen
+                        handleNoteClick(note)
+                    }
+                    rvMediaPreview.adapter = mediaPreviewAdapter
+
+
+//                    if (images.size > maxDisplayImages && displayImages.size == maxDisplayImages) {
+//                        setupMoreImagesOverlay(displayImages.last(), images.size - maxDisplayImages)
+//                    }
+
+                    rvMediaPreview.isNestedScrollingEnabled = false
+                    rvMediaPreview.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                }
+            }
+        }
+
+        // Method để setup overlay cho ảnh cuối khi có nhiều ảnh
+        private fun setupMoreImagesOverlay(lastImage: NoteImage, remainingCount: Int) {
+
         }
 
         private fun setupReminder(reminderTime: Long?) {
@@ -315,10 +335,6 @@ class NotesAdapter(
             }
         }
 
-        // Lấy view media preview (ShapeableImageView) trong layout
-//        private fun getMediaPreviewView(): ShapeableImageView {
-//            return binding.contentPreivew.getChildAt(binding.contentPreivew.childCount - 1) as ShapeableImageView
-//        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesAdapter.NoteViewHolder {

@@ -1,14 +1,18 @@
 package com.nhathuy.nextmeet.ui
 
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -131,6 +135,16 @@ class AddNoteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAddNoteBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
+        }
 
         initializeFromIntent()
         setupUI()
@@ -952,7 +966,7 @@ class AddNoteActivity : AppCompatActivity() {
 
             NoteType.PHOTO -> {
 
-                val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+                val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
 
                 if (imageList.isEmpty()) {
                     Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()

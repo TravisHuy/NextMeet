@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/profile_edit_activity"
     tools:context=".ui.ProfileEditActivity">
 
     <!-- App Bar Layout -->
@@ -12,7 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/color_gray"
-        android:fitsSystemWindows="true"
         android:padding="@dimen/padding_large">
 
         <!--Header section-->

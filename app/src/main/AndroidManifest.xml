@@ -31,9 +31,6 @@
             android:name=".ui.ProfileEditActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ProfileActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.AddAppointmentActivity"
             android:exported="false" />
         <activity

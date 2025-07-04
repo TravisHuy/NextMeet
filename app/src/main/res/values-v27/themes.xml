@@ -1,8 +1,9 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <style name="Base.Theme.CustomerManagementApp" parent="Theme.Material3.DayNight.NoActionBar">
 
         <!--Tắt hỗ trợ tai thỏ-->
+        <item name="android:windowLayoutInDisplayCutoutMode">never</item>
 
         <!-- Màu sắc chính -->
         <item name="colorPrimary">@color/light_primary</item>
@@ -24,23 +25,4 @@
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
 
     </style>
-    <style name="Theme.CustomerManagementApp" parent="Base.Theme.CustomerManagementApp" />
-    <style name="DialogAnimation">
-        <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
-        <item name="android:windowExitAnimation">@anim/slide_out_bottom</item>
-    </style>
-    <style name="CustomSearchViewStyle" parent="Widget.AppCompat.SearchView">
-        <item name="queryBackground">@android:color/white</item>
-        <item name="android:textColor">@android:color/black</item>
-    </style>
-
-    <style name="TextAppearance.App.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/light_text_primary</item>
-    </style>
-
-    <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
-    </style>
-
 </resources>
