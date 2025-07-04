@@ -9,10 +9,13 @@ import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.ShareResult
 import com.nhathuy.nextmeet.utils.ImageManager
+import com.nhathuy.nextmeet.utils.getImagePaths
+import com.nhathuy.nextmeet.utils.toImagePathsJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,7 +26,6 @@ import javax.inject.Singleton
 @Singleton
 class NoteRepository @Inject constructor(
     private val noteDao: NoteDao,
-    private val noteImageDao: NoteImageDao,
     private val imageManager: ImageManager
 ) {
 
@@ -109,6 +111,7 @@ class NoteRepository @Inject constructor(
         pinned: Boolean = false,
         shared: Boolean = false,
         reminderTime: Long? = null,
+        imagePaths: List<String> = emptyList(),
         checkListItems: String? = null
     ): Result<Long> {
         return try {
@@ -132,6 +135,7 @@ class NoteRepository @Inject constructor(
                 color = color,
                 isPinned = pinned,
                 isShared = shared,
+                imagePaths = imagePaths.toImagePathsJson(),
                 checkListItems = checkListItems,
                 reminderTime = reminderTime,
                 createdAt = System.currentTimeMillis(),
@@ -159,44 +163,6 @@ class NoteRepository @Inject constructor(
         )
     }
 
-    /**
-     * Cập nhật ghi chú với validation
-     */
-//    suspend fun updateNote(note:Note):Result<Unit>{
-//        return try {
-//            val existingNote = noteDao.getNoteById(note.id)
-//                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn tại"))
-//
-//            // Kiểm tra nhập input
-//            note.color.let {
-//                if (!isValidHexColor(it)) {
-//                    return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
-//                }
-//            }
-//            val updatedNote = existingNote.copy(
-//                title = note.title.trim(),
-//                content = note.content.trim(),
-//                noteType = note.noteType,
-//                color = note.color,
-//                checkListItems =  note.checkListItems?.trim()?.takeIf { it.isNotEmpty() },
-//                updatedAt = System.currentTimeMillis()
-//            )
-//
-//            // kiểm tra hợp lệ với note
-//            if (updatedNote.title.isBlank() && updatedNote.content.isBlank() &&
-//                updatedNote.checkListItems.isNullOrBlank()
-//            ) {
-//                return Result.failure(IllegalArgumentException("Ghi chú không thể trống"))
-//            }
-//
-//            noteDao.updateNote(updatedNote)
-//
-//            Result.success(Unit)
-//        }
-//        catch (e: Exception){
-//            Result.failure(e)
-//        }
-//    }
     suspend fun updateNote(
         noteId: Int,
         title: String? = null,
@@ -247,9 +213,6 @@ class NoteRepository @Inject constructor(
     suspend fun deleteNote(noteId: Int): Result<Unit> {
         return try {
             withContext(Dispatchers.IO) {
-                // Xóa tất cả ảnh của note trước
-                deleteImagesByNoteId(noteId)
-
                 // Xóa note
                 noteDao.deleteNoteById(noteId)
             }
@@ -300,89 +263,6 @@ class NoteRepository @Inject constructor(
         }
     }
 
-
-    /**
-     * Thêm nhiều ảnh cho 1 ghi chú
-     */
-    suspend fun insertImagesForNote(images: List<NoteImage>): Result<Unit> {
-        return try {
-            withContext(Dispatchers.IO) {
-
-                val savedImages = mutableListOf<NoteImage>()
-                for(image in images){
-                    val finalPath = if(image.imagePath.startsWith("content://")){
-                        val uri = Uri.parse(image.imagePath)
-                        imageManager.saveImageFromUri(uri,image.noteId)
-                    }
-                    else {
-                        image.imagePath
-                    }
-
-                    finalPath?.let {
-                        path ->
-                        savedImages.add(image.copy(imagePath =  path))
-                    }
-                }
-                if(savedImages.isNotEmpty()){
-                    noteImageDao.insertImages(savedImages)
-                }
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Lấy danh sách ảnh của 1 ghi chú
-     */
-    suspend fun getImagesForNote(noteId: Int): Result<List<NoteImage>> {
-        return try {
-            val images = noteImageDao.getImagesForNote(noteId)
-            Result.success(images)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Xóa 1 ảnh khỏi ghi chú
-     */
-    suspend fun deleteImage(image: NoteImage): Result<Unit> {
-        return try {
-            withContext(Dispatchers.IO) {
-                imageManager.deleteImage(image.imagePath)
-                noteImageDao.deleteImage(image)
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-
-
-    /**
-     * Xóa tất cả ảnh của 1 ghi chú
-     */
-    suspend fun deleteImagesByNoteId(noteId: Int): Result<Unit> {
-        return try {
-            withContext(Dispatchers.IO) {
-                // Lấy danh sách ảnh trước khi xóa
-                val images = noteImageDao.getImagesForNote(noteId)
-
-                // Xóa từng file ảnh
-                images.forEach { image ->
-                    imageManager.deleteImage(image.imagePath)
-                }
-
-                noteImageDao.deleteImagesByNoteId(noteId)
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
     /**
      * Tạo dupliate title
@@ -506,7 +386,7 @@ class NoteRepository @Inject constructor(
                 noteIds.forEach { noteId ->
                     try {
                         // Xóa ảnh của từng note
-                        deleteImagesByNoteId(noteId)
+//                        deleteImagesByNoteId(noteId)
 
                         // Xóa note
                         noteDao.deleteNoteById(noteId)
@@ -544,10 +424,47 @@ class NoteRepository @Inject constructor(
     }
 
     /**
-     * lấy tat ca anh cua paths
+     * Dọn dẹp ảnh không sử dụng
      */
-    fun getAllImagePaths(): Flow<List<String>> {
-        return noteImageDao.getAllImagePaths()
+    suspend fun cleanupUnusedImages(userId: Int): Result<Unit> {
+        return try {
+            withContext(Dispatchers.IO) {
+                // lấy tất cả ảnh đã lưu
+                val usedImages = mutableSetOf<String>()
+
+                // lấy tất cả ảnh đã sử dụng trong ghi chú
+                val allNotes = noteDao.getAllNotesByUser(userId)
+                allNotes.collect { notes ->
+                    notes.forEach { note ->
+                        usedImages.addAll(note.getImagePaths())
+                    }
+                }
+
+                //lấy tất cả ảnh trong thư mục ảnh
+                val imageDir = File(imageManager.context.filesDir, ImageManager.IMAGES_FOLDER)
+                var deleteCount = 0
+
+                if (imageDir.exists()) {
+                    imageDir.listFiles()?.forEach { file ->
+                        // nếu ảnh không được sử dụng trong ghi chú
+                        if (!usedImages.contains(file.absolutePath)) {
+                            if (file.delete()) {
+                                deleteCount++
+                                Log.d("NoteRepository", "Deleted unused image: ${file.name}")
+                            } else {
+                                Log.e(
+                                    "NoteRepository",
+                                    "Failed to delete unused image: ${file.name}"
+                                )
+                            }
+                        }
+                    }
+                }
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
 

@@ -5,16 +5,17 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 
-class ImageManager @Inject constructor(private val context:Context) {
+class ImageManager @Inject constructor(val context:Context) {
 
     companion object {
-        private const val IMAGES_FOLDER = "note_images"
+        const val IMAGES_FOLDER = "note_images"
         private const val MAX_IMAGES_SIZE = "1024*1024"
         private const val JPEG_QUALITY = 85
     }
@@ -134,10 +135,16 @@ class ImageManager @Inject constructor(private val context:Context) {
     /*
      * Lay file object tu path de load anh
      */
-    fun getImageFile(imagePath: String): File? {
+    fun getImageFile(imagePath: String): Uri? {
         return try {
             val file = File(imagePath)
-            if(file.exists()) file else null
+            if (file.exists()) {
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file
+                )
+            } else null
         }
         catch (e: Exception){
             null
