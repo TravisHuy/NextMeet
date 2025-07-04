@@ -553,7 +553,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
         } else {
             binding.rvNoteRecents.visibility = View.VISIBLE
             binding.layoutEmptyRecentNotes.visibility = View.GONE
-            noteRecentAdapter.updateNotesWithImages(combinedNotes, noteImagesMap)
+            noteRecentAdapter.updateNotes(combinedNotes)
         }
     }
 

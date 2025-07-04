@@ -14,8 +14,8 @@ import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.ItemNoteRecentsBinding
 import com.nhathuy.nextmeet.model.ChecklistItem
 import com.nhathuy.nextmeet.model.Note
-import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.NoteType
+import com.nhathuy.nextmeet.utils.ImagePathUtils
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit
 
 class NoteRecentAdapter(private var notes: MutableList<Note>) :
     RecyclerView.Adapter< NoteRecentAdapter.NoteRecentViewHolder>() {
-    private var noteImagesMap: MutableMap<Int, List<NoteImage>> = mutableMapOf()
 
     inner class NoteRecentViewHolder(val binding: ItemNoteRecentsBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -59,14 +58,14 @@ class NoteRecentAdapter(private var notes: MutableList<Note>) :
                         rvChecklistNoteRecent.visibility = View.GONE
 
                         val mediaView = binding.ivNoteRecent
-                        val images = noteImagesMap[note.id] ?: emptyList()
+                        val imagePaths = ImagePathUtils.parseImagePaths(note.imagePaths)
 
-                        if (images.isNotEmpty()) {
-                            Log.d("NotesAdapter", "Loading image: ${images[0].imagePath}")
+                        if (imagePaths.isNotEmpty()) {
+                            Log.d("NotesAdapter", "Loading image: ${imagePaths[0]}")
                             mediaView.visibility = View.VISIBLE
 
                             Glide.with(mediaView.context)
-                                .load(images[0].imagePath) // Use the path directly
+                                .load(imagePaths[0]) // Use the path directly
                                 .centerCrop()
                                 .placeholder(R.drawable.ic_photo)
                                 .error(R.drawable.ic_photo) // Add error placeholder
@@ -165,11 +164,9 @@ class NoteRecentAdapter(private var notes: MutableList<Note>) :
 
     override fun getItemCount(): Int  = notes.size
 
-    fun updateNotesWithImages(newNotes: List<Note>, noteImagesMap: Map<Int, List<NoteImage>>) {
+    fun updateNotes(newNotes: List<Note>) {
         notes.clear()
         notes.addAll(newNotes)
-        this.noteImagesMap.clear()
-        this.noteImagesMap.putAll(noteImagesMap)
         notifyDataSetChanged()
     }
 }

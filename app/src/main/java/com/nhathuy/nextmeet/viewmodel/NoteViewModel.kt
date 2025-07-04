@@ -160,6 +160,7 @@ class NoteViewModel @Inject constructor(
         color: String? = null,
         reminderTime: Long? = null,
         checkListItems: String? = null,
+        imagePaths: String? = null,
         shouldSetReminder: Boolean = false
     ) {
         viewModelScope.launch {
@@ -177,6 +178,7 @@ class NoteViewModel @Inject constructor(
                                 color = color,
                                 reminderTime = reminderTime,
                                 checkListItems = checkListItems,
+                                imagePaths = imagePaths
                             ).onSuccess {
                                 handleNotificationUpdate(
                                     currentNote = currentNote,
