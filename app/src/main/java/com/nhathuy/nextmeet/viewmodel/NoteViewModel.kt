@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -413,6 +416,57 @@ class NoteViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Chia sẻ note với ứng dụng khác
+     */
+    fun shareNoteWithOtherApps(noteId: Int){
+        if (noteId <= 0) {
+            _uiState.value = NoteUiState.Error("Invalid note ID for sharing")
+            return
+        }
+        viewModelScope.launch {
+            noteRepository.getNoteById(noteId)
+                .onSuccess { note ->
+                    note?.let {
+                        val shareContent = buildShareContent(note)
+                        _uiState.value = NoteUiState.ShareWithOtherApps(shareContent)
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.value =
+                        NoteUiState.Error(error.message ?: "Lỗi khi chia sẻ ghi chú")
+                }
+        }
+    }
+
+    /**
+     * Build formatted content for sharing
+     */
+    private fun buildShareContent(note: Note): String {
+        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        return buildString {
+            append("📝 Tiêu đề: ${note.title}\n")
+
+            when(note.noteType){
+                NoteType.TEXT -> {
+                    append("${note.content}\n\n")
+                }
+                NoteType.CHECKLIST -> {
+                    append("📋 Danh sách công việc:\n")
+                    note.checkListItems?.let { json ->
+                        val items = formatChecklistForNotification(json)
+                        append("$items\n")
+                    } ?: append("Không có mục nào.\n\n")
+                }
+                NoteType.PHOTO, NoteType.VIDEO -> {
+                    append("📝 Mô tả: ${note.content}\n\n")
+                }
+            }
+
+            append("⏰ Được chia sẻ lúc: ${formatter.format(Date())}\n")
+            append("📱 Từ NextMeet App")
+        }
+    }
     /**
      * Cập nhật màu sắc ghi chú
      */
