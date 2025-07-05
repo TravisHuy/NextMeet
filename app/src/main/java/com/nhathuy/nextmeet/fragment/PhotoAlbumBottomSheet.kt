@@ -18,6 +18,10 @@ import com.nhathuy.nextmeet.adapter.PhotoAdapter
 import com.nhathuy.nextmeet.databinding.BottomSheetPhotoAlbumBinding
 import com.nhathuy.nextmeet.model.Photo
 import com.nhathuy.nextmeet.utils.MediaStoreHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
 
@@ -28,6 +32,11 @@ class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
     private var onPhotosSelected: ((List<Photo>) -> Unit)? = null
     private val selectedPhotos = mutableListOf<Photo>()
     private var isLoading = false
+    private var allPhotos = listOf<Photo>()
+    private var albumMap = mapOf<String,List<Photo>>()
+    private var currentTab = 0
+
+    private val loadingScope = CoroutineScope(Dispatchers.Main)
 
     // permission launcher
     private val permissionLauncher = registerForActivityResult(
@@ -80,31 +89,13 @@ class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
                 val behavior = BottomSheetBehavior.from(it)
 
                 behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                behavior.peekHeight = resources.displayMetrics.heightPixels / 2
+                behavior.peekHeight = (resources.displayMetrics.heightPixels * 0.6).toInt()
                 behavior.isHideable = true
                 behavior.skipCollapsed = false
 
                 val layoutParams = it.layoutParams
                 layoutParams.height = resources.displayMetrics.heightPixels
                 it.layoutParams = layoutParams
-
-                behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-                    override fun onStateChanged(bottomSheet: View, newState: Int) {
-                        when (newState) {
-                            BottomSheetBehavior.STATE_EXPANDED -> {
-                            }
-                            BottomSheetBehavior.STATE_COLLAPSED -> {
-                            }
-                            BottomSheetBehavior.STATE_HIDDEN -> {
-                                dismiss()
-                            }
-                        }
-                    }
-
-                    override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                        // Optional: Add slide animations
-                    }
-                })
             }
         }
     }
@@ -124,17 +115,18 @@ class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
 
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener{
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                when (tab?.position) {
+                currentTab = tab?.position ?: 0
+                when (currentTab) {
                     0 -> {
                         binding.tvEmptyState.text = getString(R.string.no_photos_found)
                         if (hasStoragePermission()) {
-                            loadPhotos()
+                            displayPhotos()
                         }
                     }
                     1 -> {
                         binding.tvEmptyState.text = getString(R.string.no_albums_found)
                         if (hasStoragePermission()) {
-                            loadAlbums()
+                            displayAlbums()
                         }
                     }
                 }
@@ -212,40 +204,50 @@ class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
 
         showLoading(true)
 
-        try {
-            val photos = MediaStoreHelper.getImagesFromGallery(requireContext())
-            showLoading(false)
+        loadingScope.launch {
+            try {
+                // Load cả photos và albums song song
+                val photos = MediaStoreHelper.getImagesFromGallery(requireContext())
+                val albums = MediaStoreHelper.getImagesByAlbum(requireContext())
 
-            if (photos.isNotEmpty()) {
-                photoAdapter.updatePhotos(photos)
-                showEmptyState(false)
-            } else {
-                showEmptyState(true)
+                withContext(Dispatchers.Main) {
+                    allPhotos = photos
+                    albumMap = albums
+
+                    showLoading(false)
+
+                    // Display data based on current tab
+                    when (currentTab) {
+                        0 -> displayPhotos()
+                        1 -> displayAlbums()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    showError("Failed to load photos: ${e.message}")
+                }
             }
-        } catch (e: Exception) {
-            showLoading(false)
-            showError("Failed to load photos: ${e.message}")
         }
     }
 
-    private fun loadAlbums() {
-        if (isLoading) return
+    private fun displayPhotos() {
+        if (allPhotos.isNotEmpty()) {
+            photoAdapter.updatePhotos(allPhotos)
+            showEmptyState(false)
+            updateSelectionUI()
+        } else {
+            showEmptyState(true)
+        }
+    }
 
-        showLoading(true)
-
-        try {
-            val photos = MediaStoreHelper.getImagesFromGallery(requireContext())
-            showLoading(false)
-
-            if (photos.isNotEmpty()) {
-                photoAdapter.updatePhotos(photos)
-                showEmptyState(false)
-            } else {
-                showEmptyState(true)
-            }
-        } catch (e: Exception) {
-            showLoading(false)
-            showError("Failed to load albums: ${e.message}")
+    private fun displayAlbums() {
+        if (allPhotos.isNotEmpty()) {
+            photoAdapter.updatePhotos(allPhotos)
+            showEmptyState(false)
+            updateSelectionUI()
+        } else {
+            showEmptyState(true)
         }
     }
 

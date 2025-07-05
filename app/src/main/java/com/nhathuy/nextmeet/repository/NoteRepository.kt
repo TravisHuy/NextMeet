@@ -159,51 +159,16 @@ class NoteRepository @Inject constructor(
         )
     }
 
-    /**
+
+     /**
      * Cập nhật ghi chú với validation
      */
-//    suspend fun updateNote(note:Note):Result<Unit>{
-//        return try {
-//            val existingNote = noteDao.getNoteById(note.id)
-//                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn tại"))
-//
-//            // Kiểm tra nhập input
-//            note.color.let {
-//                if (!isValidHexColor(it)) {
-//                    return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
-//                }
-//            }
-//            val updatedNote = existingNote.copy(
-//                title = note.title.trim(),
-//                content = note.content.trim(),
-//                noteType = note.noteType,
-//                color = note.color,
-//                checkListItems =  note.checkListItems?.trim()?.takeIf { it.isNotEmpty() },
-//                updatedAt = System.currentTimeMillis()
-//            )
-//
-//            // kiểm tra hợp lệ với note
-//            if (updatedNote.title.isBlank() && updatedNote.content.isBlank() &&
-//                updatedNote.checkListItems.isNullOrBlank()
-//            ) {
-//                return Result.failure(IllegalArgumentException("Ghi chú không thể trống"))
-//            }
-//
-//            noteDao.updateNote(updatedNote)
-//
-//            Result.success(Unit)
-//        }
-//        catch (e: Exception){
-//            Result.failure(e)
-//        }
-//    }
     suspend fun updateNote(
         noteId: Int,
         title: String? = null,
         content: String? = null,
         noteType: NoteType? = null,
         color: String? = null,
-        reminderTime: Long? = null,
         checkListItems: String? = null
     ): Result<Unit> {
         return try {
@@ -222,7 +187,6 @@ class NoteRepository @Inject constructor(
                 content = content?.trim() ?: existingNote.content,
                 noteType = noteType ?: existingNote.noteType,
                 color = color ?: existingNote.color,
-                reminderTime = reminderTime ?: existingNote.createdAt,
                 checkListItems = checkListItems ?: existingNote.checkListItems,
                 updatedAt = System.currentTimeMillis()
             )
@@ -320,15 +284,25 @@ class NoteRepository @Inject constructor(
 
                     finalPath?.let {
                         path ->
-                        savedImages.add(image.copy(imagePath =  path))
+                        val noteImage = image.copy(imagePath =  path)
+                        savedImages.add(noteImage)
+                        Log.d("NoteRepository", "Saved image path: $path for noteId: ${noteImage.noteId}")
                     }
                 }
                 if(savedImages.isNotEmpty()){
                     noteImageDao.insertImages(savedImages)
+                    Log.d("NoteRepository", "Inserted ${savedImages.size} images into Room for noteId: ${savedImages.firstOrNull()?.noteId}")
+                    savedImages.forEach {
+                        Log.d("NoteRepository", "Room image: id=${it.id}, noteId=${it.noteId}, path=${it.imagePath}")
+                    }
                 }
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("NoteRepository", "Error inserting images for note: ${e.message}", e)
+            if (e is kotlinx.coroutines.CancellationException) {
+                Log.e("NoteRepository", "Coroutine was cancelled, likely due to lifecycle or scope.")
+            }
             Result.failure(e)
         }
     }
@@ -343,6 +317,13 @@ class NoteRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Lấy flow danh sách ảnh của 1 ghi chú (liên tục)
+     */
+    fun getImagesFlowForNote(noteId: Int): Flow<List<NoteImage>> {
+        return noteImageDao.getImagesFlowForNote(noteId)
     }
 
     /**
@@ -550,4 +531,3 @@ class NoteRepository @Inject constructor(
         return noteImageDao.getAllImagePaths()
     }
 }
-
