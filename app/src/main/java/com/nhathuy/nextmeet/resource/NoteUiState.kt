@@ -22,6 +22,7 @@ sealed class NoteUiState{
     data class MultipleNotesPinned(val updatedCount: Int, val isPinned: Boolean, val message: String) : NoteUiState()
 
     data class NoteShared(val shareResult: ShareResult, val message: String) : NoteUiState()
+    data class ShareWithOtherApps(val shareContent: String) : NoteUiState()
     data class NoteColorUpdated(val color: String, val message: String) : NoteUiState()
     data class ReminderUpdated(val reminderTime: Long?, val message: String) : NoteUiState()
     data class NoteDuplicated(val newNoteId: Long, val message: String) : NoteUiState()

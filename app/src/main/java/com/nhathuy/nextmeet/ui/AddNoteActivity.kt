@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.ui
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -253,6 +254,21 @@ class AddNoteActivity : AppCompatActivity() {
                         showSuccessAndFinish(state.message)
                     }
 
+                    is NoteUiState.ShareWithOtherApps -> {
+                        val shareIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, state.shareContent)
+                            putExtra(Intent.EXTRA_SUBJECT, currentNote?.title ?: "Shared Note")
+                        }
+
+                        try {
+                            startActivity(Intent.createChooser(shareIntent, "Share note with"))
+                        } catch (e: Exception) {
+                            Toast.makeText(this@AddNoteActivity, "Unable to share note", Toast.LENGTH_SHORT).show()
+                            Log.e("AddNoteActivity", "Error sharing note", e)
+                        }
+                    }
                     is NoteUiState.Error -> {
                         binding.progressBarAddNote.visibility = View.GONE
                         binding.btnSave.isEnabled = true
@@ -301,6 +317,107 @@ class AddNoteActivity : AppCompatActivity() {
             else -> {}
         }
     }
+
+    /**
+     * xử lý chia sẽ note
+     */
+    private fun handleShareNote(){
+        if(isEditMode && noteId != -1){
+            noteViewModel.shareNoteWithOtherApps(noteId)
+        }
+        else{
+            shareCurrentContent()
+        }
+    }
+
+    /**
+     * Chia sẽ nội dung hiện tại của ghi chú
+     */
+    private fun shareCurrentContent(){
+        val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
+
+        if (title.isEmpty()) {
+            Toast.makeText(this, "Please enter a title before sharing", Toast.LENGTH_SHORT).show()
+            binding.switchShare.isChecked = false
+            isShared = false
+            return
+        }
+
+        val shareContent = buildCurrentShareContent(title)
+
+        // Tạo Intent để share
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareContent)
+            putExtra(Intent.EXTRA_SUBJECT, title)
+        }
+
+        try {
+            startActivity(Intent.createChooser(shareIntent, "Share note with"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Unable to share note", Toast.LENGTH_SHORT).show()
+            Log.e("AddNoteActivity", "Error sharing note", e)
+        }
+    }
+
+    private fun buildCurrentShareContent(title: String): String {
+        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+
+        return buildString {
+            append("📝 Tiêu đề: $title\n\n")
+
+            when (noteType) {
+                NoteType.TEXT -> {
+                    val content = binding.textEdContent.text?.toString()?.trim() ?: ""
+                    if (content.isNotEmpty()) {
+                        append("$content\n\n")
+                    } else {
+                        append("(Nội dung trống)\n\n")
+                    }
+                }
+
+                NoteType.CHECKLIST -> {
+                    append("📋 Danh sách công việc:\n")
+                    val items = checklistAdapter.getItems()
+                    if (items.any { it.text.isNotEmpty() }) {
+                        items.forEach { item ->
+                            if (item.text.isNotEmpty()) {
+                                val checkbox = if (item.isChecked) "☑️" else "☐"
+                                append("$checkbox ${item.text}\n")
+                            }
+                        }
+                        append("\n")
+                    } else {
+                        append("(Chưa có mục nào)\n\n")
+                    }
+                }
+
+                NoteType.PHOTO -> {
+                    val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
+                    append("📸 Ghi chú ảnh:\n")
+                    if (content.isNotEmpty()) {
+                        append("$content\n")
+                    } else {
+                        append("(Không có mô tả)\n")
+                    }
+                    append("Số lượng ảnh: ${imageList.size}\n\n")
+                }
+
+                else -> {
+                    append("(Loại ghi chú không xác định)\n\n")
+                }
+            }
+
+            // Thêm thông tin reminder nếu có
+            reminderTime?.let { time ->
+                append("⏰ Nhắc nhở: ${formatter.format(Date(time))}\n")
+            }
+
+            append("📱 Được chia sẻ từ NextMeet App lúc: ${formatter.format(Date())}")
+        }
+    }
+
     /**
      * Populate UI với dữ liệu note đã load (cho edit mode)
      */
@@ -450,6 +567,9 @@ class AddNoteActivity : AppCompatActivity() {
         binding.switchShare.setOnCheckedChangeListener { _, isChecked ->
             isShared = isChecked
             hasUnsavedChanges = true
+            if (isChecked) {
+                handleShareNote()
+            }
         }
     }
 
@@ -1120,6 +1240,8 @@ class AddNoteActivity : AppCompatActivity() {
             })
         }
     }
+
+
 
     override fun onBackPressed() {
         super.onBackPressed()
