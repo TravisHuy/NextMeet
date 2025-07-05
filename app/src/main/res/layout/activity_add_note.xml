@@ -454,6 +454,22 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
-
+        <ProgressBar
+            android:id="@+id/progress_bar_add_note"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            style="@style/Widget.AppCompat.ProgressBar"
+            android:visibility="gone"
+            tools:visibility="visible"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
 </androidx.core.widget.NestedScrollView>

@@ -7,48 +7,6 @@
     android:background="#FEFEFE"
     tools:context=".fragment.NotesFragment">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/app_bar_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="@dimen/elevation_small"
-        android:background="#FBF9F9"
-        >
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_filters"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/padding_medium"
-            app:singleSelection="false"
-            app:chipSpacingHorizontal="@dimen/spacing_small"
-            >
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_all"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:text="All"
-                android:checked="true"
-                />
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_pinned"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:text="Pinned"
-                app:chipIcon="@drawable/ic_pin"
-                />
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_reminder"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:text="Reminder"
-                app:chipIcon="@drawable/ic_notification"
-                />
-        </com.google.android.material.chip.ChipGroup>
-    </com.google.android.material.appbar.AppBarLayout>
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -65,37 +23,37 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone"
-                >
+                android:visibility="gone">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
-                    android:text="All"
-                    android:textSize="@dimen/text_size_medium"
                     android:fontFamily="@font/montserrat_bold"
-                    />
+                    android:text="All"
+                    android:textSize="@dimen/text_size_medium" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginTop="16dp"
                     android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
                     android:layout_marginEnd="16dp"
                     android:background="@color/gray" />
 
             </LinearLayout>
 
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_notes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:clipToPadding="false"
                 tools:listitem="@layout/item_note_layout" />
 
 
@@ -112,18 +70,17 @@
                 <ImageView
                     android:layout_width="120dp"
                     android:layout_height="120dp"
-                    android:src="@drawable/ic_lightbulb_outline"
                     android:alpha="0.5"
+                    android:src="@drawable/ic_lightbulb_outline"
                     app:tint="@color/black" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Ghi chú bạn thêm sẽ xuất hiện ở đây"
-                    android:textSize="18sp"
                     android:fontFamily="@font/quicksand_medium"
-                    />
+                    android:text="Ghi chú bạn thêm sẽ xuất hiện ở đây"
+                    android:textSize="18sp" />
 
             </LinearLayout>
 
@@ -136,10 +93,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#80000000"
-        android:visibility="gone"
         android:clickable="true"
-        android:focusable="true" />
-
+        android:focusable="true"
+        android:visibility="gone" />
 
 
     <!-- FAB Menu Items Container -->
@@ -183,12 +139,11 @@
                 android:contentDescription="Image note"
                 android:src="@drawable/ic_image"
                 app:backgroundTint="@color/light_primary"
-                app:fabSize="mini"
-                app:tint="@android:color/white"
                 app:elevation="0dp"
-                app:pressedTranslationZ="0dp"
+                app:fabSize="mini"
                 app:hoveredFocusedTranslationZ="0dp"
-                />
+                app:pressedTranslationZ="0dp"
+                app:tint="@android:color/white" />
 
         </LinearLayout>
 
@@ -222,12 +177,11 @@
                 android:contentDescription="CheckList"
                 android:src="@drawable/ic_checklist"
                 app:backgroundTint="@color/light_primary"
-                app:fabSize="mini"
-                app:tint="@android:color/white"
                 app:elevation="0dp"
-                app:pressedTranslationZ="0dp"
+                app:fabSize="mini"
                 app:hoveredFocusedTranslationZ="0dp"
-                />
+                app:pressedTranslationZ="0dp"
+                app:tint="@android:color/white" />
 
         </LinearLayout>
 
@@ -236,9 +190,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="end|center_vertical"
-            >
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/tv_text_note"
@@ -262,12 +215,11 @@
                 android:contentDescription="Text"
                 android:src="@drawable/ic_text_fields"
                 app:backgroundTint="@color/light_primary"
-                app:fabSize="mini"
-                app:tint="@android:color/white"
                 app:elevation="0dp"
-                app:pressedTranslationZ="0dp"
+                app:fabSize="mini"
                 app:hoveredFocusedTranslationZ="0dp"
-                />
+                app:pressedTranslationZ="0dp"
+                app:tint="@android:color/white" />
 
         </LinearLayout>
 
@@ -280,9 +232,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        app:backgroundTint="@color/light_primary"
         android:contentDescription="Add note"
         android:src="@drawable/ic_add"
+        app:backgroundTint="@color/light_primary"
         app:fabSize="normal"
         app:tint="@android:color/white" />
 

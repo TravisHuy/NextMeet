@@ -88,6 +88,9 @@ class AddNoteActivity : AppCompatActivity() {
     private var hasUnsavedChanges = false
     private var isNotificationScheduled = false
 
+    // Thêm biến này để kiểm soát việc chờ lưu ảnh
+    private var pendingImageInsert = false
+
     // Image picker launcher
 //    private val pickMultipleImagesLauncher =
 //        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
@@ -136,7 +139,6 @@ class AddNoteActivity : AppCompatActivity() {
         binding = ActivityAddNoteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             enableEdgeToEdge()
             ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
@@ -157,6 +159,9 @@ class AddNoteActivity : AppCompatActivity() {
         if (isEditMode) {
             noteViewModel.getNoteById(noteId)
         }
+
+        // Ẩn loading ban đầu
+        binding.progressBarAddNote?.visibility = View.GONE
     }
 
     /**
@@ -209,11 +214,14 @@ class AddNoteActivity : AppCompatActivity() {
             noteViewModel.uiState.collect { state ->
                 when (state) {
                     is NoteUiState.Loading -> {
-                        // Show loading indicator if needed
-                        Log.d("AddNoteActivity", "Loading...")
+                        // Show loading indicator
+                        binding.progressBarAddNote?.visibility = View.VISIBLE
+                        binding.btnSave.isEnabled = false
                     }
 
                     is NoteUiState.NoteLoaded -> {
+                        binding.progressBarAddNote?.visibility = View.GONE
+                        binding.btnSave.isEnabled = true
                         Log.d("AddNoteActivity", "Note loaded: ${state.note}")
                         populateNoteData(state.note)
                     }
@@ -223,27 +231,39 @@ class AddNoteActivity : AppCompatActivity() {
                         if (noteType == NoteType.PHOTO && imageList.isNotEmpty()) {
                             val noteId = state.noteId.toInt()
                             val imagesToSave = imageList.map { it.copy(noteId = noteId) }
+                            pendingImageInsert = true
                             noteViewModel.insertImagesForNote(imagesToSave)
+                        } else {
+                            showSuccessAndFinish(state.message)
                         }
-                        showSuccessAndFinish(state.message)
-                    }
-
-                    is NoteUiState.NoteUpdated -> {
-                        Log.d("AddNoteActivity", "Note updated successfully")
-                        showSuccessAndFinish(state.message)
                     }
 
                     is NoteUiState.ImagesInserted -> {
                         Log.d("AddNoteActivity", "Images inserted successfully")
-                        // Images được insert thành công, có thể finish ngay
+                        if (pendingImageInsert) {
+                            pendingImageInsert = false
+                            showSuccessAndFinish("Đã lưu ghi chú với ảnh")
+                        }
                     }
+
+                    is NoteUiState.NoteUpdated -> {
+                        binding.progressBarAddNote?.visibility = View.GONE
+                        binding.btnSave.isEnabled = true
+                        Log.d("AddNoteActivity", "Note updated successfully")
+                        showSuccessAndFinish(state.message)
+                    }
+
                     is NoteUiState.Error -> {
+                        binding.progressBarAddNote.visibility = View.GONE
+                        binding.btnSave.isEnabled = true
                         Log.e("AddNoteActivity", "Error: ${state.message}")
                         Toast.makeText(this@AddNoteActivity, state.message, Toast.LENGTH_SHORT).show()
+                        pendingImageInsert = false
                     }
 
                     else -> {
-                        // Handle other states if needed
+                        binding.progressBarAddNote.visibility = View.GONE
+                        binding.btnSave.isEnabled = true
                     }
                 }
             }
@@ -395,10 +415,15 @@ class AddNoteActivity : AppCompatActivity() {
      * Hiển thị thông báo thành công và đóng activity
      */
     private fun showSuccessAndFinish(message: String) {
+        binding.progressBarAddNote.visibility = View.GONE
+        binding.btnSave.isEnabled = true
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         setResult(RESULT_OK)
-        finish()
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+
+        if (!pendingImageInsert) {
+            finish()
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        }
     }
 
     /**
@@ -527,7 +552,7 @@ class AddNoteActivity : AppCompatActivity() {
                 else -> return false
             }
         } else {
-            // Trong edit mode, kiểm tra thay đổi so với dữ liệu gốc
+            // Trong edit mode, kiểm tra thay đổi so với dữ liệu g��c
             currentNote?.let { note ->
                 val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
                 if (title != note.title) return true
@@ -909,26 +934,12 @@ class AddNoteActivity : AppCompatActivity() {
         when (noteType) {
             NoteType.TEXT -> {
                 val content = binding.textEdContent.text?.toString()?.trim() ?: ""
-                if(reminderTime!=null){
-                    noteViewModel.updateNote(
-                        noteId = noteId,
-                        title = title,
-                        content = content,
-                        color = selectedColorName,
-                        reminderTime = reminderTime,
-                        shouldSetReminder = true
-                    )
-                }
-                else{
-                    noteViewModel.updateNote(
-                        noteId = noteId,
-                        title = title,
-                        content = content,
-                        color = selectedColorName,
-                        reminderTime = reminderTime,
-                        shouldSetReminder = false
-                    )
-                }
+                noteViewModel.updateNote(
+                    noteId = noteId,
+                    title = title,
+                    content = content,
+                    color = selectedColorName
+                )
             }
 
             NoteType.CHECKLIST -> {
@@ -942,26 +953,12 @@ class AddNoteActivity : AppCompatActivity() {
                     (if (it.isChecked) "- [x] " else "- [ ] ") + it.text
                 }
 
-                if(reminderTime != null){
-                    noteViewModel.updateNote(
-                        noteId = noteId,
-                        title = title,
-                        color = selectedColorName,
-                        checkListItems = checklistString,
-                        reminderTime = reminderTime,
-                        shouldSetReminder = true
-                    )
-                }
-                else {
-                    noteViewModel.updateNote(
-                        noteId = noteId,
-                        title = title,
-                        color = selectedColorName,
-                        checkListItems = checklistString,
-                        reminderTime = reminderTime,
-                        shouldSetReminder = false
-                    )
-                }
+                noteViewModel.updateNote(
+                    noteId = noteId,
+                    title = title,
+                    color = selectedColorName,
+                    checkListItems = checklistString
+                )
             }
 
             NoteType.PHOTO -> {
@@ -973,26 +970,12 @@ class AddNoteActivity : AppCompatActivity() {
                     return
                 }
 
-                if(reminderTime != null){
-                    noteViewModel.updateNote(
-                        noteId = noteId,
-                        title = title,
-                        content = content,
-                        color = selectedColorName,
-                        reminderTime = reminderTime,
-                        shouldSetReminder = true
-                    )
-                }
-                else{
-                    noteViewModel.updateNote(
-                        noteId = noteId,
-                        title = title,
-                        content = content,
-                        color = selectedColorName,
-                        reminderTime = reminderTime,
-                        shouldSetReminder = false
-                    )
-                }
+                noteViewModel.updateNote(
+                    noteId = noteId,
+                    title = title,
+                    content = content,
+                    color = selectedColorName
+                )
                 // Images are handled separately when added/removed
                 applyImageChanges()
             }
@@ -1010,6 +993,24 @@ class AddNoteActivity : AppCompatActivity() {
             }
             if (note.reminderTime != reminderTime) {
                 noteViewModel.updateReminder(noteId, reminderTime)
+                lifecycleScope.launch {
+                    // Bước 1: Hủy notification cũ nếu có
+                    if (note.reminderTime != null) {
+                        noteViewModel.cancelNoteNotification(note.id)
+                    }
+
+                    // Bước 2: Cập nhật reminder time trong database
+                    noteViewModel.updateReminder(noteId, reminderTime)
+
+                    // Bước 3: Tạo notification mới nếu có reminder time
+                    if (reminderTime != null) {
+                        val updatedNote = note.copy(
+                            reminderTime = reminderTime,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        noteViewModel.scheduleNoteNotification(updatedNote)
+                    }
+                }
             }
         }
     }

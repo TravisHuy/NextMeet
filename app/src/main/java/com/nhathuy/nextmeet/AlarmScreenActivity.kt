@@ -249,20 +249,22 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         velocityX: Float,
         velocityY: Float
     ): Boolean {
-//        val diffX = e2.x - e1.x
-//        val diffY = e2.y - e1.y
-//
-//        if (abs(diffX) > abs(diffY)) {
-//            if (diffX > 0 && diffX > screenWidth / 3) {
-//                // Swipe right - dismiss
-//                dismissAlarm()
-//            } else if (diffX < 0 && abs(diffX) > screenWidth / 3) {
-//                // Swipe left - snooze
-//                snoozeAlarm()
-//            } else {
-//                resetIconAlarm()
-//            }
-//        }
+        if(e1 == null ) return false
+
+        val diffX = e2.x - e1.x
+        val diffY = e2.y - e1.y
+
+        if (abs(diffX) > abs(diffY)) {
+            if (diffX > 0 && diffX > screenWidth / 3) {
+                // Swipe right - dismiss
+                dismissAlarm()
+            } else if (diffX < 0 && abs(diffX) > screenWidth / 3) {
+                // Swipe left - snooze
+                snoozeAlarm()
+            } else {
+                resetIconAlarm()
+            }
+        }
         return true
     }
 
@@ -285,8 +287,9 @@ class AlarmScreenActivity : AppCompatActivity(), GestureDetector.OnGestureListen
         distanceX: Float,
         distanceY: Float
     ): Boolean {
-//        val scrollX = e2.x - e1.x
-        val scrollX = e2.x - iconInitialX
+        if(e1 == null ) return false
+
+        val scrollX = e2.x - e1.x
         val maxScroll = screenWidth / 2f
 
         // Calculate the percentage of the swipe

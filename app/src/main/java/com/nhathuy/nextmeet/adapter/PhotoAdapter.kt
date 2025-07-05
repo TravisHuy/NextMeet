@@ -47,8 +47,6 @@ class PhotoAdapter(
             Glide.with(itemView.context)
                 .load(photo.uri)
                 .centerCrop()
-                .placeholder(R.drawable.ic_photo)
-                .error(R.drawable.ic_photo)
                 .into(binding.imageView)
 
             val isSelected = selectedPhotos.any { it.id == photo.id }

@@ -123,88 +123,81 @@ class NoteViewModel @Inject constructor(
     /**
      * Cập nhật ghi chú
      */
-//    fun updateNote(
-//        noteId: Int,
-//        title: String? = null,
-//        content: String? = null,
-//        noteType: NoteType? = null,
-//        color: String? = null,
-//        checkListItems: String? = null,
-//        shouldSetReminder: Boolean = false
-//    ) {
-//        viewModelScope.launch {
-//            _uiState.value = NoteUiState.Loading
-//
-//            noteRepository.updateNote(noteId, title, content, noteType, color, checkListItems)
-//                .onSuccess {
-//                    // xóa notification cũ
-//                    cancelNoteNotification(noteId)
-//
-//                    // tạo notification mới nếu user chọn reminder
-//                    if(shouldSetReminder && noteId != null){
-//                        scheduleNoteNotification(note)
-//                    }
-//                    _uiState.value = NoteUiState.NoteUpdated("Ghi chú đã được cập nhật")
-//                }
-//                .onFailure { error ->
-//                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi cập nhật ghi chú")
-//                }
-//        }
-//    }
-
     fun updateNote(
         noteId: Int,
         title: String? = null,
         content: String? = null,
         noteType: NoteType? = null,
         color: String? = null,
-        reminderTime: Long? = null,
-        checkListItems: String? = null,
-        shouldSetReminder: Boolean = false
+        checkListItems: String? = null
     ) {
         viewModelScope.launch {
             _uiState.value = NoteUiState.Loading
 
-            try {
-                noteRepository.getNoteById(noteId)
-                    .onSuccess { currentNote ->
-                        if (currentNote != null) {
-                            noteRepository.updateNote(
-                                noteId = noteId,
-                                title = title,
-                                content = content,
-                                noteType = noteType,
-                                color = color,
-                                reminderTime = reminderTime,
-                                checkListItems = checkListItems,
-                            ).onSuccess {
-                                handleNotificationUpdate(
-                                    currentNote = currentNote,
-                                    newReminderTime = reminderTime,
-                                    shouldUpdateReminder = shouldSetReminder,
-                                    updatedTitle = title,
-                                    updatedContent = content
-                                )
-
-                                _uiState.value = NoteUiState.NoteUpdated("Ghi chú đã được cập nhật")
-                            }.onFailure { error ->
-                                _uiState.value =
-                                    NoteUiState.Error(error.message ?: "Lỗi khi cập nhật ghi chú")
-                            }
-                        } else {
-                            _uiState.value = NoteUiState.Error("Ghi chú không tồn tại")
-                        }
-                    }
-                    .onFailure { error ->
-                        _uiState.value =
-                            NoteUiState.Error(error.message ?: "Lỗi khi lấy thông tin ghi chú")
-                    }
-            } catch (e: Exception) {
-                _uiState.value = NoteUiState.Error(e.message ?: "Lỗi không xác định")
-            }
-
+            noteRepository.updateNote(noteId, title, content, noteType, color, checkListItems)
+                .onSuccess {
+                    _uiState.value = NoteUiState.NoteUpdated("Ghi chú đã được cập nhật")
+                }
+                .onFailure { error ->
+                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi cập nhật ghi chú")
+                }
         }
     }
+
+
+//    fun updateNote(
+//        noteId: Int,
+//        title: String? = null,
+//        content: String? = null,
+//        noteType: NoteType? = null,
+//        color: String? = null,
+//        reminderTime: Long? = null,
+//        checkListItems: String? = null,
+//        shouldSetReminder: Boolean = false
+//    ) {
+//        viewModelScope.launch {
+//            _uiState.value = NoteUiState.Loading
+//
+//            try {
+//                noteRepository.getNoteById(noteId)
+//                    .onSuccess { currentNote ->
+//                        if (currentNote != null) {
+//                            noteRepository.updateNote(
+//                                noteId = noteId,
+//                                title = title,
+//                                content = content,
+//                                noteType = noteType,
+//                                color = color,
+//                                reminderTime = reminderTime,
+//                                checkListItems = checkListItems,
+//                            ).onSuccess {
+//                                handleNotificationUpdate(
+//                                    currentNote = currentNote,
+//                                    newReminderTime = reminderTime,
+//                                    shouldUpdateReminder = shouldSetReminder,
+//                                    updatedTitle = title,
+//                                    updatedContent = content
+//                                )
+//
+//                                _uiState.value = NoteUiState.NoteUpdated("Ghi chú đã được cập nhật")
+//                            }.onFailure { error ->
+//                                _uiState.value =
+//                                    NoteUiState.Error(error.message ?: "Lỗi khi cập nhật ghi chú")
+//                            }
+//                        } else {
+//                            _uiState.value = NoteUiState.Error("Ghi chú không tồn tại")
+//                        }
+//                    }
+//                    .onFailure { error ->
+//                        _uiState.value =
+//                            NoteUiState.Error(error.message ?: "Lỗi khi lấy thông tin ghi chú")
+//                    }
+//            } catch (e: Exception) {
+//                _uiState.value = NoteUiState.Error(e.message ?: "Lỗi không xác định")
+//            }
+//
+//        }
+//    }
 
     /**
      * Xử lý notification khi update note
@@ -236,7 +229,7 @@ class NoteViewModel @Inject constructor(
     /**
      * Hủy thông báo cho cuộc hẹn
      */
-    private suspend fun cancelNoteNotification(noteId: Int) {
+    suspend fun cancelNoteNotification(noteId: Int) {
         try {
             // Xóa tất cả notification liên quan đến appointment này
             notificationManagerService.cancelNotificationsByRelatedId(
@@ -503,6 +496,13 @@ class NoteViewModel @Inject constructor(
         }
     }
 
+
+    /**
+     * Lấy flow danh sách ảnh của 1 ghi chú (liên tục)
+     */
+    fun getImagesFlowForNote(noteId: Int): Flow<List<NoteImage>> {
+        return noteRepository.getImagesFlowForNote(noteId)
+    }
 
     /**
      * Xóa 1 ảnh khỏi ghi chú

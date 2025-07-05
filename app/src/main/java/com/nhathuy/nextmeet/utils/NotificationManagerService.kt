@@ -238,7 +238,7 @@ class NotificationManagerService @Inject constructor(
             val overallSuccess = reminderSuccess && alarmSuccess
 
             if (overallSuccess) {
-                Log.d("NotificationManager", "Đã lên lịch reminder lúc $reminderTime và alarm lúc $appointmentTime")
+                Log.d("NotificationManager", "Đã lên lịch reminder với notification lúc $reminderTime và alarm lúc $appointmentTime")
             }
 
             return@withContext overallSuccess

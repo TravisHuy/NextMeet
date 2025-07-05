@@ -30,4 +30,15 @@ class MediaGridLayoutManager(
             }
         }
     }
+
+
+    override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
+        when (imageCount) {
+            1 -> spanCount = 1
+            2 -> spanCount = 2
+            3 -> spanCount = 2
+            else -> spanCount = 2
+        }
+        super.onLayoutChildren(recycler, state)
+    }
 }

@@ -242,26 +242,28 @@ class NotesAdapter(
 
                     val maxDisplayImages = 4
                     val displayImages = images.take(maxDisplayImages)
-                        .toMutableList()
 
                     val layoutManager = MediaGridLayoutManager(root.context, displayImages.size)
                     rvMediaPreview.layoutManager = layoutManager
 
-
-                    // Setup adapter
-                    mediaPreviewAdapter = MediaPreviewAdapter(displayImages) { image, position ->
-                        // Xử lý click vào ảnh - có thể mở gallery hoặc full screen
-                        handleNoteClick(note)
+                    if (mediaPreviewAdapter == null) {
+                        mediaPreviewAdapter = MediaPreviewAdapter(
+                            images = displayImages,
+                            totalImageCount = images.size
+                        ) { image, position ->
+                            handleNoteClick(note)
+                        }
+                        rvMediaPreview.adapter = mediaPreviewAdapter
+                    } else {
+                        mediaPreviewAdapter?.updateImages(displayImages)
                     }
-                    rvMediaPreview.adapter = mediaPreviewAdapter
-
-
-//                    if (images.size > maxDisplayImages && displayImages.size == maxDisplayImages) {
-//                        setupMoreImagesOverlay(displayImages.last(), images.size - maxDisplayImages)
-//                    }
 
                     rvMediaPreview.isNestedScrollingEnabled = false
                     rvMediaPreview.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                }
+                else {
+                    rvMediaPreview.visibility = View.GONE
+                    Log.d("NoteAdapter", "No images found for note ${note.id}")
                 }
             }
         }
@@ -358,13 +360,16 @@ class NotesAdapter(
         diffResult.dispatchUpdatesTo(this)
     }
 
-    // New: update notes and images map directly, no DB/DAO logic here
     fun updateNotesWithImages(newNotes: List<Note>, noteImagesMap: Map<Int, List<NoteImage>>) {
+        val diffCallback = NotesDiffCallback(notes, newNotes)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+
         notes.clear()
         notes.addAll(newNotes)
         this.noteImagesMap.clear()
         this.noteImagesMap.putAll(noteImagesMap)
-        notifyDataSetChanged()
+
+        diffResult.dispatchUpdatesTo(this)
     }
 
     //lấy vị trí của note

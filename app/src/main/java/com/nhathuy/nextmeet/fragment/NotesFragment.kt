@@ -42,26 +42,20 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 /**
- * NoteFragment fragment thể hiện logic với FAB menu animation
+ * NoteFragment fragment - Simplified version without appbar and chip filters
+ * Hiển thị tất cả notes với FAB menu animation
  */
 @AndroidEntryPoint
-class NotesFragment : Fragment() , NavigationCallback{
+class NotesFragment : Fragment(), NavigationCallback {
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
 
     private var isFabMenuOpen = false
-
     private var currentUserId: Int = 0
 
     private lateinit var notesAdapter: NotesAdapter
-
     private lateinit var noteViewModel: NoteViewModel
-
     private lateinit var userViewModel: UserViewModel
-
-    private var allNotes = listOf<Note>()
-
-    private var pinnedNotes = listOf<Note>()
 
     // Map lưu trữ danh sách ảnh cho mỗi note
     private val noteImagesMap = mutableMapOf<Int, List<NoteImage>>()
@@ -82,57 +76,51 @@ class NotesFragment : Fragment() , NavigationCallback{
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
 
         setupUserInfo()
-        setObserver()
         setupViews()
         setupRecyclerView()
-        setupChipFilters()
         setupFabMenu()
-
+        setupObservers()
     }
 
     private fun setupUserInfo() {
         userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->
             user?.let {
                 currentUserId = user.id
-                setupObserverNotes()
+                startObservingNotes()
             }
         }
     }
 
     private fun setupViews() {
-        //cài đặt chip filters nếu đã check
-        binding.chipAll.isChecked = true
-        // initial state
+        // Initial state
         updateEmptyState()
     }
 
-    private fun setObserver() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 noteViewModel.uiState.collect { state ->
                     when (state) {
                         is NoteUiState.Loading -> {
-
+                            // Có thể thêm loading indicator nếu cần
+                        }
+                        is NoteUiState.NotesLoaded -> {
+                            handleNotesLoaded(state.notes)
                         }
                         is NoteUiState.Error -> {
                             Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
                         }
-
                         is NoteUiState.NotePinToggled -> {
                             val message = if (state.isPinned) "Đã ghim ghi chú" else "Đã bỏ ghim ghi chú"
                             Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
                         }
-
                         is NoteUiState.NoteDeleted -> {
                             Snackbar.make(binding.root, "Đã xóa ghi chú thành công", Snackbar.LENGTH_SHORT).show()
                         }
-
                         is NoteUiState.NoteDuplicated -> {
                             Snackbar.make(binding.root, "Đã tạo bản sao ghi chú", Snackbar.LENGTH_SHORT).show()
                         }
-
                         is NoteUiState.NoteShared -> {
-                            // Nếu chia sẻ thành công, lấy nội dung và thực hiện Intent share
                             val shareContent = state.shareResult.shareContent
                             if (!shareContent.isNullOrBlank()) {
                                 val shareIntent = Intent().apply {
@@ -145,14 +133,12 @@ class NotesFragment : Fragment() , NavigationCallback{
                                 Snackbar.make(binding.root, state.message, Snackbar.LENGTH_SHORT).show()
                             }
                         }
-
                         is NoteUiState.ReminderUpdated -> {
                             val message = state.message ?: "Đã cập nhật lời nhắc"
                             Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
                         }
-
                         else -> {
-
+                            // Handle other states if needed
                         }
                     }
                 }
@@ -160,83 +146,70 @@ class NotesFragment : Fragment() , NavigationCallback{
         }
     }
 
-    private fun setupObserverNotes() {
+    private fun startObservingNotes() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-                noteViewModel.getAllNotes(currentUserId).collect { notes ->
-                    allNotes = notes
-                    pinnedNotes = notes.filter { it.isPinned }
-
-                    // Tải ảnh cho tất cả note kiểu PHOTO
-                    loadImagesForPhotoNotesImproved(notes)
-
-                    when {
-                        binding.chipAll.isChecked -> showAllNotes()
-                        binding.chipPinned.isChecked -> showPinnedNotes()
-                        binding.chipReminder.isChecked -> showReminderNotes()
-                    }
-                }
+            noteViewModel.getAllNotes(currentUserId).collect { notes ->
+                // The notes are already handled in setupObservers() via NotesLoaded state
+                // This collect is just to trigger the Flow
             }
         }
     }
 
-    // Hàm mới để tải ảnh cho tất cả note kiểu PHOTO
+    private fun handleNotesLoaded(notes: List<Note>) {
+        Log.d("NotesFragment", "Handling ${notes.size} notes")
+
+        // Clear previous images map
+        noteImagesMap.clear()
+
+        // Load images for photo notes
+        loadImagesForPhotoNotes(notes)
+    }
+
     private fun loadImagesForPhotoNotes(notes: List<Note>) {
         val photoNotes = notes.filter { it.noteType == NoteType.PHOTO }
-        if (photoNotes.isEmpty()) return
+
+        if (photoNotes.isEmpty()) {
+            // Nếu không có photo notes, update UI ngay
+            displayNotes(notes)
+            return
+        }
 
         var loadedCount = 0
+        val totalPhotoNotes = photoNotes.size
+
+        // Load images for each photo note
         photoNotes.forEach { note ->
             noteViewModel.getImagesForNote(note.id) { images ->
                 Log.d("NotesFragment", "Loaded ${images.size} images for note ID: ${note.id}")
                 noteImagesMap[note.id] = images
                 loadedCount++
 
-                // Chỉ cập nhật khi tất cả ảnh đã được load
-                if (loadedCount == photoNotes.size) {
-                    when {
-                        binding.chipAll.isChecked -> showAllNotes()
-                        binding.chipPinned.isChecked -> showPinnedNotes()
-                        binding.chipReminder.isChecked -> showReminderNotes()
-                    }
+                // Update UI when all images are loaded
+                if (loadedCount == totalPhotoNotes) {
+                    displayNotes(notes)
                 }
             }
         }
     }
 
-    // hiển thị tất cả note
-    private fun showAllNotes() {
+    /**
+     * Hiển thị tất cả notes với pinned notes ở trên
+     */
+    private fun displayNotes(notes: List<Note>) {
         val combinedNotes = mutableListOf<Note>()
+
+        // Thêm pinned notes trước
+        val pinnedNotes = notes.filter { it.isPinned }
         combinedNotes.addAll(pinnedNotes)
 
-        val unpinnedNotes = allNotes.filter {
-            !it.isPinned
-        }
+        // Thêm unpinned notes sau
+        val unpinnedNotes = notes.filter { !it.isPinned }
         combinedNotes.addAll(unpinnedNotes)
 
-        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
+        // Update adapter với notes và images
         notesAdapter.updateNotesWithImages(combinedNotes, noteImagesMap)
         updateEmptyState(combinedNotes.isEmpty())
     }
-
-    // hiển thị note pin
-    private fun showPinnedNotes() {
-        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
-        notesAdapter.updateNotesWithImages(pinnedNotes, noteImagesMap)
-        updateEmptyState(pinnedNotes.isEmpty())
-    }
-
-    //hiển thị note đã pin
-    private fun showReminderNotes() {
-        val reminderNotes = allNotes.filter {
-            it.reminderTime != null && it.reminderTime > System.currentTimeMillis()
-        }
-
-        // Sử dụng hàm updateNotesWithImages thay vì updateNotes
-        notesAdapter.updateNotesWithImages(reminderNotes, noteImagesMap)
-        updateEmptyState(reminderNotes.isEmpty())
-    }
-
 
     private fun setupRecyclerView() {
         notesAdapter = NotesAdapter(
@@ -257,7 +230,6 @@ class NotesFragment : Fragment() , NavigationCallback{
         }
     }
 
-    // xử lý khi onclick vao item chuyển sao edit
     private fun openNoteForEdit(note: Note) {
         val intent = Intent(requireContext(), AddNoteActivity::class.java)
         intent.putExtra(Constant.EXTRA_NOTE_ID, note.id)
@@ -285,7 +257,6 @@ class NotesFragment : Fragment() , NavigationCallback{
             dialog.dismiss()
         }
         dialogBinding.llShare.setOnClickListener {
-            // Gọi toggleShare thay vì shareNote trực tiếp
             noteViewModel.toggleShare(note.id)
             dialog.dismiss()
         }
@@ -316,10 +287,8 @@ class NotesFragment : Fragment() , NavigationCallback{
     }
 
     private fun showReminderDialog(note: Note) {
-
-        val constraintBuilder =
-            CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
-
+        val constraintBuilder = CalendarConstraints.Builder()
+            .setValidator(DateValidatorPointForward.now())
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Chọn ngày nhắc nhở")
@@ -343,6 +312,7 @@ class NotesFragment : Fragment() , NavigationCallback{
                 calendar.set(Calendar.MINUTE, timePicker.minute)
                 calendar.set(Calendar.SECOND, 0)
                 val reminderTime = calendar.timeInMillis
+
                 if (reminderTime <= System.currentTimeMillis()) {
                     Snackbar.make(binding.root, "Vui lòng chọn thời gian trong tương lai", Snackbar.LENGTH_SHORT).show()
                 } else {
@@ -354,7 +324,6 @@ class NotesFragment : Fragment() , NavigationCallback{
         datePicker.show(parentFragmentManager, "date_picker")
     }
 
-    // show dialog delete note
     private fun showDeleteConfirmation(note: Note) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Delete Note")
@@ -368,65 +337,20 @@ class NotesFragment : Fragment() , NavigationCallback{
 
     private fun deleteNote(note: Note) {
         if (note.id != 0) {
-            if(note.noteType == NoteType.PHOTO) {
-                // Xóa ảnh liên quan đến note nếu là note kiểu PHOTO
+            if (note.noteType == NoteType.PHOTO) {
                 noteViewModel.deleteImagesByNoteId(note.id)
             }
-            // xóa
             noteViewModel.deleteNote(note.id)
-        }
-        else{
-            Snackbar.make(binding.root,"Không thể xóa ghi chú này", Snackbar.LENGTH_SHORT).show()
+        } else {
+            Snackbar.make(binding.root, "Không thể xóa ghi chú này", Snackbar.LENGTH_SHORT).show()
         }
     }
 
-    // tao ban sao cho note
-    private fun duplicateNote(note:Note){
+    private fun duplicateNote(note: Note) {
         noteViewModel.duplicateNote(note.id)
     }
 
-
-    private fun setupChipFilters() {
-        binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                clearOtherChips(binding.chipAll.id)
-                showAllNotes()
-            }
-        }
-        binding.chipPinned.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                clearOtherChips(binding.chipPinned.id)
-                showPinnedNotes()
-            }
-        }
-        binding.chipReminder.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                clearOtherChips(binding.chipReminder.id)
-                showReminderNotes()
-            }
-        }
-    }
-
-    private fun clearOtherChips(checkedChipId: Int) {
-        when (checkedChipId) {
-            binding.chipAll.id -> {
-                binding.chipPinned.isChecked = false
-                binding.chipReminder.isChecked = false
-            }
-
-            binding.chipPinned.id -> {
-                binding.chipAll.isChecked = false
-                binding.chipReminder.isChecked = false
-            }
-
-            binding.chipReminder.id -> {
-                binding.chipPinned.isChecked = false
-                binding.chipAll.isChecked = false
-            }
-        }
-    }
-
-    private fun updateEmptyState(isEmpty: Boolean = allNotes.isEmpty()) {
+    private fun updateEmptyState(isEmpty: Boolean = true) {
         binding.emptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
     }
 
@@ -453,8 +377,6 @@ class NotesFragment : Fragment() , NavigationCallback{
             closeFabMenu()
             openAddNote(NoteType.CHECKLIST)
         }
-
-
     }
 
     private fun openAddNote(noteType: NoteType) {
@@ -474,34 +396,28 @@ class NotesFragment : Fragment() , NavigationCallback{
     private fun openFabMenu() {
         isFabMenuOpen = true
 
-        // Hiển thị lớp phủ và vùng chứa menu
         binding.fabMenuOverlay.visibility = View.VISIBLE
         binding.fabMenuContainer.visibility = View.VISIBLE
 
-        // Animate overlay mờ dần
         binding.fabMenuOverlay.alpha = 0f
         binding.fabMenuOverlay.animate()
             .alpha(1f)
             .setDuration(250)
             .start()
 
-        // Chuyển main FAB
         binding.fabAddNote.animate()
             .rotation(45f)
             .setDuration(250)
             .start()
 
-        // Animate các FAB phụ với thời gian
         animateSubFabIn(binding.fabTextNote, binding.tvTextNote, 0)
         animateSubFabIn(binding.fabImageNote, binding.tvCheckListNote, 90)
         animateSubFabIn(binding.fabChecklistNote, binding.tvImageNote, 180)
-
     }
 
     private fun closeFabMenu() {
         isFabMenuOpen = false
 
-        // làm mờ fab menu overlay
         binding.fabMenuOverlay.animate()
             .alpha(0f)
             .setDuration(200)
@@ -510,13 +426,11 @@ class NotesFragment : Fragment() , NavigationCallback{
             }
             .start()
 
-        // Rotate main FAB back
         binding.fabAddNote.animate()
             .rotation(0f)
             .setDuration(200)
             .start()
 
-        // Animate sub FABs
         animateSubFabOut(binding.fabChecklistNote, binding.tvImageNote, 0)
         animateSubFabOut(binding.fabImageNote, binding.tvCheckListNote, 70)
         animateSubFabOut(binding.fabTextNote, binding.tvTextNote, 140) {
@@ -525,7 +439,6 @@ class NotesFragment : Fragment() , NavigationCallback{
     }
 
     private fun animateSubFabIn(fab: View, label: View, delay: Long) {
-        // Khởi tạo trạng thái ban đầu
         fab.scaleX = 0f
         fab.scaleY = 0f
         fab.alpha = 0f
@@ -536,7 +449,6 @@ class NotesFragment : Fragment() , NavigationCallback{
         label.alpha = 0f
         label.translationY = 50f
 
-        // Animate FAB
         fab.animate()
             .scaleX(1f)
             .scaleY(1f)
@@ -547,7 +459,6 @@ class NotesFragment : Fragment() , NavigationCallback{
             .setInterpolator(OvershootInterpolator(1.2f))
             .start()
 
-        // Animate label với delay nhỏ hơn
         label.animate()
             .scaleX(1f)
             .scaleY(1f)
@@ -565,7 +476,6 @@ class NotesFragment : Fragment() , NavigationCallback{
         delay: Long,
         endAction: (() -> Unit)? = null
     ) {
-        // Animate label trước
         label.animate()
             .scaleX(0f)
             .scaleY(0f)
@@ -575,7 +485,6 @@ class NotesFragment : Fragment() , NavigationCallback{
             .setStartDelay(delay)
             .start()
 
-        // Animate FAB
         fab.animate()
             .scaleX(0f)
             .scaleY(0f)
@@ -587,6 +496,21 @@ class NotesFragment : Fragment() , NavigationCallback{
             .start()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (currentUserId != 0) {
+            refreshNotes()
+        }
+    }
+
+    private fun refreshNotes() {
+        // Clear cache cũ
+        noteImagesMap.clear()
+
+        // Trigger refresh by starting observation again
+        startObservingNotes()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -595,57 +519,4 @@ class NotesFragment : Fragment() , NavigationCallback{
     override fun triggerAddAction() {
         openAddNote(NoteType.TEXT)
     }
-
-    override fun onResume() {
-        super.onResume()
-        if (currentUserId != 0) {
-            refreshNotes()
-        }
-    }
-    private fun refreshNotes() {
-        // Clear cache cũ
-        noteImagesMap.clear()
-
-        // Trigger lại observe để load fresh data
-        viewLifecycleOwner.lifecycleScope.launch {
-            noteViewModel.getAllNotes(currentUserId).collect { notes ->
-                allNotes = notes
-                pinnedNotes = notes.filter { it.isPinned }
-
-                // Load images với cải thiện
-                loadImagesForPhotoNotesImproved(notes)
-            }
-        }
-    }
-
-    private fun loadImagesForPhotoNotesImproved(notes: List<Note>) {
-        val photoNotes = notes.filter { it.noteType == NoteType.PHOTO }
-
-        if (photoNotes.isEmpty()) {
-            // Nếu không có photo notes, update UI ngay
-            updateCurrentView()
-            return
-        }
-
-        // Load từng note một cách bất đồng bộ
-        photoNotes.forEach { note ->
-            noteViewModel.getImagesForNote(note.id) { images ->
-                Log.d("NotesFragment", "Loaded ${images.size} images for note ID: ${note.id}")
-                noteImagesMap[note.id] = images
-
-                // Update UI ngay sau khi load xong từng note
-                updateCurrentView()
-            }
-        }
-    }
-
-    // Hàm helper để update view hiện tại
-    private fun updateCurrentView() {
-        when {
-            binding.chipAll.isChecked -> showAllNotes()
-            binding.chipPinned.isChecked -> showPinnedNotes()
-            binding.chipReminder.isChecked -> showReminderNotes()
-        }
-    }
 }
-

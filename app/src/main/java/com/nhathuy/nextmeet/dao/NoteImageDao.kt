@@ -37,5 +37,9 @@ interface NoteImageDao {
     // Lấy tất cả cac ảnh
     @Query("SELECT image_path FROM note_images")
     fun getAllImagePaths() : Flow<List<String>>
+
+    // Lấy tất cả ảnh của 1 note
+    @Query("SELECT * FROM note_images WHERE note_id = :noteId")
+    fun getImagesFlowForNote(noteId: Int): Flow<List<NoteImage>>
 }
 
