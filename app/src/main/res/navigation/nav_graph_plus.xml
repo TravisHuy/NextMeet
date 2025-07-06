@@ -64,5 +64,17 @@
         <action
             android:id="@+id/action_nav_home_to_nav_contact"
             app:destination="@id/nav_contact" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_search"
+            app:destination="@id/nav_search" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_search"
+        android:name="com.nhathuy.nextmeet.fragment.SearchFragment"
+        android:label="fragment_search"
+        tools:layout="@layout/fragment_search" >
+        <action
+            android:id="@+id/action_nav_search_to_nav_home"
+            app:destination="@id/nav_home" />
     </fragment>
 </navigation>

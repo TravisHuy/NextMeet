@@ -50,6 +50,7 @@
     <color name="gray_dark">#424242</color>
     <color name="selection_border_color">#075898</color>
 
-
+    <color name="primary_color">#2196F3</color>
+    <color name="text_secondary">#757575</color>
 
 </resources>
