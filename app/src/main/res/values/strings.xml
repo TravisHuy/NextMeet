@@ -187,6 +187,8 @@
     <string name="hint_enter_address_or_select_from_map">Nhập địa chỉ hoặc chọn từ bản đồ...</string>
     <string name="back">Back</string>
     <string name="history">History</string>
+    <string name="all">All</string>
+    <string name="cu_c_h_n">Cuộc hẹn</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">
