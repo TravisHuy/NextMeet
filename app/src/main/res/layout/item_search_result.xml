@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/selectableItemBackground"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/iv_result_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/circle_background"
+        android:padding="8dp"
+        android:src="@drawable/ic_search"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/primary_color" />
+
+    <TextView
+        android:id="@+id/tv_result_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:fontFamily="@font/inter_semibold"
+        android:maxLines="1"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toStartOf="@+id/tv_result_status"
+        app:layout_constraintStart_toEndOf="@+id/iv_result_icon"
+        app:layout_constraintTop_toTopOf="@+id/iv_result_icon"
+        tools:text="Cuộc hẹn với khách hàng" />
+
+    <TextView
+        android:id="@+id/tv_result_subtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/open_sans"
+        android:maxLines="1"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="@+id/tv_result_title"
+        app:layout_constraintStart_toStartOf="@+id/tv_result_title"
+        app:layout_constraintTop_toBottomOf="@+id/tv_result_title"
+        tools:text="Nguyễn Văn A" />
+
+    <TextView
+        android:id="@+id/tv_result_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/open_sans"
+        android:maxLines="2"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@+id/tv_result_subtitle"
+        app:layout_constraintStart_toStartOf="@+id/tv_result_subtitle"
+        app:layout_constraintTop_toBottomOf="@+id/tv_result_subtitle"
+        tools:text="Văn phòng công ty, tầng 5" />
+
+    <TextView
+        android:id="@+id/tv_result_time"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/open_sans"
+        android:maxLines="1"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@+id/tv_result_description"
+        app:layout_constraintStart_toStartOf="@+id/tv_result_description"
+        app:layout_constraintTop_toBottomOf="@+id/tv_result_description"
+        tools:text="15/03/2024 - 10:00" />
+
+    <TextView
+        android:id="@+id/tv_result_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/status_background"
+        android:fontFamily="@font/inter_semibold"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        android:textColor="@color/primary_color"
+        android:textSize="12sp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tv_result_title"
+        tools:text="Sắp tới" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

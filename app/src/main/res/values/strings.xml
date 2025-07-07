@@ -128,6 +128,7 @@
     <!-- API Key (Keep as is) -->
     <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
     <string name="search_appointments">Search appointments...</string>
+    <string name="search_homes">Search...</string>
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
     <string name="add_appointment">Add appointment</string>
@@ -184,6 +185,10 @@
     <string name="email">Email</string>
     <string name="edit">Edit</string>
     <string name="hint_enter_address_or_select_from_map">Nhập địa chỉ hoặc chọn từ bản đồ...</string>
+    <string name="back">Back</string>
+    <string name="history">History</string>
+    <string name="all">All</string>
+    <string name="cu_c_h_n">Cuộc hẹn</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

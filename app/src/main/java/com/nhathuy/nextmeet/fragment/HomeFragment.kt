@@ -13,6 +13,7 @@ import android.view.Window
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.android.material.textfield.TextInputEditText
@@ -23,6 +24,7 @@ import com.nhathuy.nextmeet.databinding.FragmentHomeBinding
 import com.nhathuy.nextmeet.model.RegistrationForm
 import com.nhathuy.nextmeet.ui.AddNoteActivity
 import com.nhathuy.nextmeet.ui.GoogleMapActivity
+import com.nhathuy.nextmeet.ui.SearchActivity
 import com.nhathuy.nextmeet.ui.TestActivity
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -64,37 +66,18 @@ class HomeFragment : Fragment() {
         binding.homeViewpager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback(){
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                when(position){
-                    0->binding.btnAdd.visibility = View.VISIBLE
-                    1->binding.btnAdd.visibility = View.GONE
-                    2->binding.btnAdd.visibility = View.GONE
-                }
+//                when(position){
+//                    0->binding.btnAdd.visibility = View.VISIBLE
+//                    1->binding.btnAdd.visibility = View.GONE
+//                    2->binding.btnAdd.visibility = View.GONE
+//                }
             }
         })
     }
     private fun setupClickListener(){
-        binding.btnAdd.setOnClickListener {
-            val dialog = Dialog(requireContext())
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-            val dialogBinding = DialogAddGridLayoutBinding.inflate(LayoutInflater.from(requireContext()))
-            dialog.setContentView(dialogBinding.root)
-
-            dialogBinding.ivAddNotes.setOnClickListener {
-                startActivity(Intent(requireContext(),AddNoteActivity::class.java))
-            }
-
-            dialogBinding.ivCancel.setOnClickListener {
-                dialog.dismiss()
-            }
-
-            dialog.show()
-            dialog.window?.apply {
-                setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
-                setBackgroundDrawableResource(R.drawable.border_dialog_background)
-                attributes.windowAnimations = R.style.DialogAnimation
-                setGravity(Gravity.CENTER_HORIZONTAL)
-            }
+        binding.ivSearch.setOnClickListener {
+            val intent = Intent(requireContext(), SearchActivity::class.java)
+            startActivity(intent)
         }
     }
     override fun onDestroyView() {
