@@ -298,6 +298,17 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
     }
 
     /**
+     * Reset search to initial state with ALL type
+     */
+    fun resetToInitialState() {
+        _currentQuery.value = ""
+        _searchResults.value = UniversalSearchResult()
+        _isSearching.value = false
+        _currentSearchType.value = SearchType.ALL
+        loadInitialSuggestions()
+    }
+
+    /**
      * Update query without triggering search (for text input changes)
      */
     fun updateQuery(query: String) {
@@ -343,8 +354,6 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
     }
     override fun onCleared() {
         super.onCleared()
-        searchManager.cleanup()
+//        searchManager.cleanup()
     }
-
-
 }

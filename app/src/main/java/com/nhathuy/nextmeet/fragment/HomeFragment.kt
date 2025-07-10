@@ -77,7 +77,9 @@ class HomeFragment : Fragment() {
     private fun setupClickListener(){
         binding.ivSearch.setOnClickListener {
             val intent = Intent(requireContext(), SearchActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
     }
     override fun onDestroyView() {

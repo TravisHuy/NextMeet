@@ -81,6 +81,9 @@ class SearchRepository @Inject constructor(
     /**
      * tạo gợi ý tìm kiếm
      */
+    /**
+     * tạo gợi ý tìm kiếm
+     */
     suspend fun generateSearchSuggestions(
         userId: Int,
         query: String,
@@ -91,25 +94,57 @@ class SearchRepository @Inject constructor(
 
         //1.history suggestions
         if (query.isEmpty()) {
-            val history = searchHistoryDao.getSearchHistory(userId, searchType)
-            history.forEach { historyItem ->
-                suggestions.add(
-                    SearchSuggestion(
-                        text = historyItem.searchText,
-                        type = SearchSuggestionType.HISTORY,
-                        searchType = searchType,
-                        icon = getHistoryIcon(searchType),
-                        subtitle = context.getString(R.string.search_recent)
+            if (searchType == SearchType.ALL) {
+                // Lấy history từ tất cả các loại search
+                val allHistory = searchHistoryDao.getAllSearchHistory(userId, 15)
+                allHistory.forEach { historyItem ->
+                    suggestions.add(
+                        SearchSuggestion(
+                            text = historyItem.searchText,
+                            type = SearchSuggestionType.HISTORY,
+                            searchType = historyItem.searchType, // Giữ nguyên searchType gốc
+                            icon = getHistoryIcon(historyItem.searchType),
+                            subtitle = context.getString(R.string.search_recent) + " - ${getSearchTypeLabel(historyItem.searchType)}"
+                        )
                     )
-                )
+                }
+            } else {
+                val history = searchHistoryDao.getSearchHistory(userId, searchType)
+                history.forEach { historyItem ->
+                    suggestions.add(
+                        SearchSuggestion(
+                            text = historyItem.searchText,
+                            type = SearchSuggestionType.HISTORY,
+                            searchType = searchType,
+                            icon = getHistoryIcon(searchType),
+                            subtitle = context.getString(R.string.search_recent)
+                        )
+                    )
+                }
             }
         } else {
             //filtered history
-            val history = searchHistoryDao.getSearchHistory(userId, searchType, 10)
-            history.filter {
-                it.searchText.contains(query, ignoreCase = true)
-            }
-                .take(3).forEach { historyItem ->
+            if (searchType == SearchType.ALL) {
+                // Tìm kiếm trong tất cả history
+                val allHistory = searchHistoryDao.getAllSearchHistory(userId, 20)
+                allHistory.filter {
+                    it.searchText.contains(query, ignoreCase = true)
+                }.take(5).forEach { historyItem ->
+                    suggestions.add(
+                        SearchSuggestion(
+                            text = historyItem.searchText,
+                            type = SearchSuggestionType.HISTORY,
+                            searchType = historyItem.searchType,
+                            icon = getHistoryIcon(historyItem.searchType),
+                            subtitle = context.getString(R.string.search_history) + " - ${getSearchTypeLabel(historyItem.searchType)}"
+                        )
+                    )
+                }
+            } else {
+                val history = searchHistoryDao.getSearchHistory(userId, searchType, 10)
+                history.filter {
+                    it.searchText.contains(query, ignoreCase = true)
+                }.take(3).forEach { historyItem ->
                     suggestions.add(
                         SearchSuggestion(
                             text = historyItem.searchText,
@@ -120,6 +155,7 @@ class SearchRepository @Inject constructor(
                         )
                     )
                 }
+            }
         }
 
         //2. autocomplete suggestions
@@ -136,20 +172,80 @@ class SearchRepository @Inject constructor(
 
         //4.Trending searchers
         if (query.isEmpty()) {
-            val trending = searchHistoryDao.getTrendingSearches(userId, searchType, 3)
-            trending.forEach { trend ->
-                suggestions.add(
-                    SearchSuggestion(
-                        text = trend.search_text,
-                        type = SearchSuggestionType.TRENDING,
-                        searchType = searchType,
-                        icon = getHistoryIcon(searchType),
-                        subtitle = context.getString(R.string.search_trending, trend.count)
+            if (searchType == SearchType.ALL) {
+                // Lấy trending từ tất cả các loại
+                val allTrending = mutableListOf<SearchSuggestion>()
+
+                // Lấy trending từ từng loại
+                val contactTrending = searchHistoryDao.getTrendingSearches(userId, SearchType.CONTACT, 2)
+                val appointmentTrending = searchHistoryDao.getTrendingSearches(userId, SearchType.APPOINTMENT, 2)
+                val noteTrending = searchHistoryDao.getTrendingSearches(userId, SearchType.NOTE, 2)
+
+                contactTrending.forEach { trend ->
+                    allTrending.add(
+                        SearchSuggestion(
+                            text = trend.search_text,
+                            type = SearchSuggestionType.TRENDING,
+                            searchType = SearchType.CONTACT,
+                            icon = getHistoryIcon(SearchType.CONTACT),
+                            subtitle = context.getString(R.string.search_trending, trend.count) + " - ${getSearchTypeLabel(SearchType.CONTACT)}"
+                        )
                     )
-                )
+                }
+
+                appointmentTrending.forEach { trend ->
+                    allTrending.add(
+                        SearchSuggestion(
+                            text = trend.search_text,
+                            type = SearchSuggestionType.TRENDING,
+                            searchType = SearchType.APPOINTMENT,
+                            icon = getHistoryIcon(SearchType.APPOINTMENT),
+                            subtitle = context.getString(R.string.search_trending, trend.count) + " - ${getSearchTypeLabel(SearchType.APPOINTMENT)}"
+                        )
+                    )
+                }
+
+                noteTrending.forEach { trend ->
+                    allTrending.add(
+                        SearchSuggestion(
+                            text = trend.search_text,
+                            type = SearchSuggestionType.TRENDING,
+                            searchType = SearchType.NOTE,
+                            icon = getHistoryIcon(SearchType.NOTE),
+                            subtitle = context.getString(R.string.search_trending, trend.count) + " - ${getSearchTypeLabel(SearchType.NOTE)}"
+                        )
+                    )
+                }
+
+                // Sắp xếp theo count và lấy top 5
+                suggestions.addAll(allTrending.sortedByDescending {
+                    it.subtitle?.substringBefore(" lần")?.substringAfterLast(" ")?.toIntOrNull() ?: 0
+                }.take(5))
+            } else {
+                val trending = searchHistoryDao.getTrendingSearches(userId, searchType, 3)
+                trending.forEach { trend ->
+                    suggestions.add(
+                        SearchSuggestion(
+                            text = trend.search_text,
+                            type = SearchSuggestionType.TRENDING,
+                            searchType = searchType,
+                            icon = getHistoryIcon(searchType),
+                            subtitle = context.getString(R.string.search_trending, trend.count)
+                        )
+                    )
+                }
             }
         }
-        emit(suggestions.distinctBy { it.text }.take(15))
+        emit(suggestions.distinctBy { it.text + it.searchType.name }.take(15))
+    }
+
+    private fun getSearchTypeLabel(searchType: SearchType): String {
+        return when (searchType) {
+            SearchType.CONTACT -> context.getString(R.string.contact)
+            SearchType.APPOINTMENT -> context.getString(R.string.appointment)
+            SearchType.NOTE -> context.getString(R.string.notes)
+            SearchType.ALL -> context.getString(R.string.all)
+        }
     }
 
     private suspend fun generateAutocompleteSuggestions(
