@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -14,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.tabs.TabLayout
 import com.nhathuy.nextmeet.R
@@ -40,6 +42,7 @@ class SearchActivity : AppCompatActivity() {
 
     private var currentSearch = ""
     private var currentSearchType = SearchType.ALL
+    private var isUpdatingSearch = false
 
     companion object {
         const val TAG = "SearchActivity"
@@ -72,6 +75,7 @@ class SearchActivity : AppCompatActivity() {
     private fun setupUserInfo(){
         userViewModel.getCurrentUser().observe(this) { user ->
             user?.let {
+                Log.d(TAG, "User loaded: ${user.id}, ${user.name}")
                 searchViewModel.initializeSearch(user.id)
             }
         }
@@ -97,12 +101,15 @@ class SearchActivity : AppCompatActivity() {
                 }
 
                 override fun afterTextChanged(s: Editable?) {
+
+                    if (isUpdatingSearch) return
+
                     val query = s.toString().trim()
                     currentSearch = query
 
                     btnClear.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
 
-                    searchViewModel.updateQuery(query)
+                    searchViewModel.generateSuggestions(query)
                 }
 
             })
@@ -117,7 +124,9 @@ class SearchActivity : AppCompatActivity() {
 
             btnClear.setOnClickListener {
                 etSearch.setText("")
-                searchViewModel.clearSearch()
+                currentSearchType = SearchType.ALL
+                binding.tabSearchFilters.getTabAt(0)?.select()
+                searchViewModel.resetToInitialState()
                 hideKeyboard()
             }
 
@@ -245,36 +254,50 @@ class SearchActivity : AppCompatActivity() {
 
     private fun observeSearchData(){
         lifecycleScope.launch {
-            searchViewModel.uiState.collect { state ->
-                handleSearchUiState(state)
-            }
-        }
-
-        lifecycleScope.launch {
-            searchViewModel.suggestions.collect { suggestions ->
-                searchSuggestionsAdapter.submitList(suggestions)
-            }
-        }
-
-
-        lifecycleScope.launch {
-            searchViewModel.searchResults.collect { results ->
-                searchResultsAdapter.submitSearchResults(results)
-            }
-        }
-
-        lifecycleScope.launch {
-            searchViewModel.currentQuery.collect { query ->
-                if (query != binding.etSearch.text.toString()) {
-                    binding.etSearch.setText(query)
-                    binding.etSearch.setSelection(query.length)
+            lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED){
+                searchViewModel.uiState.collect { state ->
+                    handleSearchUiState(state)
                 }
             }
         }
 
         lifecycleScope.launch {
-            searchViewModel.isSearching.collect { isSearching ->
-                binding.progressLoading.visibility = if (isSearching) View.VISIBLE else View.GONE
+            lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                searchViewModel.suggestions.collect { suggestions ->
+                    Log.d(TAG, "Suggestions updated: ${suggestions.size}")
+                    searchSuggestionsAdapter.submitList(suggestions)
+                }
+            }
+        }
+
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                searchViewModel.searchResults.collect { results ->
+                    searchResultsAdapter.submitSearchResults(results)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                searchViewModel.currentQuery.collect { query ->
+                    if (query != binding.etSearch.text.toString()) {
+                        isUpdatingSearch = true
+                        binding.etSearch.setText(query)
+                        binding.etSearch.setSelection(query.length)
+                        isUpdatingSearch = false
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                searchViewModel.isSearching.collect { isSearching ->
+                    binding.progressLoading.visibility =
+                        if (isSearching) View.VISIBLE else View.GONE
+                }
             }
         }
     }
@@ -300,12 +323,12 @@ class SearchActivity : AppCompatActivity() {
             }
 
             is SearchUiState.SuggestionsLoaded -> {
-                binding.progressLoading.visibility = View.VISIBLE
+                binding.progressLoading.visibility = View.GONE
+                showSuggestions()
             }
 
             is SearchUiState.LoadingSuggestions -> {
-                // Could show a lighter loading indicator for suggestions
-                binding.progressLoading.visibility = View.VISIBLE
+
             }
 
             is SearchUiState.SearchResultsLoaded -> {
@@ -352,4 +375,25 @@ class SearchActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
     }
+
+//    override fun onResume() {
+//        super.onResume()
+//        Log.d(TAG, "onResume called - currentSearch: $currentSearch, currentSearchType: $currentSearchType")
+//
+//        lifecycleScope.launch {
+//            val currentSuggestions = searchViewModel.suggestions.value
+//            if (currentSuggestions.isEmpty() && currentSearch.isEmpty()) {
+//                Log.d(TAG, "No suggestions found, force reload")
+//                userViewModel.getCurrentUser().value?.let { user ->
+//                    searchViewModel.initializeSearch(user.id)
+//                }
+//            }
+//        }
+//
+//    }
+
+//    override fun onPause() {
+//        super.onPause()
+//        Log.d(TAG, "onPause called")
+//    }
 }
