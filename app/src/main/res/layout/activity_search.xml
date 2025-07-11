@@ -100,7 +100,7 @@
 
     </LinearLayout>
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
@@ -328,10 +328,9 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_search_results"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
+                    android:layout_height="0dp"
                     android:paddingTop="8dp"
-                    tools:itemCount="10"
+                    android:layout_weight="1"
                     />
             </LinearLayout>
 
@@ -371,7 +370,7 @@
             </LinearLayout>
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <ProgressBar
         android:id="@+id/progress_loading"

@@ -56,6 +56,14 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
     }
 
     /**
+     * Set search type without generating suggestions
+     */
+    fun setSearchTypeOnly(searchType: SearchType) {
+        _currentSearchType.value = searchType
+    }
+
+
+    /**
      * Perform search with debounce
      */
     fun search(query: String, searchType: SearchType = _currentSearchType.value) {
@@ -121,6 +129,61 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
             }
         )
     }
+
+    fun searchImmediateCategory(query: String, searchType: SearchType = _currentSearchType.value){
+        _currentQuery.value = query
+        _currentSearchType.value = searchType
+        _isSearching.value = true
+        _uiState.value = SearchUiState.Loading
+
+        searchManager.performCategorySearch(
+            userId = currentUserId,
+            searchType = searchType,
+            onResult = { result ->
+                _isSearching.value = false
+                _searchResults.value = result
+                _uiState.value = SearchUiState.SearchResultsLoaded(
+                    results = result,
+                    query = query,
+                    searchType = searchType
+                )
+            },
+            onError = { error ->
+                _isSearching.value = false
+                _uiState.value = SearchUiState.Error(error)
+            }
+        )
+    }
+
+
+    /**
+     * Search for all items in a specific category (for category buttons)
+     */
+    fun searchByCategory(searchType: SearchType) {
+        _currentQuery.value = ""
+        _currentSearchType.value = searchType
+        _isSearching.value = true
+        _uiState.value = SearchUiState.Loading
+
+        searchManager.performCategorySearch(
+            userId = currentUserId,
+            searchType = searchType,
+            onResult = { result ->
+                _isSearching.value = false
+                _searchResults.value = result
+                _uiState.value = SearchUiState.SearchResultsLoaded(
+                    results = result,
+                    query = "", // Empty query for category search
+                    searchType = searchType
+                )
+            },
+            onError = { error ->
+                _isSearching.value = false
+                _uiState.value = SearchUiState.Error(error)
+            }
+        )
+    }
+
 
     private fun loadInitialSuggestions() {
         generateSuggestions("")
@@ -288,6 +351,22 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
     }
 
     /**
+     * Clear all search history
+     */
+    fun clearAllSearchHistory(){
+        searchManager.clearAllSearchHistory(
+            userId = currentUserId,
+            onComplete = {
+                _uiState.value = SearchUiState.SearchHistoryCleared("Search history cleared all")
+                generateSuggestions(_currentQuery.value)
+            },
+            onError = { error ->
+                _uiState.value = SearchUiState.Error(error)
+            }
+        )
+    }
+
+    /**
      * Clear search and reset to initial state
      */
     fun clearSearch() {
@@ -317,6 +396,16 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
         generateSuggestions(query)
     }
 
+//    /**
+//     * Reset to initial state but keep current search type
+//     */
+//    fun resetToInitialStateWithType(searchType: SearchType) {
+//        _currentQuery.value = ""
+//        _searchResults.value = UniversalSearchResult()
+//        _isSearching.value = false
+//        _currentSearchType.value = searchType
+//        generateSuggestions("") // Generate suggestions for the specific type
+//    }
 
 
     /**

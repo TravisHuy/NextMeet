@@ -1276,5 +1276,11 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         showContactDialog()
         showMessage("Vui lòng thêm liên hệ để tạo cuộc hẹn")
     }
+
+    override fun onNavigateToEditContact(contact: Contact) {
+        binding.root.postDelayed({
+            showContactDialog(contact)
+        }, 200)
+    }
 }
 

@@ -1,6 +1,7 @@
 package com.nhathuy.nextmeet.adapter
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -98,6 +99,11 @@ class SearchResultsAdapter(
             items.add(SearchResultItem.HeaderItem(context.getString(R.string.notes), results.notes.size))
             items.addAll(results.notes.map { SearchResultItem.NoteItem(it) })
         }
+
+        Log.d("SearchResultsAdapter", "Total items: ${items.size}")
+        Log.d("SearchResultsAdapter", "Appointments: ${results.appointments.size}")
+        Log.d("SearchResultsAdapter", "Contacts: ${results.contacts.size}")
+        Log.d("SearchResultsAdapter", "Notes: ${results.notes.size}")
 
         submitList(items)
     }

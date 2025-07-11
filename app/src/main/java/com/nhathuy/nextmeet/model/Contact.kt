@@ -1,10 +1,12 @@
 package com.nhathuy.nextmeet.model
 
+import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
 /**
  * Contact Entity đại diện cho  bảng danh bạ liên hệ trong room
@@ -36,6 +38,7 @@ import androidx.room.PrimaryKey
         Index("name"),
         Index("user_id", "phone", unique = true)]
 )
+@Parcelize
 data class Contact(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -63,5 +66,5 @@ data class Contact(
     val createAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at")
     val updateAt: Long = System.currentTimeMillis()
-)
+) : Parcelable
 

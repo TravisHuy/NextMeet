@@ -12,6 +12,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.ViewPagerAdapter
 import com.nhathuy.nextmeet.databinding.ActivitySolutionBinding
+import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.utils.NavigationCallback
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -22,6 +23,7 @@ class SolutionActivity : AppCompatActivity() {
 
     interface NavigationCallback {
         fun onNavigateToContact()
+        fun onNavigateToEditContact(contact: Contact)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,9 +90,21 @@ class SolutionActivity : AppCompatActivity() {
     }
     private fun triggerContactNavigation(){
         val fragments = supportFragmentManager.fragments
+        val contactData = intent.getParcelableExtra<Contact>("contact_data")
+        val action = intent.getStringExtra("action")
+
         for(fragment in fragments){
             if(fragment is NavigationCallback && fragment.isVisible){
-                fragment.onNavigateToContact()
+                when(action) {
+                    "edit_contact" -> {
+                        if(contactData != null) {
+                            fragment.onNavigateToEditContact(contactData)
+                        }
+                    }
+                    else -> {
+                        fragment.onNavigateToContact()
+                    }
+                }
                 break
             }
         }

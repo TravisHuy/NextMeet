@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -149,7 +150,9 @@ class UniversalSearchManager @Inject constructor(
                         }
 
                         SearchType.CONTACT -> {
-                            val contacts = searchRepository.getContactsByQuickFilter(userId, filterText).first()
+                            val contacts =
+                                searchRepository.getContactsByQuickFilter(userId, filterText)
+                                    .first()
                             UniversalSearchResult(
                                 contacts = contacts,
                                 totalCount = contacts.size
@@ -159,7 +162,9 @@ class UniversalSearchManager @Inject constructor(
                         SearchType.APPOINTMENT -> {
                             val filterKey = Constant.getFilterKeyFromText(filterText, context)
                             if (filterKey != null) {
-                                val appointments = searchRepository.getAppointmentsByQuickFilter(userId, filterKey).first()
+                                val appointments =
+                                    searchRepository.getAppointmentsByQuickFilter(userId, filterKey)
+                                        .first()
                                 UniversalSearchResult(
                                     appointments = appointments,
                                     totalCount = appointments.size
@@ -170,7 +175,8 @@ class UniversalSearchManager @Inject constructor(
                         }
 
                         SearchType.NOTE -> {
-                            val notes = searchRepository.getNotesByQuickFilter(userId, filterText).first()
+                            val notes =
+                                searchRepository.getNotesByQuickFilter(userId, filterText).first()
                             UniversalSearchResult(
                                 notes = notes,
                                 totalCount = notes.size
@@ -198,6 +204,81 @@ class UniversalSearchManager @Inject constructor(
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     onError(e.message ?: "Error performing quick filter search")
+                }
+            }
+        }
+    }
+
+    /**
+     * Perform category search to get all items of a specific type
+     */
+    fun performCategorySearch(
+        userId: Int,
+        searchType: SearchType,
+        onResult: (UniversalSearchResult) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        searchRunnable?.let { handler.removeCallbacks(it) }
+        currentSearchJob?.cancel()
+
+        currentSearchJob = searchScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    when (searchType) {
+                        SearchType.ALL -> {
+                            val appointmentsDeferred =
+                                async { searchRepository.getAllAppointmentsByUser(userId).first() }
+                            val contactsDeferred =
+                                async { searchRepository.getAllContactsByUser(userId).first() }
+                            val notesDeferred =
+                                async { searchRepository.getAllNotesByUser(userId).first() }
+
+                            val appointments = appointmentsDeferred.await()
+                            val contacts = contactsDeferred.await()
+                            val notes = notesDeferred.await()
+
+                            UniversalSearchResult(
+                                appointments = appointments,
+                                contacts = contacts,
+                                notes = notes,
+                                totalCount = appointments.size + contacts.size + notes.size
+                            )
+                        }
+
+                        SearchType.APPOINTMENT -> {
+                            val appointments =
+                                searchRepository.getAllAppointmentsByUser(userId).first()
+                            UniversalSearchResult(
+                                appointments = appointments,
+                                totalCount = appointments.size
+                            )
+                        }
+
+                        SearchType.CONTACT -> {
+                            val contacts = searchRepository.getAllContactsByUser(userId).first()
+                            UniversalSearchResult(
+                                contacts = contacts,
+                                totalCount = contacts.size
+                            )
+                        }
+
+                        SearchType.NOTE -> {
+                            val notes = searchRepository.getAllNotesByUser(userId).first()
+                            UniversalSearchResult(
+                                notes = notes,
+                                totalCount = notes.size
+                            )
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    onResult(result)
+                }
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onError("Error loading ${searchType.name.lowercase()} items: ${e.message}")
                 }
             }
         }
@@ -294,7 +375,11 @@ class UniversalSearchManager @Inject constructor(
         searchScope.launch {
             try {
                 // Get appointments for specific contact with SCHEDULED status
-                val appointments = searchRepository.getAppointmentByContactId(userId, contactId, AppointmentStatus.SCHEDULED)
+                val appointments = searchRepository.getAppointmentByContactId(
+                    userId,
+                    contactId,
+                    AppointmentStatus.SCHEDULED
+                )
 
                 // Calculate total count
                 val totalCount = appointments.size
@@ -322,6 +407,7 @@ class UniversalSearchManager @Inject constructor(
             }
         }
     }
+
     /**
      * Delete search history item
      */
@@ -372,6 +458,28 @@ class UniversalSearchManager @Inject constructor(
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     onError(e.message ?: "Error clearing search history")
+                }
+            }
+        }
+    }
+
+    fun clearAllSearchHistory(
+        userId: Int, onComplete: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        searchScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    searchRepository.clearAllSearchHistory(userId)
+                }
+
+                withContext(Dispatchers.Main) {
+                    onComplete()
+                }
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Error clearing all search history")
                 }
             }
         }
