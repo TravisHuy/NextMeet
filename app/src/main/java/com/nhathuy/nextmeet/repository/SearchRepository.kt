@@ -61,9 +61,27 @@ class SearchRepository @Inject constructor(
     }
 
     /**
+     * Lấy tất cả tìm kiếm với note
+     */
+    suspend fun getAllNotesByUser(userId: Int): Flow<List<Note>> =
+        noteDao.getAllNotesByUser(userId)
+
+    /**
+     * Lấy tất cả tìm kiếm với contact
+     */
+    fun getAllContactsByUser(userId: Int): Flow<List<Contact>> =
+        contactDao.getAllContactsByUser(userId)
+
+
+    /**
+     * Lấy tất cả tìm kiếm với contact
+     */
+    fun getAllAppointmentsByUser(userId: Int): Flow<List<AppointmentPlus>> =
+        appointmentDao.getAllAppointmentsByUser(userId)
+    /**
      * Tìm kiếm liên hệ
      */
-    suspend fun searchContacts(userId: Int, query: String): Flow<List<Contact>> =
+    fun searchContacts(userId: Int, query: String): Flow<List<Contact>> =
         contactDao.searchContacts(userId, query)
 
     /**
@@ -555,6 +573,11 @@ class SearchRepository @Inject constructor(
     suspend fun clearSearchHistory(userId: Int, searchType: SearchType) {
         searchHistoryDao.clearSearchHistory(userId, searchType)
     }
+
+    /**
+     * Xóa toàn bộ lịch sử tìm kiếm của người dùng
+     */
+    suspend fun clearAllSearchHistory(userId: Int) = searchHistoryDao.clearAllSearchHistory(userId)
 
 
     /**

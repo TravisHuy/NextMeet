@@ -25,8 +25,13 @@ import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.SearchResultsAdapter
 import com.nhathuy.nextmeet.adapter.SearchSuggestionsAdapter
 import com.nhathuy.nextmeet.databinding.ActivitySearchBinding
+import com.nhathuy.nextmeet.fragment.NotesFragment
+import com.nhathuy.nextmeet.model.AppointmentPlus
+import com.nhathuy.nextmeet.model.Contact
+import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.SearchType
 import com.nhathuy.nextmeet.resource.SearchUiState
+import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.SearchViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,6 +49,8 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var searchSuggestionsAdapter: SearchSuggestionsAdapter
     private lateinit var searchResultsAdapter : SearchResultsAdapter
 
+    // userId
+    private var currentUserId: Int = 0
     private var currentSearch = ""
     private var currentSearchType = SearchType.ALL
     private var isUpdatingSearch = false
@@ -80,6 +87,7 @@ class SearchActivity : AppCompatActivity() {
     private fun setupUserInfo(){
         userViewModel.getCurrentUser().observe(this) { user ->
             user?.let {
+                currentUserId = user.id
                 Log.d(TAG, "User loaded: ${user.id}, ${user.name}")
                 searchViewModel.initializeSearch(user.id)
             }
@@ -164,7 +172,7 @@ class SearchActivity : AppCompatActivity() {
             adapter = searchSuggestionsAdapter
         }
         binding.tvClearAll.setOnClickListener {
-            searchViewModel.clearSearchHistory()
+            searchViewModel.clearAllSearchHistory()
         }
     }
 
@@ -172,23 +180,63 @@ class SearchActivity : AppCompatActivity() {
         searchResultsAdapter = SearchResultsAdapter(
             this,
             onAppointmentClick = { appointment ->
-                // TODO: Handle appointment click
-                Toast.makeText(this, "Appointment clicked: ${appointment.title}", Toast.LENGTH_SHORT).show()
+                handleAppointmentClick(appointment)
+                Log.d(TAG,"Clicked appointment: ${appointment.title}")
             },
             onContactClick = { contact ->
-                // TODO: Handle contact click
-                Toast.makeText(this, "Contact clicked: ${contact.name}", Toast.LENGTH_SHORT).show()
+                handleContactClick(contact)
+                Log.d(TAG,"Clicked contact: ${contact.name}")
             },
             onNoteClick = { note ->
-                // TODO: Handle note click
-                Toast.makeText(this, "Note clicked: ${note.title}", Toast.LENGTH_SHORT).show()
+                handleNoteClick(note)
+                Log.d(TAG,"Clicked note: ${note.title}")
             }
         )
 
         binding.rvSearchResults.apply {
             layoutManager = LinearLayoutManager(this@SearchActivity)
             adapter = searchResultsAdapter
+
+            setHasFixedSize(false)
+            isNestedScrollingEnabled = false
         }
+    }
+    // handle navigation appointment click
+    private fun handleAppointmentClick(appointment: AppointmentPlus) {
+        val intent = Intent(this, AddAppointmentActivity::class.java).apply {
+            putExtra("current_user_id", currentUserId)
+            putExtra("is_edit_mode", true)
+            putExtra("appointment_id", appointment.id)
+            putExtra("appointment_title", appointment.title)
+            putExtra("appointment_description", appointment.description)
+            putExtra("appointment_location", appointment.location)
+            putExtra("appointment_latitude", appointment.latitude)
+            putExtra("appointment_longitude", appointment.longitude)
+            putExtra("appointment_start_time", appointment.startDateTime)
+            putExtra("appointment_contact_id", appointment.contactId)
+            putExtra("appointment_color", appointment.color)
+            putExtra("appointment_is_pinned", appointment.isPinned)
+        }
+        startActivity(intent)
+    }
+
+    // handle navigation contact click
+    private fun handleContactClick(contact: Contact) {
+        val intent = Intent(this, SolutionActivity::class.java).apply {
+            putExtra("navigate_to", "contact")
+            putExtra("contact_data", contact)
+            putExtra("action", "edit_contact")
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    // handle navigation note click
+    private fun handleNoteClick(note: Note) {
+        val intent = Intent(this, AddNoteActivity::class.java).apply {
+            putExtra(Constant.EXTRA_NOTE_ID, note.id)
+        }
+        startActivity(intent)
     }
 
     private fun setupSearchTabs(){
@@ -206,7 +254,7 @@ class SearchActivity : AppCompatActivity() {
                         // Chỉ thực hiện search nếu search type thay đổi
                         if (currentSearchType != newSearchType) {
                             currentSearchType = newSearchType
-                            searchViewModel.setSearchType(currentSearchType)
+                            searchViewModel.setSearchTypeOnly(currentSearchType)
 
                             // Nếu có query hiện tại, search với type mới
                             if (currentSearch.isNotEmpty()) {
@@ -216,8 +264,12 @@ class SearchActivity : AppCompatActivity() {
                                 )
                                 searchViewModel.search(currentSearch, currentSearchType)
                             } else {
-                                // Nếu không có query, có thể hiển thị empty state hoặc suggestions
-                                handleEmptyQueryTabChange()
+                                if (isInSearchMode()) {
+                                    searchViewModel.searchByCategory(currentSearchType)
+                                } else {
+                                    // Nếu đang trong suggestion mode, generate suggestions
+                                    searchViewModel.generateSuggestions("")
+                                }
                             }
 
                             // Update clear button visibility khi chuyển tab
@@ -234,36 +286,34 @@ class SearchActivity : AppCompatActivity() {
     private fun setupCategoryButtons(){
         binding.apply {
             btnAppointment.setOnClickListener {
-                selectSearchType(SearchType.APPOINTMENT)
+                selectCategoryAndShowResults(SearchType.APPOINTMENT)
             }
 
             btnContact.setOnClickListener {
-                selectSearchType(SearchType.CONTACT)
+                selectCategoryAndShowResults(SearchType.CONTACT)
             }
 
             btnNotes.setOnClickListener {
-                selectSearchType(SearchType.NOTE)
+                selectCategoryAndShowResults(SearchType.NOTE)
             }
 
             btnHistory.setOnClickListener {
-                // Show all search history
-                searchViewModel.setSearchType(SearchType.ALL)
-                searchViewModel.generateSuggestions("")
+                selectCategoryAndShowResults(SearchType.ALL)
             }
         }
     }
+    private fun selectCategoryAndShowResults(searchType: SearchType) {
+        // Clear current search text
+        isUpdatingSearch = true
+        binding.etSearch.setText("")
+        binding.etSearch.clearFocus()
+        isUpdatingSearch = false
 
-    private fun  setupBackButton(){
-        binding.btnBack.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
-    }
-
-    private fun selectSearchType(searchType: SearchType){
+        // Update current search type
         currentSearchType = searchType
-        searchViewModel.setSearchType(searchType)
+        currentSearch = ""
 
+        // Update tab selection
         val tabIndex = when (searchType) {
             SearchType.ALL -> 0
             SearchType.APPOINTMENT -> 1
@@ -272,11 +322,24 @@ class SearchActivity : AppCompatActivity() {
         }
         binding.tabSearchFilters.getTabAt(tabIndex)?.select()
 
-        if (currentSearch.isNotEmpty()) {
-            searchViewModel.search(currentSearch, searchType)
-        }
-        if (currentSearch.isEmpty()) {
-            handleEmptyQueryTabChange()
+        // Set search type in ViewModel
+        searchViewModel.setSearchTypeOnly(searchType)
+
+        // Thực hiện search để hiển thị tất cả items của category đó
+        // Sử dụng empty string để lấy tất cả items
+        searchViewModel.searchByCategory(searchType)
+
+        // Hide keyboard
+        hideKeyboard()
+
+        // Update UI buttons
+        updateSearchBarButtons()
+    }
+
+    private fun  setupBackButton(){
+        binding.btnBack.setOnClickListener {
+            finish()
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
         }
     }
 
@@ -535,6 +598,7 @@ class SearchActivity : AppCompatActivity() {
 
         // Reset về state ban đầu
         searchViewModel.resetToInitialState()
+//        searchViewModel.resetToInitialStateWithType(currentSearchType)
 
         // Hide keyboard
         hideKeyboard()
@@ -544,7 +608,13 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun handleEmptyQueryTabChange() {
-        searchViewModel.resetToInitialState()
+        if (isShowingCategoryResults()) {
+            // Nếu đang hiển thị category results, chuyển sang category khác
+            searchViewModel.searchByCategory(currentSearchType)
+        } else {
+            // Nếu đang ở suggestion mode, reset về initial state
+            searchViewModel.resetToInitialState()
+        }
     }
 
     override fun onDestroy() {
@@ -552,8 +622,16 @@ class SearchActivity : AppCompatActivity() {
     }
 
     fun isInSearchMode(): Boolean {
+        val currentUiState = searchViewModel.uiState.value
         return currentSearch.isNotEmpty() ||
-                searchViewModel.uiState.value is SearchUiState.SearchResultsLoaded
+                currentUiState is SearchUiState.SearchResultsLoaded ||
+                currentUiState is SearchUiState.Loading
+    }
+
+    private fun isShowingCategoryResults(): Boolean {
+        val currentUiState = searchViewModel.uiState.value
+        return currentUiState is SearchUiState.SearchResultsLoaded &&
+                currentSearch.isEmpty()
     }
 
     override fun onBackPressed() {
