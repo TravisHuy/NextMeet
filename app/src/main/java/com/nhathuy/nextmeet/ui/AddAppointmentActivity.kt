@@ -96,21 +96,38 @@ class AddAppointmentActivity : AppCompatActivity() {
     private var isNotificationScheduled = false
     private var notificationPermissionChecked = false
 
+    //location fromMap
+    private var isLocationFromMap = false
+
     // Activity Result Launcher
     private val mapPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { data ->
-                location = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
-                latitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
-                longitude = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
+                val selectedAddress = data.getStringExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS)
+                val selectedLat = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, 0.0)
+                val selectedLng = data.getDoubleExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, 0.0)
 
-                if (!location.isNullOrEmpty()) {
+                isLocationFromMap = true
+
+                location = selectedAddress
+                latitude = selectedLat
+                longitude = selectedLng
+
+                if (!selectedAddress.isNullOrEmpty()) {
                     binding.etAppointmentLocation.setText(location)
+                    binding.tilAppointmentLocation.helperText = "📍 Đã chọn vị trí từ bản đồ"
+                    Log.d(
+                        "AddAppointmentActivity",
+                        "Selected from map: $selectedAddress at ($selectedLat, $selectedLng)"
+                    )
                 } else {
                     binding.etAppointmentLocation.setText(getString(R.string.no_location_selected))
+                    binding.tilAppointmentLocation.helperText = "⚠️ Không có vị trí nào được chọn"
                     location = ""
+                    latitude = null
+                    longitude = null
                 }
             }
         }
@@ -188,6 +205,8 @@ class AddAppointmentActivity : AppCompatActivity() {
         latitude = intent.getDoubleExtra("appointment_latitude", 0.0).takeIf { it != 0.0 }
         longitude = intent.getDoubleExtra("appointment_longitude", 0.0).takeIf { it != 0.0 }
 
+        updateLocationHelperText()
+
         reminderTime = intent.getLongExtra("appointment_start_time", 0L).takeIf { it != 0L }
         currentContactId = intent.getIntExtra("appointment_contact_id", 0)
         selectedColorName = intent.getStringExtra("appointment_color") ?: "color_white"
@@ -196,12 +215,29 @@ class AddAppointmentActivity : AppCompatActivity() {
         Log.d("AddAppointment", "Edit mode contact ID: $currentContactId")
 
         // Update UI for edit mode
-        binding.btnSave.text = "Cập nhật"
         supportActionBar?.title = "Chỉnh sửa cuộc hẹn"
 
         // Update reminder display if available
         reminderTime?.let { updateReminderDisplay() }
     }
+
+    private fun updateLocationHelperText() {
+        when {
+            // Có cả location và coordinates
+            !location.isNullOrEmpty() && latitude != null && longitude != null -> {
+                binding.tilAppointmentLocation.helperText = "📍 Đã tìm thấy vị trí"
+            }
+            // Có location nhưng không có coordinates
+            !location.isNullOrEmpty() && (latitude == null || longitude == null) -> {
+                binding.tilAppointmentLocation.helperText = "⚠️ Có địa chỉ nhưng chưa có tọa độ chính xác"
+            }
+            // Không có location
+            else -> {
+                binding.tilAppointmentLocation.helperText = "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+            }
+        }
+    }
+
 
     private fun initializeViewModels() {
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
@@ -546,24 +582,22 @@ class AddAppointmentActivity : AppCompatActivity() {
     }
 
     private fun setupLocationInput() {
+        updateLocationHelperText()
         binding.tilAppointmentLocation.apply {
-            helperText = "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
             setEndIconDrawable(R.drawable.ic_geo)
             setEndIconContentDescription("Chọn vị trí trên bản đồ")
 
             setEndIconOnClickListener {
                 val intent = Intent(this@AddAppointmentActivity, GoogleMapActivity::class.java).apply {
                     if (latitude != null && longitude != null) {
-                        putExtra("current_lat", latitude)
-                        putExtra("current_lng", longitude)
-                        putExtra("current_address", location)
+                        putExtra(GoogleMapActivity.EXTRA_SELECTED_LAT, latitude)
+                        putExtra(GoogleMapActivity.EXTRA_SELECTED_LNG, longitude)
+                        putExtra(GoogleMapActivity.EXTRA_SELECTED_ADDRESS, location)
                     }
                 }
                 mapPickerLauncher.launch(intent)
             }
         }
-
-        var isLocationFromMap = false
 
         binding.etAppointmentLocation.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -571,9 +605,13 @@ class AddAppointmentActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {
                 val manualLocation = s?.toString()?.trim()
 
-                if (!isLocationFromMap) {
-                    geocodingJob?.cancel()
 
+                if (isLocationFromMap) {
+                    isLocationFromMap = false
+                    return
+                }
+
+                geocodingJob?.cancel()
                     if (!manualLocation.isNullOrEmpty() && manualLocation.length >= 3) {
                         location = manualLocation
 
@@ -585,8 +623,8 @@ class AddAppointmentActivity : AppCompatActivity() {
                                 if (lat != null && lng != null) {
                                     latitude = lat
                                     longitude = lng
-                                    binding.tilAppointmentLocation.helperText =
-                                        "📍 Tọa độ: ${String.format("%.4f", lat)}, ${String.format("%.4f", lng)}"
+                                    binding.tilAppointmentLocation.helperText = "📍 Đã tìm thấy vị trí"
+//                                        "📍 Tọa độ: ${String.format("%.4f", lat)}, ${String.format("%.4f", lng)}"
                                     Log.d("Geocoding", "Found coordinates: $lat, $lng for address: $manualLocation")
                                 } else {
                                     latitude = null
@@ -611,11 +649,6 @@ class AddAppointmentActivity : AppCompatActivity() {
                         binding.tilAppointmentLocation.helperText = "📝 Nhập thêm để tìm tọa độ..."
                     }
                 }
-
-                if (isLocationFromMap) {
-                    isLocationFromMap = false
-                }
-            }
         })
     }
 
@@ -624,9 +657,6 @@ class AddAppointmentActivity : AppCompatActivity() {
             showDateTimePicker()
         }
 
-        binding.btnCancel.setOnClickListener {
-            finish()
-        }
 
         binding.btnSave.setOnClickListener {
             binding.btnSave.isEnabled = false
