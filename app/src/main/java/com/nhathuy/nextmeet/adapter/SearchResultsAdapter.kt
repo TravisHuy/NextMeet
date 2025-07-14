@@ -161,6 +161,7 @@ class SearchResultsAdapter(
                         tvResultStatus.text = "Đã hủy"
                         tvResultStatus.setTextColor(binding.root.context.getColor(R.color.red))
                     }
+                    else -> {}
                 }
                 tvResultStatus.visibility = View.VISIBLE
 

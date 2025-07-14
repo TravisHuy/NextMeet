@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.repository
 
+import android.util.Log
 import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.AppointmentPlus
@@ -22,7 +23,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AppointmentPlusRepository @Inject constructor(private val appointmentPlusDao: AppointmentPlusDao,
-    private val contactDao: ContactDao) {
+                                                    private val contactDao: ContactDao) {
 
     /**
      * Lấy tất cả cuộc hẹn theo userId, cho phép tìm kiếm và lọc theo trạng thái.
@@ -220,12 +221,32 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         status: AppointmentStatus
     ): Result<Unit> {
         return try {
-            val appointment = appointmentPlusDao.getAppointmentById(appointmentId)
-                ?: return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
+            Log.d("AppointmentRepository", "Updating appointment $appointmentId to status $status")
 
+            val appointment = appointmentPlusDao.getAppointmentById(appointmentId)
+            if (appointment == null) {
+                Log.e("AppointmentRepository", "Appointment $appointmentId not found")
+                return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
+            }
+
+            Log.d("AppointmentRepository", "Current appointment status: ${appointment.status}")
+
+            // Update status
             appointmentPlusDao.updateAppointmentStatus(appointmentId, status)
-            Result.success(Unit)
+
+            // Verify update
+            val updatedAppointment = appointmentPlusDao.getAppointmentById(appointmentId)
+            Log.d("AppointmentRepository", "Updated appointment status: ${updatedAppointment?.status}")
+
+            if (updatedAppointment?.status == status) {
+                Log.d("AppointmentRepository", "Status update successful")
+                Result.success(Unit)
+            } else {
+                Log.e("AppointmentRepository", "Status update failed - status not changed")
+                Result.failure(RuntimeException("Failed to update status"))
+            }
         } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Exception updating appointment status", e)
             Result.failure(e)
         }
     }
@@ -307,10 +328,10 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
     /**
      * Bắt đầu điều hướng đến cuộc hẹn.
      */
-    suspend fun startNavigation(appointmentId: Int): Result<Unit> {
+    suspend fun updateNavigationStatus(appointmentId: Int, hasStartedNavigation: Boolean): Result<Boolean> {
         return try {
-            appointmentPlusDao.updateNavigationStatus(appointmentId, true)
-            Result.success(Unit)
+            appointmentPlusDao.updateNavigationStatus(appointmentId, hasStartedNavigation)
+            Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -403,5 +424,34 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         return suggestions.take(10).toList()
     }
 
+    /**
+     * lấy tất cả cuộc hẹn đang hoạt động của người dùng.
+     */
+    suspend fun getAllActiveAppointments(userId:Int) : List<AppointmentPlus> =
+        appointmentPlusDao.getAllActiveAppointments(userId).sortedBy { it.startDateTime }
+
+    /**
+     * lấy tất cả cuộc hẹn đã hoàn thành của người dùng.
+     */
+    suspend fun getAppointmentsInTimeRange(
+        userId : Int,
+        startTime : Long,
+        endTime: Long
+    ) : List<AppointmentPlus> =
+        appointmentPlusDao.getAppointmentsInTimeRange(userId, startTime, endTime)
+            .sortedBy { it.startDateTime }
+
+    /**
+     * update appointment với travel time
+     */
+    suspend fun updateTravelTime(appointmentId:Int,travelTimeMinutes: Int) : Result<Boolean>{
+        return try {
+            appointmentPlusDao.updateTravelTime(appointmentId, travelTimeMinutes)
+            Result.success(true)
+        } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Error updating travel time", e)
+            Result.failure(e)
+        }
+    }
 
 }

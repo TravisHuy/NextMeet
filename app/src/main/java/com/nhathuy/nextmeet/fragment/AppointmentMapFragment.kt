@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -254,7 +255,6 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
     }
 
     // MARK: - Navigation Methods
-
     private fun openAddAppointmentActivity(appointmentToEdit: AppointmentPlus? = null) {
         val intent = Intent(requireContext(), AddAppointmentActivity::class.java).apply {
             putExtra("current_user_id", currentUserId)
@@ -322,6 +322,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         isSelectionMode = true
         binding.selectionToolbar.visibility = View.VISIBLE
         binding.appBarLayout.visibility = View.GONE
+        binding.fabAddAppointment.hide()
     }
 
     private fun exitSelectionMode() {
@@ -330,6 +331,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         binding.appBarLayout.visibility = View.VISIBLE
         appointmentAdapter.setMultiSelectionMode(false)
         appointmentAdapter.clearSelection()
+        binding.fabAddAppointment.show()
     }
 
     private fun togglePinned(appointment: AppointmentPlus) {
@@ -589,10 +591,23 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
                 showMessage(state.message)
                 appointmentViewModel.resetUiState()
             }
+            is AppointmentUiState.StatusUpdated -> {
+                // Hiển thị thông báo thành công
+                showSuccessMessage(state.message)
+
+                // Refresh data nếu cần
+                refreshAppointmentsList()
+            }
             else -> {}
         }
     }
 
+    private fun refreshAppointmentsList() {
+        appointmentViewModel.getAllAppointments(currentUserId)
+    }
+    private fun showSuccessMessage(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
     private fun handleSearchUiState(state: SearchUiState) {
         when (state) {
             is SearchUiState.Loading -> showLoading()
@@ -667,7 +682,6 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
 
     private fun handleDeleteAction() {
         val selectedAppointments = appointmentAdapter.getSelectedAppointments()
-
         if (selectedAppointments.isEmpty()) {
             exitSelectionMode()
             return
@@ -679,6 +693,13 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
 
         // Xóa khỏi UI trước (soft delete)
         appointmentAdapter.removeAppointments(selectedAppointments)
+
+        // thoát selection mode trước khi hiển thị snackbar
+        isSelectionMode = false
+        binding.selectionToolbar.visibility = View.GONE
+        binding.appBarLayout.visibility = View.VISIBLE
+        appointmentAdapter.setMultiSelectionMode(false)
+        appointmentAdapter.clearSelection()
 
         val snackbar = Snackbar.make(
             binding.root,
@@ -697,6 +718,9 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
 
         snackbar.addCallback(object : Snackbar.Callback() {
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                // Hiển thị lại FAB khi Snackbar bị dismiss
+                binding.fabAddAppointment.show()
+
                 // Chỉ xóa khỏi database khi snackbar bị dismiss và user không hoàn tác
                 if (!isUndoClicked && event != DISMISS_EVENT_ACTION) {
                     // Thực hiện xóa thật khỏi database
@@ -708,7 +732,6 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         })
 
         snackbar.show()
-        exitSelectionMode()
     }
 
     private fun handleMoreAction(view: View) {
@@ -783,7 +806,8 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
     }
 
     private fun showMessage(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+//        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     private fun hideKeyboard() {

@@ -2,6 +2,7 @@ package com.nhathuy.nextmeet.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ComponentCaller
 import android.content.Intent
 import android.location.Location
 import android.os.Bundle
@@ -23,9 +24,13 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.MarkerOptions
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.RouteStepAdapter
 import com.nhathuy.nextmeet.databinding.ActivityNavigationMapBinding
@@ -46,14 +51,15 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.model.RouteStep
+import com.nhathuy.nextmeet.utils.Constant.REQUEST_CODE_TURN_BY_TURN
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 @AndroidEntryPoint
 class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -81,6 +87,15 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigationMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
+        }
 
         // Initialize OkHttpClient
         okHttpClient = OkHttpClient.Builder()
@@ -410,6 +425,8 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                         updateRouteInfo(result)
                         showRouteInfo()
 
+                        updateAppointmentTravelTime(result)
+
                         // Tự động hiển thị toàn bộ tuyến đường
                         showFullRoute()
 
@@ -425,6 +442,34 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     showError("Lỗi khi tính toán tuyến đường: ${e.message}")
                     hideRouteInfo()
                 }
+            }
+        }
+    }
+
+    // cập nhật travel time cho cuộn hẹn
+    private fun updateAppointmentTravelTime(routeResult: RouteResult){
+        appointment?.let { appt ->
+            // Chỉ cập nhật nếu travel time hiện tại là 0 hoặc khác biệt đáng kể
+            if (appt.travelTimeMinutes == 0 ||
+                abs(appt.travelTimeMinutes - routeResult.duration) > 5) {
+
+                val distance = routeResult.distanceMeters / 1000.0 // Convert to km
+
+                Log.d("NavigationMapActivity",
+                    "Updating travel time: ${routeResult.duration} minutes, distance: $distance km")
+
+                appointmentViewModel.updateAppointmentWithRouteInfo(
+                    appointmentId = appt.id,
+                    travelTimeMinutes = routeResult.duration,
+                    distance = distance,
+                    transportMode = selectedTransportMode
+                )
+
+                // Cập nhật local appointment object
+                appointment = appt.copy(
+                    travelTimeMinutes = routeResult.duration,
+                    updateAt = System.currentTimeMillis()
+                )
             }
         }
     }
@@ -665,16 +710,16 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun startNavigation() {
         appointment?.let { appt ->
+            appointmentViewModel.updateNavigationStatus(appt.id, true)
             val intent = Intent(this, TurnByTurnNavigationActivity::class.java)
             intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appt.id)
             startActivity(intent)
-            updateAppointmentNavigationStatus()
         }
     }
 
     private fun updateAppointmentNavigationStatus() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Update appointment to mark navigation as started
+
         }
     }
 
@@ -748,6 +793,31 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.e("NavigationMapActivity", message)
     }
 
+    private fun showSuccess(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Log.d("NavigationMapActivity", message)
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(requestCode == REQUEST_CODE_TURN_BY_TURN) {
+            appointment?.let {
+                appt ->
+                appointmentViewModel.updateAppointmentBasedOnTime(appt.id)
+                if (resultCode == RESULT_OK) {
+                    val navigationCompleted = data?.getBooleanExtra("navigation_completed", false) ?: false
+                    if (navigationCompleted) {
+                        showSuccess("Đã hoàn thành điều hướng đến cuộc hẹn")
+                    }
+                }
+            }
+        }
+    }
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -765,6 +835,12 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        appointment?.let { appt ->
+            appointmentViewModel.checkAppointmentStatus(appt.id)
+        }
+    }
     data class RouteResult(
         val duration: Int,
         val distanceMeters: Int,

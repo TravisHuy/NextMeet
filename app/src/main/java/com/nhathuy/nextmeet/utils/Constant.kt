@@ -7,6 +7,7 @@ object Constant {
     const val EXTRA_NOTE_TYPE = "extra_note_type"
     const val EXTRA_NOTE_ID = "note_id"
     const val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    const val REQUEST_CODE_TURN_BY_TURN = 1002
     const val EXTRA_APPOINTMENT_ID= "extra_appointment_id"
     const val EXTRA_USER_ID = "user_id"
 
