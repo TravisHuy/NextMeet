@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import kotlinx.coroutines.flow.Flow
@@ -114,6 +115,13 @@ interface AppointmentPlusDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateAppointment(appointment: AppointmentPlus)
+
+    /**
+     * Cập nhật thông tin cuộc hẹn.
+     * @param appointment Đối tượng AppointmentPlus đã cập nhật
+     */
+    @Update
+    suspend fun updateAppointmentPlus(appointment: AppointmentPlus)
 
     /**
      * Cập nhật trạng thái bắt đầu điều hướng.
@@ -336,7 +344,55 @@ interface AppointmentPlusDao {
         endTime: Long = System.currentTimeMillis() + 6 * 60 * 60 * 1000
     ): List<AppointmentPlus>
 
+    /**
+     * Lấy các appointment đang active (cho background monitoring)
+     */
+    @Query(
+        """
+    SELECT * FROM appointments 
+    WHERE user_id = :userId 
+    AND status IN ('SCHEDULED', 'PREPARING', 'TRAVELLING', 'IN_PROGRESS', 'DELAYED')
+    AND start_date_time > :currentTime - 86400000  -- Trong vòng 24h qua
+    AND start_date_time < :currentTime + 86400000   -- Và 24h tới
+    ORDER BY start_date_time ASC
+"""
+    )
+    suspend fun getActiveAppointments(userId: Int, currentTime: Long): List<AppointmentPlus>
 
+
+    /**
+     * Lấy tất cả cuộc hẹn với bộ lọc trạng thái
+     * @param userId ID người dùng
+     * @param searchQuery Từ khóa tìm kiếm
+     * @param showPinnedOnly Chỉ hiển thị cuộc hẹn đã ghim (1) hoặc không (0)
+     * @param allowedStatuses Danh sách các trạng thái được phép
+     * @return Flow danh sách các cuộc hẹn phù hợp
+     */
+    @Query(
+        """
+    SELECT * FROM appointments 
+    WHERE user_id = :userId 
+    AND (:searchQuery = '' OR title LIKE :searchQuery OR description LIKE :searchQuery OR location LIKE :searchQuery)
+    AND (:showPinnedOnly = 0 OR is_pinned = 1)
+    AND status IN (:allowedStatuses)
+    ORDER BY 
+        CASE 
+            WHEN status = 'DELAYED' THEN 1
+            WHEN status = 'IN_PROGRESS' THEN 2  
+            WHEN status = 'TRAVELLING' THEN 3
+            WHEN status = 'PREPARING' THEN 4
+            WHEN status = 'SCHEDULED' THEN 5
+            ELSE 6
+        END,
+        start_date_time ASC
+"""
+    )
+    fun getAllAppointmentsWithStatusFilter(
+        userId: Int,
+        searchQuery: String,
+        showPinnedOnly: Int,
+        allowedStatuses: List<AppointmentStatus>
+    ): Flow<List<AppointmentPlus>>
 
     /**
      * Lấy cuoc hen trong thoi gian

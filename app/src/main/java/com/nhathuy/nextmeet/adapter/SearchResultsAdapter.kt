@@ -147,7 +147,7 @@ class SearchResultsAdapter(
                         tvResultStatus.setTextColor(binding.root.context.getColor(R.color.primary_color))
                     }
 
-                    AppointmentStatus.IN_PROCESS-> {
+                    AppointmentStatus.IN_PROGRESS-> {
                         tvResultStatus.text = "Đang diễn ra"
                         tvResultStatus.setTextColor(binding.root.context.getColor(R.color.primary_color))
                     }

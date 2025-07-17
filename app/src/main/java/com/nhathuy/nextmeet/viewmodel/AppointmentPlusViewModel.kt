@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.location.Location
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,7 +8,9 @@ import com.nhathuy.nextmeet.model.Appointment
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.Contact
+import com.nhathuy.nextmeet.model.NavigationCheckResult
 import com.nhathuy.nextmeet.model.NotificationType
+import com.nhathuy.nextmeet.model.TimingInfo
 import com.nhathuy.nextmeet.model.TransportMode
 import com.nhathuy.nextmeet.repository.AppointmentPlusRepository
 import com.nhathuy.nextmeet.repository.ContactRepository
@@ -45,6 +48,9 @@ class AppointmentPlusViewModel @Inject constructor(
 
     private var allAppointments: List<AppointmentPlus> = emptyList()
 
+    // thông tin navigation session
+    private var navigationStartTime: Long = 0
+    private var navigationStartLocation: Location? = null
 
     private val statusManager = AppointmentStatusManager()
     private var statusUpdateJob: Job? = null
@@ -253,6 +259,17 @@ class AppointmentPlusViewModel @Inject constructor(
     }
 
     /**
+     * Lấy cuộc hẹn theo ID
+     */
+    suspend fun getAppointmentByIdSync(appointmentId: Int): Result<AppointmentPlus> {
+        return try {
+            appointmentRepository.getAppointmentById(appointmentId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Cập nhật cuộc hẹn
      */
     fun updateAppointment(
@@ -354,6 +371,174 @@ class AppointmentPlusViewModel @Inject constructor(
     }
 
     /**
+     * Bắt đầu điều hướng đến cuộc hẹn - cập nhật status
+     */
+    /**
+     * Bắt đầu navigation với location tracking
+     */
+    fun startNavigationToAppointment(appointmentId: Int, startLocation: Location? = null) {
+        viewModelScope.launch {
+            try {
+                // Lưu thông tin navigation session
+                navigationStartTime = System.currentTimeMillis()
+                navigationStartLocation = startLocation
+
+                // Cập nhật navigation status
+                val navResult = appointmentRepository.updateNavigationStatus(appointmentId, true)
+
+                if (navResult.isSuccess) {
+                    // Lấy appointment hiện tại để kiểm tra status
+                    val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
+
+                    if (appointmentResult.isSuccess) {
+                        val appointment = appointmentResult.getOrThrow()
+
+                        // Tính toán status mới
+                        val newStatus = statusManager.calculateNewStatus(
+                            appointment = appointment.copy(navigationStarted = true),
+                            currentTime = System.currentTimeMillis(),
+                            hasStartedNavigation = true
+                        )
+
+                        // Cập nhật status nếu cần
+                        if (statusManager.shouldUpdateStatus(appointment.status, newStatus)) {
+                            val statusResult = appointmentRepository.updateAppointmentStatus(appointmentId, newStatus)
+
+                            if (statusResult.isSuccess) {
+                                // Update local cache
+                                updateLocalCache(appointmentId) { appt ->
+                                    appt.copy(
+                                        status = newStatus,
+                                        navigationStarted = true,
+                                        updateAt = System.currentTimeMillis()
+                                    )
+                                }
+
+                                _appointmentUiState.value = AppointmentUiState.NavigationStarted(
+                                    statusManager.getStatusTransitionMessage(appointment.status, newStatus)
+                                )
+
+                                Log.d("AppointmentViewModel",
+                                    "Started navigation: ${appointment.status} -> $newStatus")
+                            } else {
+                                _appointmentUiState.value = AppointmentUiState.Error(
+                                    "Lỗi khi cập nhật trạng thái: ${statusResult.exceptionOrNull()?.message}"
+                                )
+                            }
+                        } else {
+                            // Chỉ cập nhật navigation started
+                            updateLocalCache(appointmentId) { appt ->
+                                appt.copy(
+                                    navigationStarted = true,
+                                    updateAt = System.currentTimeMillis()
+                                )
+                            }
+
+                            _appointmentUiState.value = AppointmentUiState.NavigationStarted(
+                                "Đã bắt đầu điều hướng"
+                            )
+                        }
+                    }
+                } else {
+                    _appointmentUiState.value = AppointmentUiState.Error(
+                        "Lỗi khi bắt đầu điều hướng: ${navResult.exceptionOrNull()?.message}"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("AppointmentViewModel", "Error starting navigation", e)
+                _appointmentUiState.value = AppointmentUiState.Error(
+                    e.message ?: "Lỗi khi bắt đầu điều hướng"
+                )
+            }
+        }
+    }
+
+
+    /**
+     * hủy navigation với logic revert status
+     */
+    fun cancelNavigation(appointmentId: Int, currentLocation: Location? = null) {
+        viewModelScope.launch {
+            try {
+                val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
+
+                if (appointmentResult.isSuccess) {
+                    val appointment = appointmentResult.getOrThrow()
+
+                    val cancelAction = statusManager.handleNavigationCancellation(
+                        appointment = appointment,
+                        navigationStartTime = navigationStartTime,
+                        currentLocation = currentLocation,
+                        startLocation = navigationStartLocation
+                    )
+
+                    //
+                    if(cancelAction.shouldUpdateNavigationStarted){
+                        val navResult = appointmentRepository.updateNavigationStatus(appointmentId, false)
+                        if (navResult.isFailure) {
+                            _appointmentUiState.value = AppointmentUiState.Error("Lỗi khi hủy navigation")
+                            return@launch
+                        }
+                    }
+
+                    if(cancelAction.shouldUpdateStatus && cancelAction.newStatus != appointment.status) {
+                        val statusResult = appointmentRepository.updateAppointmentStatus(
+                            appointmentId,
+                            cancelAction.newStatus
+                        )
+
+                        if(statusResult.isSuccess) {
+                            updateLocalCache(appointmentId) { appt ->
+                                appt.copy(
+                                    status = cancelAction.newStatus,
+                                    navigationStarted = false,
+                                    updateAt = System.currentTimeMillis()
+                                )
+                            }
+
+                            _appointmentUiState.value = AppointmentUiState.NavigationCancelled(
+                                cancelAction.message
+                            )
+                        }
+                        else {
+                            _appointmentUiState.value = AppointmentUiState.Error("Lỗi khi cập nhật trạng thái")
+                        }
+                    }
+                    else {
+                        // Chỉ update navigation_started
+                        updateLocalCache(appointmentId) { appt ->
+                            appt.copy(
+                                navigationStarted = false,
+                                updateAt = System.currentTimeMillis()
+                            )
+                        }
+
+                        _appointmentUiState.value = AppointmentUiState.NavigationCancelled(
+                            cancelAction.message
+                        )
+
+                        // Reset navigation session data
+                        resetNavigationSession()
+
+                        Log.d("AppointmentViewModel",
+                            "Navigation cancelled: ${cancelAction.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("AppointmentViewModel", "Error cancelling navigation", e)
+                _appointmentUiState.value = AppointmentUiState.Error(
+                    e.message ?: "Lỗi khi hủy điều hướng"
+                )
+            }
+        }
+    }
+
+    private fun resetNavigationSession() {
+        navigationStartTime = 0
+        navigationStartLocation = null
+    }
+
+    /**
      * Bắt đầu điều hướng đến cuộc hẹn
      */
     fun updateNavigationStatus(appointmentId: Int, hasStartedNavigation: Boolean) {
@@ -364,7 +549,13 @@ class AppointmentPlusViewModel @Inject constructor(
                     hasStartedNavigation
                 )
                 if (result.isSuccess) {
-                    checkAppointmentStatus(appointmentId)
+                    // Tự động cập nhật status dựa trên navigation state
+                    updateAppointmentBasedOnTime(appointmentId)
+
+                    Log.d(
+                        "AppointmentViewModel",
+                        "Navigation status updated: hasStarted = $hasStartedNavigation"
+                    )
                 }
             } catch (e: Exception) {
                 Log.e("AppointmentViewModel", "Error updating navigation status", e)
@@ -383,10 +574,14 @@ class AppointmentPlusViewModel @Inject constructor(
                     val appointment = appointmentResult.getOrThrow()
                     val currentTime = System.currentTimeMillis()
 
+                    Log.d("AppointmentViewModel", "Checking status for appointment $appointmentId")
+                    Log.d("AppointmentViewModel", "Current status: ${appointment.status}")
+                    Log.d(
+                        "AppointmentViewModel",
+                        "Navigation started: ${appointment.navigationStarted}"
+                    )
                     Log.d("AppointmentViewModel", "Current time: $currentTime")
                     Log.d("AppointmentViewModel", "Start time: ${appointment.startDateTime}")
-                    Log.d("AppointmentViewModel", "End time: ${appointment.endDateTime}")
-                    Log.d("AppointmentViewModel", "Current status: ${appointment.status}")
 
                     val newStatus = statusManager.calculateNewStatus(
                         appointment = appointment,
@@ -397,27 +592,57 @@ class AppointmentPlusViewModel @Inject constructor(
                     if (statusManager.shouldUpdateStatus(appointment.status, newStatus)) {
                         Log.d(
                             "AppointmentViewModel",
-                            "Updating status from ${appointment.status} to $newStatus"
+                            "Updating status: ${appointment.status} -> $newStatus"
                         )
 
-                        // Cập nhật status
                         updateAppointmentStatus(appointmentId, newStatus)
 
-//                        // Gửi notification nếu cần
-//                        val message = statusManager.getStatusTransitionMessage(appointment.status, newStatus)
-//                        sendStatusUpdateNotification(appointment, newStatus, message)
+                        // Gửi notification quan trọng nếu cần
+                        if (shouldNotifyStatusChange(appointment.status, newStatus)) {
+                            sendStatusChangeNotification(appointment, newStatus)
+                        }
                     } else {
                         Log.d(
                             "AppointmentViewModel",
                             "No status change needed: ${appointment.status}"
                         )
                     }
-                } else {
-                    Log.w("AppointmentViewModel", "Appointment not found for ID: $appointmentId")
                 }
             } catch (e: Exception) {
-                Log.e("AppointmentViewModel", "Error updating appointment status: ${e.message}", e)
+                Log.e("AppointmentViewModel", "Error updating appointment status", e)
             }
+        }
+    }
+
+    private fun shouldNotifyStatusChange(
+        oldStatus: AppointmentStatus,
+        newStatus: AppointmentStatus
+    ): Boolean {
+        return when (newStatus) {
+            AppointmentStatus.DELAYED,
+            AppointmentStatus.MISSED -> true
+
+            AppointmentStatus.IN_PROGRESS -> oldStatus != AppointmentStatus.IN_PROGRESS
+            else -> false
+        }
+    }
+
+    private suspend fun sendStatusChangeNotification(
+        appointment: AppointmentPlus,
+        newStatus: AppointmentStatus
+    ) {
+        try {
+            val message = statusManager.getStatusTransitionMessage(appointment.status, newStatus)
+
+            notificationManagerService.sendSimpleNotification(
+                appointmentId = appointment.id,
+                title = "Cập nhật cuộc hẹn",
+                message = "${appointment.title}: $message"
+            )
+
+            Log.d("AppointmentViewModel", "Sent status change notification: $message")
+        } catch (e: Exception) {
+            Log.e("AppointmentViewModel", "Error sending status notification", e)
         }
     }
 
@@ -591,14 +816,14 @@ class AppointmentPlusViewModel @Inject constructor(
                 title = title,
                 message = message
             )
-            Log . d ("StatusMonitor", "Sent important notification: $title")
+            Log.d("StatusMonitor", "Sent important notification: $title")
 
         } catch (e: Exception) {
             Log.e("StatusMonitor", "Error sending notification", e)
         }
     }
 
-    private fun updateLocalCache(appointmentId:Int, newStatus: AppointmentStatus){
+    private fun updateLocalCache(appointmentId: Int, newStatus: AppointmentStatus) {
         allAppointments = allAppointments.map { appointment ->
             if (appointment.id == appointmentId) {
                 appointment.copy(status = newStatus, updateAt = System.currentTimeMillis())
@@ -607,12 +832,23 @@ class AppointmentPlusViewModel @Inject constructor(
             }
         }
     }
+
+    private fun updateLocalCache(appointmentId: Int, updateFunction: (AppointmentPlus) -> AppointmentPlus) {
+        allAppointments = allAppointments.map { appointment ->
+            if (appointment.id == appointmentId) {
+                updateFunction(appointment)
+            } else {
+                appointment
+            }
+        }
+    }
+
     //kiểm tra cuộc hẹn với trạng thái
     fun checkAppointmentStatus(appointmentId: Int) {
         viewModelScope.launch {
             try {
                 val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
-                if(appointmentResult.isSuccess){
+                if (appointmentResult.isSuccess) {
                     val appointment = appointmentResult.getOrThrow()
                     val newStatus = statusManager.calculateNewStatus(
                         appointment = appointment,
@@ -624,12 +860,76 @@ class AppointmentPlusViewModel @Inject constructor(
                         appointmentRepository.updateAppointmentStatus(appointment.id, newStatus)
                         updateLocalCache(appointment.id, newStatus)
 
-                        Log.d("StatusMonitor", "Updated appointment $appointmentId: ${appointment.status} -> $newStatus")
+                        Log.d(
+                            "StatusMonitor",
+                            "Updated appointment $appointmentId: ${appointment.status} -> $newStatus"
+                        )
                     }
                 }
-            }
-            catch (e: Exception){
+            } catch (e: Exception) {
                 Log.e("StatusMonitor", "Error checking appointment status", e)
+            }
+        }
+    }
+
+    /**
+     * Kiểm tra navigation timing cho appointment - Version với Flow
+     */
+    suspend fun checkNavigationTiming(appointmentId: Int): NavigationCheckResult? {
+        return try {
+            val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
+            if (appointmentResult.isSuccess) {
+                val appointment = appointmentResult.getOrThrow()
+                statusManager.canStartNavigationNow(appointment)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("AppointmentViewModel", "Error checking navigation timing", e)
+            null
+        }
+    }
+
+    /**
+     * Lấy thông tin timing cho appointment
+     */
+    suspend fun getAppointmentTimingInfo(appointmentId: Int): TimingInfo? {
+        return try {
+            val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
+            if (appointmentResult.isSuccess) {
+                val appointment = appointmentResult.getOrThrow()
+                statusManager.getTimingInfo(appointment)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("AppointmentViewModel", "Error getting timing info", e)
+            null
+        }
+    }
+
+    /**
+     * Lấy tất cả cuộc hẹn với filter status cụ thể
+     */
+    fun getAllAppointmentsWithStatusFilter(
+        userId: Int,
+        searchQuery: String = "",
+        showPinnedOnly: Boolean = false,
+        allowedStatuses: List<AppointmentStatus>
+    ) {
+        viewModelScope.launch {
+            _appointmentUiState.value = AppointmentUiState.Loading
+            try {
+                appointmentRepository.getAllAppointmentsWithStatusFilter(
+                    userId, searchQuery, showPinnedOnly, allowedStatuses
+                ).collect { appointments ->
+                    allAppointments = appointments
+                    _appointmentUiState.value = AppointmentUiState.AppointmentsLoaded(appointments)
+                }
+            } catch (e: Exception) {
+                _appointmentUiState.value = AppointmentUiState.Error(
+                    e.message ?: "Lỗi khi tải danh sách cuộc hẹn"
+                )
             }
         }
     }
@@ -637,5 +937,6 @@ class AppointmentPlusViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopStatus()
+        resetNavigationSession()
     }
 }

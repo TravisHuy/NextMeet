@@ -783,11 +783,20 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
     private fun loadAppointments() {
         if (currentUserId != 0) {
             hideEmptyStates()
-            appointmentViewModel.getAllAppointments(
+
+            val statusesToShow = listOf(
+                AppointmentStatus.SCHEDULED,
+                AppointmentStatus.PREPARING,
+                AppointmentStatus.TRAVELLING,
+                AppointmentStatus.IN_PROGRESS,
+                AppointmentStatus.DELAYED
+            )
+
+            appointmentViewModel.getAllAppointmentsWithStatusFilter(
                 userId = currentUserId,
                 searchQuery = currentSearchQuery ?: "",
                 showPinnedOnly = false,
-                status = AppointmentStatus.SCHEDULED
+                allowedStatuses = statusesToShow
             )
         }
     }

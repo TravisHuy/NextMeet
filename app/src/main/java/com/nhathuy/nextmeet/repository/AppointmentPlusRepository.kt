@@ -305,7 +305,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             }
 
             val updatedAppointment = appointment.copy(updateAt = System.currentTimeMillis())
-            appointmentPlusDao.updateAppointment(updatedAppointment)
+            appointmentPlusDao.updateAppointmentPlus(updatedAppointment)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -428,7 +428,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
      * lấy tất cả cuộc hẹn đang hoạt động của người dùng.
      */
     suspend fun getAllActiveAppointments(userId:Int) : List<AppointmentPlus> =
-        appointmentPlusDao.getAllActiveAppointments(userId).sortedBy { it.startDateTime }
+        appointmentPlusDao.getActiveAppointments(userId, System.currentTimeMillis())
 
     /**
      * lấy tất cả cuộc hẹn đã hoàn thành của người dùng.
@@ -452,6 +452,22 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             Log.e("AppointmentRepository", "Error updating travel time", e)
             Result.failure(e)
         }
+    }
+    /**
+     * Lấy tất cả cuộc hẹn với filter status cụ thể
+     */
+    suspend fun getAllAppointmentsWithStatusFilter(
+        userId: Int,
+        searchQuery: String = "",
+        showPinnedOnly: Boolean = false,
+        allowedStatuses: List<AppointmentStatus>
+    ): Flow<List<AppointmentPlus>> {
+        return appointmentPlusDao.getAllAppointmentsWithStatusFilter(
+            userId = userId,
+            searchQuery = "%$searchQuery%",
+            showPinnedOnly = if (showPinnedOnly) 1 else 0,
+            allowedStatuses = allowedStatuses
+        )
     }
 
 }

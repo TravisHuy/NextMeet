@@ -73,6 +73,7 @@
 
             </LinearLayout>
 
+
             <TextView
                 android:id="@+id/appointment_description"
                 android:layout_width="wrap_content"
@@ -85,7 +86,20 @@
                 android:textColor="?colorOnSurfaceVariant"
                 tools:text="Tôi sẽ giúp bạn hoàn thiện chức năng thêm cuộc hẹn trong AppointmentMapFragment. Dựa trên code bạn đã có, tôi sẽ implement phần saveAppointment và một số cải tiến khác." />
 
-
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:layout_marginTop="@dimen/margin_extra_small"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@drawable/status_badge_background"
+                android:gravity="center"
+                tools:text="ĐÃ LÊN LỊCH"
+                tools:backgroundTint="@color/blue" />
         </LinearLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
