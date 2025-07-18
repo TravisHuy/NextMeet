@@ -457,7 +457,11 @@ class AppointmentPlusViewModel @Inject constructor(
     /**
      * hủy navigation với logic revert status
      */
-    fun cancelNavigation(appointmentId: Int, currentLocation: Location? = null) {
+    fun cancelNavigationWithMode(
+        appointmentId: Int,
+        currentLocation: Location? = null,
+        transportMode: TransportMode
+    ) {
         viewModelScope.launch {
             try {
                 val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
@@ -465,29 +469,26 @@ class AppointmentPlusViewModel @Inject constructor(
                 if (appointmentResult.isSuccess) {
                     val appointment = appointmentResult.getOrThrow()
 
+                    // Luôn set navigation_started = false trước
+                    val navResult = appointmentRepository.updateNavigationStatus(appointmentId, false)
+                    if (navResult.isFailure) {
+                        _appointmentUiState.value = AppointmentUiState.Error("Lỗi khi hủy navigation")
+                        return@launch
+                    }
+
+                    // Gọi AppointmentStatusManager với transport mode
                     val cancelAction = statusManager.handleNavigationCancellation(
                         appointment = appointment,
                         navigationStartTime = navigationStartTime,
                         currentLocation = currentLocation,
-                        startLocation = navigationStartLocation
+                        startLocation = navigationStartLocation,
+                        transportMode = transportMode // Pass transport mode
                     )
 
-                    //
-                    if(cancelAction.shouldUpdateNavigationStarted){
-                        val navResult = appointmentRepository.updateNavigationStatus(appointmentId, false)
-                        if (navResult.isFailure) {
-                            _appointmentUiState.value = AppointmentUiState.Error("Lỗi khi hủy navigation")
-                            return@launch
-                        }
-                    }
+                    if (cancelAction.shouldUpdateStatus && cancelAction.newStatus != appointment.status) {
+                        val statusResult = appointmentRepository.updateAppointmentStatus(appointmentId, cancelAction.newStatus)
 
-                    if(cancelAction.shouldUpdateStatus && cancelAction.newStatus != appointment.status) {
-                        val statusResult = appointmentRepository.updateAppointmentStatus(
-                            appointmentId,
-                            cancelAction.newStatus
-                        )
-
-                        if(statusResult.isSuccess) {
+                        if (statusResult.isSuccess) {
                             updateLocalCache(appointmentId) { appt ->
                                 appt.copy(
                                     status = cancelAction.newStatus,
@@ -496,16 +497,9 @@ class AppointmentPlusViewModel @Inject constructor(
                                 )
                             }
 
-                            _appointmentUiState.value = AppointmentUiState.NavigationCancelled(
-                                cancelAction.message
-                            )
+                            _appointmentUiState.value = AppointmentUiState.NavigationCancelled(cancelAction.message)
                         }
-                        else {
-                            _appointmentUiState.value = AppointmentUiState.Error("Lỗi khi cập nhật trạng thái")
-                        }
-                    }
-                    else {
-                        // Chỉ update navigation_started
+                    } else {
                         updateLocalCache(appointmentId) { appt ->
                             appt.copy(
                                 navigationStarted = false,
@@ -513,24 +507,22 @@ class AppointmentPlusViewModel @Inject constructor(
                             )
                         }
 
-                        _appointmentUiState.value = AppointmentUiState.NavigationCancelled(
-                            cancelAction.message
-                        )
-
-                        // Reset navigation session data
-                        resetNavigationSession()
-
-                        Log.d("AppointmentViewModel",
-                            "Navigation cancelled: ${cancelAction.message}")
+                        _appointmentUiState.value = AppointmentUiState.NavigationCancelled(cancelAction.message)
                     }
+
+                    resetNavigationSession()
                 }
             } catch (e: Exception) {
-                Log.e("AppointmentViewModel", "Error cancelling navigation", e)
-                _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi hủy điều hướng"
-                )
+                Log.e("AppointmentViewModel", "Error cancelling navigation with mode", e)
+                _appointmentUiState.value = AppointmentUiState.Error("Lỗi khi hủy điều hướng")
             }
         }
+    }
+
+    // Giữ nguyên method cancelNavigation cũ để backward compatibility
+    fun cancelNavigation(appointmentId: Int, currentLocation: Location? = null) {
+        // Default to DRIVING if no transport mode specified
+        cancelNavigationWithMode(appointmentId, currentLocation, TransportMode.DRIVING)
     }
 
     private fun resetNavigationSession() {

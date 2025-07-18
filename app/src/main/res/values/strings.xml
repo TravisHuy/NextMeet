@@ -189,6 +189,10 @@
     <string name="history">History</string>
     <string name="all">All</string>
     <string name="cu_c_h_n">Cuộc hẹn</string>
+    <string name="completed">Completed</string>
+    <string name="cancelled">Cancelled</string>
+    <string name="missed">Missed</string>
+    <string name="history_appointments">History Appointments</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header với status và thời gian -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:paddingBottom="8dp">
+
+            <!-- Color indicator -->
+            <View
+                android:id="@+id/view_color_indicator"
+                android:layout_width="4dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="12dp"
+                android:background="@color/light_primary"
+                android:minHeight="60dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- Title -->
+                <TextView
+                    android:id="@+id/tv_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Cuộc họp với khách hàng"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/light_text_primary"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    tools:text="Cuộc họp với khách hàng ABC" />
+
+                <!-- Date and time -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_week_calendar"
+                        android:layout_marginEnd="6dp"
+                        android:layout_gravity="center_vertical"
+                        app:tint="@color/light_text_secondary" />
+
+                    <TextView
+                        android:id="@+id/tv_date_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="15/06/2024 - 14:30"
+                        android:textSize="13sp"
+                        android:textColor="@color/light_text_secondary"
+                        tools:text="15/06/2024 - 14:30" />
+
+                </LinearLayout>
+
+                <!-- Location -->
+                <LinearLayout
+                    android:id="@+id/layout_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_geo"
+                        android:layout_marginEnd="6dp"
+                        android:layout_gravity="center_vertical"
+                        app:tint="@color/light_text_secondary" />
+
+                    <TextView
+                        android:id="@+id/tv_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Công ty ABC, Quận 1"
+                        android:textSize="13sp"
+                        android:textColor="@color/light_text_secondary"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        tools:text="Công ty ABC, Quận 1" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Status badge -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:text="Đã hoàn thành"
+                android:textSize="12sp"
+                android:textColor="@color/success_color"
+                app:chipBackgroundColor="@color/success_background"
+                app:chipCornerRadius="8dp"
+                app:chipMinHeight="28dp"
+                app:chipStrokeWidth="0dp"
+                app:chipIconVisible="false"
+                app:textStartPadding="8dp"
+                app:textEndPadding="8dp"
+                tools:text="Đã hoàn thành" />
+
+        </LinearLayout>
+
+        <!-- Description (if available) -->
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="28dp"
+            android:layout_marginBottom="8dp"
+            android:text="Thảo luận về kế hoạch marketing cho quý III"
+            android:textSize="14sp"
+            android:textColor="@color/light_text_secondary"
+            android:lineSpacingMultiplier="1.2"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:visibility="gone"
+            tools:visibility="visible"
+            tools:text="Thảo luận về kế hoạch marketing cho quý III và đánh giá hiệu quả các chiến dịch hiện tại" />
+
+        <!-- Contact info -->
+        <LinearLayout
+            android:id="@+id/layout_contact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="28dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_person"
+                android:layout_marginEnd="6dp"
+                android:layout_gravity="center_vertical"
+                app:tint="@color/light_text_secondary" />
+
+            <TextView
+                android:id="@+id/tv_contact_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nguyễn Văn A"
+                android:textSize="13sp"
+                android:textColor="@color/light_text_secondary"
+                tools:text="Nguyễn Văn A" />
+
+        </LinearLayout>
+
+        <!-- Bottom section với thông tin bổ sung -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="28dp"
+            android:layout_marginBottom="12dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Duration -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="16dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_alarm"
+                    android:layout_marginEnd="4dp"
+                    android:layout_gravity="center_vertical"
+                    app:tint="@color/text_tertiary" />
+
+                <TextView
+                    android:id="@+id/tv_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2h 30m"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_tertiary"
+                    tools:text="2h 30m" />
+
+            </LinearLayout>
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Additional info based on status -->
+            <LinearLayout
+                android:id="@+id/layout_additional_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/iv_additional_icon"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_info"
+                    android:layout_marginEnd="4dp"
+                    android:layout_gravity="center_vertical"
+                    app:tint="@color/text_tertiary" />
+
+                <TextView
+                    android:id="@+id/tv_additional_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hoàn thành sớm 15m"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_tertiary"
+                    tools:text="Hoàn thành sớm 15m" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Divider line at bottom -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/border_light"
+            android:layout_marginHorizontal="16dp" />
+
+        <!-- Action buttons (if needed) -->
+        <LinearLayout
+            android:id="@+id/layout_actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="end"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_view_details"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Xem chi tiết"
+                android:textSize="12sp"
+                android:layout_marginEnd="8dp"
+                style="@style/Widget.Material3.Button.TextButton"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_repeat"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Lặp lại"
+                android:textSize="12sp"
+                style="@style/Widget.Material3.Button.TextButton"
+                app:cornerRadius="8dp"
+                app:icon="@drawable/ic_repeat"
+                app:iconSize="16dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

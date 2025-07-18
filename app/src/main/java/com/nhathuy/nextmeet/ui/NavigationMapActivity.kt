@@ -88,6 +88,12 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private var hasRouteData = false
     private var routeResult: RouteResult? = null
 
+    private var navigationStartTime : Long = 0L
+    private var navigationStartLocation : Location? = null
+    private var currentTransportMode: TransportMode = TransportMode.DRIVING
+    private var hasUserStartedMoving = false
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigationMapBinding.inflate(layoutInflater)
@@ -565,9 +571,28 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun checkUserMovement(currentLocation: Location) {
+        navigationStartLocation?.let { startLocation ->
+            val distance = startLocation.distanceTo(currentLocation)
+
+            // Threshold tùy theo transport mode
+            val threshold = when (currentTransportMode) {
+                TransportMode.WALKING -> 15f
+                TransportMode.DRIVING -> 50f
+                TransportMode.TRANSIT -> 25f
+            }
+
+            if (distance > threshold && !hasUserStartedMoving) {
+                hasUserStartedMoving = true
+                Log.d("NavigationMap", "${currentTransportMode.name}: User moved ${distance}m")
+            }
+        }
+    }
+
     private fun selectTransportMode(mode: TransportMode) {
         selectedTransportMode = mode
         updateTransportModeUI(mode)
+        hasUserStartedMoving = false
 
         // Tính lại route với phương tiện mới
         val currentLatLng = currentLocation?.let { LatLng(it.latitude, it.longitude) }
@@ -925,10 +950,19 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun startNavigation() {
         appointment?.let { appt ->
-            appointmentViewModel.updateNavigationStatus(appt.id, true)
+            navigationStartTime = System.currentTimeMillis()
+            navigationStartLocation = currentLocation
+            hasUserStartedMoving = false
+
+            appointmentViewModel.startNavigationToAppointment(
+                appointmentId = appt.id,
+                startLocation = currentLocation
+            )
+
             val intent = Intent(this, TurnByTurnNavigationActivity::class.java)
             intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appt.id)
-            startActivity(intent)
+            intent.putExtra("transport_mode", currentTransportMode.name) // Thêm dòng này
+            startActivityForResult(intent, REQUEST_CODE_TURN_BY_TURN)
         }
     }
 

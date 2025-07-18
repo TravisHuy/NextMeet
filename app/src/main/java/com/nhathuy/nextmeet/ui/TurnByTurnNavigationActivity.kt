@@ -46,11 +46,9 @@ import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Locale
 import kotlin.math.*
 
@@ -97,6 +95,11 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
     // Voice control
     private var isMuted = false
 
+    // Thêm transport mode tracking - ĐƠN GIẢN
+    private var transportMode: TransportMode = TransportMode.DRIVING
+    private var hasMovedFromStart = false
+    private var startLocation: Location? = null
+
     private companion object {
         const val LOCATION_UPDATE_INTERVAL = 1000L // 1 giây
         const val FASTEST_UPDATE_INTERVAL = 500L // 0.5 giây
@@ -133,6 +136,14 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         if (appointmentId == -1) {
             finish()
             return
+        }
+
+        // Get transport mode từ intent
+        val transportModeStr = intent.getStringExtra("transport_mode") ?: TransportMode.DRIVING.name
+        transportMode = try {
+            TransportMode.valueOf(transportModeStr)
+        } catch (e: Exception) {
+            TransportMode.DRIVING
         }
 
         initializeComponents()
@@ -232,6 +243,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             location?.let {
                 currentLocation = it
+                startLocation = it // Lưu vị trí bắt đầu
                 Log.d("Navigation", "Current location: ${it.latitude}, ${it.longitude}")
                 startNavigation()
             } ?: run {
@@ -274,7 +286,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                 val result = NavigationUtils.calculateRoute(
                     LatLng(currentLoc.latitude, currentLoc.longitude),
                     LatLng(destination.latitude, destination.longitude),
-                    TransportMode.DRIVING,
+                    transportMode, // Sử dụng transport mode từ intent
                     getString(R.string.google_map_api_key)
                 )
 
@@ -286,7 +298,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                         if (routeResult.steps.isNotEmpty()) {
                             startTurnByTurnNavigation(routeResult.steps)
                             updateNavigationInfo(routeResult)
-                            announceInstruction("Bắt đầu điều hướng")
+                            announceInstruction("Bắt đầu điều hướng ${getTransportModeDisplayName()}")
                         } else {
                             Log.e("Navigation", "No navigation steps found")
                         }
@@ -297,6 +309,14 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
             } catch (e: Exception) {
                 Log.e("TurnByTurnNavigationActivity", "Error calculating route", e)
             }
+        }
+    }
+
+    private fun getTransportModeDisplayName(): String {
+        return when (transportMode) {
+            TransportMode.WALKING -> "đi bộ"
+            TransportMode.DRIVING -> "lái xe"
+            TransportMode.TRANSIT -> "phương tiện công cộng"
         }
     }
 
@@ -455,6 +475,9 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         val previousLocation = currentLocation
         currentLocation = location
 
+        // Check movement với threshold phù hợp theo transport mode
+        checkMovementFromStart(location)
+
         // Update user location marker
         updateUserLocationMarker(location)
 
@@ -476,6 +499,25 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         // Check for reroute
         if (previousLocation != null) {
             checkForReroute(location)
+        }
+    }
+
+    // Check movement từ start location với threshold phù hợp
+    private fun checkMovementFromStart(location: Location) {
+        if (!hasMovedFromStart) {
+            startLocation?.let { start ->
+                val distance = start.distanceTo(location)
+                val threshold = when (transportMode) {
+                    TransportMode.WALKING -> 15f
+                    TransportMode.DRIVING -> 50f
+                    TransportMode.TRANSIT -> 25f
+                }
+
+                if (distance > threshold) {
+                    hasMovedFromStart = true
+                    Log.d("TurnByTurn", "${transportMode.name}: Moved ${distance}m (threshold: ${threshold}m)")
+                }
+            }
         }
     }
 
@@ -793,7 +835,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                 val result = NavigationUtils.calculateRoute(
                     LatLng(currentLoc.latitude, currentLoc.longitude),
                     LatLng(destination.latitude, destination.longitude),
-                    TransportMode.DRIVING,
+                    transportMode, // Sử dụng transport mode hiện tại
                     getString(R.string.google_map_api_key)
                 )
 
@@ -828,14 +870,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
 
         lifecycleScope.launch {
             appointment?.let { appt ->
-
-                appointment?.let { appt ->
-                    appointmentViewModel.checkAppointmentStatus(appt.id)
-                }
-
-//                appointmentViewModel.updateAppointmentBasedOnTime(appt.id)
-//                delay(500)
-//                appointmentViewModel.updateNavigationStatus(appt.id, true)
+                appointmentViewModel.checkAppointmentStatus(appt.id)
             }
         }
     }
@@ -940,16 +975,64 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
+    // Sửa stopNavigation để return transport mode và movement data
     private fun stopNavigation() {
         isNavigationActive = false
         fusedLocationClient.removeLocationUpdates(locationCallback)
 
+        // Tạo result data với transport mode và movement info
         val resultIntent = Intent().apply {
             putExtra("navigation_completed", hasArrivedAtDestination)
+            putExtra("has_moved_from_start", hasMovedFromStart)
+            putExtra("transport_mode", transportMode.name) // Thêm transport mode
+            putExtra("current_location_lat", currentLocation?.latitude ?: 0.0)
+            putExtra("current_location_lng", currentLocation?.longitude ?: 0.0)
         }
-        setResult(if (hasArrivedAtDestination) RESULT_OK else RESULT_CANCELED, resultIntent)
+
+        setResult(
+            if (hasArrivedAtDestination) RESULT_OK else RESULT_CANCELED,
+            resultIntent
+        )
 
         finish()
+    }
+
+    // Override back button với confirm dialog transport mode aware
+    override fun onBackPressed() {
+        val transportName = getTransportModeDisplayName()
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Dừng điều hướng $transportName?")
+            .setMessage(getStopNavigationMessage())
+            .setPositiveButton("Dừng") { _, _ -> stopNavigation() }
+            .setNegativeButton("Tiếp tục", null)
+            .show()
+    }
+
+    private fun getStopNavigationMessage(): String {
+        return when (transportMode) {
+            TransportMode.WALKING -> {
+                if (hasMovedFromStart) {
+                    "Bạn đã bắt đầu đi bộ. Dừng điều hướng đi bộ?"
+                } else {
+                    "Bạn chưa bắt đầu đi bộ. Dừng chuẩn bị điều hướng?"
+                }
+            }
+            TransportMode.DRIVING -> {
+                if (hasMovedFromStart) {
+                    "Bạn đã bắt đầu lái xe. Dừng điều hướng?"
+                } else {
+                    "Bạn chưa bắt đầu lái xe. Dừng chuẩn bị điều hướng?"
+                }
+            }
+            TransportMode.TRANSIT -> {
+                if (hasMovedFromStart) {
+                    "Bạn đang sử dụng phương tiện công cộng. Dừng điều hướng?"
+                } else {
+                    "Bạn đang chuẩn bị sử dụng phương tiện công cộng. Dừng điều hướng?"
+                }
+            }
+        }
     }
 
     // TTS Initialization

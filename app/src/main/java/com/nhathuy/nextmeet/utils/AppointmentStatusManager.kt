@@ -4,10 +4,12 @@ import android.location.Location
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.CancellationType
 import com.nhathuy.nextmeet.model.NavigationCancelAction
 import com.nhathuy.nextmeet.model.NavigationCheckResult
 import com.nhathuy.nextmeet.model.NavigationRevertResult
 import com.nhathuy.nextmeet.model.TimingInfo
+import com.nhathuy.nextmeet.model.TransportMode
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -35,10 +37,26 @@ class AppointmentStatusManager {
         private const val MIN_BUFFER_MINUTES = 10
 
         // thời gian tối thiểu thực sự di chuyển
-        private const val MIN_MOVEMENT_TIME_MINUTES = 1
+        private const val MIN_MOVEMENT_TIME_MINUTES = 2
 
-        // khoảng cách tối thiểu để coi là đã di chuyển (50m)
-        private const val MIN_MOVEMENT_DISTANCE_METERS = 50f
+        // Helper methods cho transport mode - ĐƠN GIẢN
+        private fun getMovementThreshold(transportMode: TransportMode?): Float {
+            return when (transportMode) {
+                TransportMode.WALKING -> 15f
+                TransportMode.DRIVING -> 50f
+                TransportMode.TRANSIT -> 25f
+                else -> 30f // default
+            }
+        }
+
+        private fun getGracePeriodMinutes(transportMode: TransportMode?): Long {
+            return when (transportMode) {
+                TransportMode.WALKING -> 1L
+                TransportMode.DRIVING -> 3L
+                TransportMode.TRANSIT -> 2L
+                else -> 2L // default
+            }
+        }
     }
 
     /**
@@ -101,10 +119,17 @@ class AppointmentStatusManager {
 
             AppointmentStatus.TRAVELLING -> {
                 when {
-                    currentTime > startTime + TimeUnit.MINUTES.toMillis(MISSED_GRACE_PERIOD_MINUTES.toLong())
-                            && !hasStartedNavigation -> AppointmentStatus.MISSED
-
+                    // Nếu đã tắt navigation và qua giờ hẹn -> có thể là MISSED hoặc IN_PROGRESS
+                    !hasStartedNavigation && currentTime > startTime + TimeUnit.MINUTES.toMillis(MISSED_GRACE_PERIOD_MINUTES.toLong()) -> AppointmentStatus.MISSED
                     currentTime >= startTime -> AppointmentStatus.IN_PROGRESS
+                    // Nếu tắt navigation trước giờ hẹn -> revert về PREPARING hoặc SCHEDULED
+                    !hasStartedNavigation -> {
+                        if (currentTime >= startTime - TimeUnit.MINUTES.toMillis(PREPARING_TIME_MINUTES.toLong())) {
+                            AppointmentStatus.PREPARING
+                        } else {
+                            AppointmentStatus.SCHEDULED
+                        }
+                    }
                     else -> AppointmentStatus.TRAVELLING
                 }
             }
@@ -179,7 +204,7 @@ class AppointmentStatusManager {
 
         // kiểm tra khoảng cách
         val hasActuallyMoved = if (currentLocation != null && startLocation != null) {
-            currentLocation.distanceTo(startLocation) > MIN_MOVEMENT_DISTANCE_METERS
+            currentLocation.distanceTo(startLocation) > getMovementThreshold(null)
         } else {
             false
         }
@@ -221,18 +246,120 @@ class AppointmentStatusManager {
         appointment: AppointmentPlus,
         navigationStartTime: Long,
         currentLocation: Location?,
-        startLocation: Location?
+        startLocation: Location?,
+        transportMode: TransportMode? = null // Thêm parameter này
     ): NavigationCancelAction {
-        val revertResult = canRevertNavigationStatus(
-            appointment, navigationStartTime, currentLocation, startLocation
-        )
+        val currentTime = System.currentTimeMillis()
+        val timeSinceStart = currentTime - navigationStartTime
+        val timeMinutes = timeSinceStart / (60 * 1000)
 
-        return NavigationCancelAction(
-            shouldUpdateNavigationStarted = true, // Luôn set về false
-            shouldUpdateStatus = revertResult.shouldRevertStatus,
-            newStatus = revertResult.newStatus,
-            message = revertResult.reason
+        // Sử dụng threshold phù hợp với transport mode
+        val movementThreshold = getMovementThreshold(transportMode)
+        val gracePeriod = getGracePeriodMinutes(transportMode)
+
+        // Kiểm tra khoảng cách di chuyển
+        val actualDistance = if (currentLocation != null && startLocation != null) {
+            currentLocation.distanceTo(startLocation)
+        } else 0f
+
+        // Logic đơn giản dựa trên transport mode
+        val cancellationType = when {
+            // Immediate cancel - trong 1 phút và chưa di chuyển
+            timeMinutes < 1 && actualDistance < 10f -> CancellationType.IMMEDIATE_CANCEL
+
+            // Grace period cancel - trong grace period và chưa di chuyển đủ xa
+            timeMinutes <= gracePeriod && actualDistance < movementThreshold -> {
+                CancellationType.GRACE_PERIOD_CANCEL
+            }
+
+            // After movement - đã di chuyển đủ xa hoặc đủ lâu
+            actualDistance >= movementThreshold || timeMinutes >= gracePeriod -> {
+                CancellationType.AFTER_MOVEMENT
+            }
+
+            else -> CancellationType.LATE_CANCEL
+        }
+
+        return when (cancellationType) {
+            CancellationType.IMMEDIATE_CANCEL -> {
+                NavigationCancelAction(
+                    shouldUpdateNavigationStarted = true,
+                    shouldUpdateStatus = true,
+                    newStatus = getRevertStatus(appointment),
+                    message = "Đã hủy điều hướng. Trạng thái được khôi phục."
+                )
+            }
+
+            CancellationType.GRACE_PERIOD_CANCEL -> {
+                NavigationCancelAction(
+                    shouldUpdateNavigationStarted = true,
+                    shouldUpdateStatus = true,
+                    newStatus = getRevertStatus(appointment),
+                    message = "Đã hủy điều hướng sớm. Trạng thái được khôi phục."
+                )
+            }
+
+            CancellationType.AFTER_MOVEMENT -> {
+                NavigationCancelAction(
+                    shouldUpdateNavigationStarted = true,
+                    shouldUpdateStatus = false,
+                    newStatus = appointment.status,
+                    message = "Đã dừng điều hướng. Trạng thái được giữ nguyên."
+                )
+            }
+
+            CancellationType.LATE_CANCEL -> {
+                val newStatus = calculateAppropriateStatusAfterLateCancel(appointment, currentTime)
+                NavigationCancelAction(
+                    shouldUpdateNavigationStarted = true,
+                    shouldUpdateStatus = newStatus != appointment.status,
+                    newStatus = newStatus,
+                    message = getLateCancelMessage(appointment.status, newStatus)
+                )
+            }
+        }
+    }
+
+    private fun getRevertStatus(appointment: AppointmentPlus): AppointmentStatus {
+        return when (appointment.status) {
+            AppointmentStatus.TRAVELLING -> {
+                // Revert về PREPARING hoặc SCHEDULED tùy vào thời gian
+                val currentTime = System.currentTimeMillis()
+                val timeUntilAppointment = appointment.startDateTime - currentTime
+                val thirtyMinutes = 30 * 60 * 1000L
+
+                if (timeUntilAppointment <= thirtyMinutes) {
+                    AppointmentStatus.PREPARING
+                } else {
+                    AppointmentStatus.SCHEDULED
+                }
+            }
+            AppointmentStatus.IN_PROGRESS -> {
+                // Từ IN_PROGRESS về PREPARING (trường hợp đặc biệt)
+                AppointmentStatus.PREPARING
+            }
+            else -> appointment.status
+        }
+    }
+
+    private fun calculateAppropriateStatusAfterLateCancel(
+        appointment: AppointmentPlus,
+        currentTime: Long
+    ): AppointmentStatus {
+        // Tính toán status mới dựa trên thời gian hiện tại, bỏ qua navigation state
+        return calculateNewStatus(
+            appointment = appointment.copy(navigationStarted = false),
+            currentTime = currentTime,
+            hasStartedNavigation = false
         )
+    }
+
+    private fun getLateCancelMessage(oldStatus: AppointmentStatus, newStatus: AppointmentStatus): String {
+        return if (oldStatus != newStatus) {
+            "Đã dừng điều hướng. ${getStatusTransitionMessage(oldStatus, newStatus)}"
+        } else {
+            "Đã dừng điều hướng."
+        }
     }
 
     /**
@@ -418,5 +545,4 @@ class AppointmentStatusManager {
         return tomorrow.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
                 tomorrow.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR)
     }
-
 }
