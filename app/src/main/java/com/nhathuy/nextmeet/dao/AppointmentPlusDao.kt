@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import kotlinx.coroutines.flow.Flow
@@ -66,7 +67,7 @@ interface AppointmentPlusDao {
     @Query("SELECT * FROM appointments WHERE user_id = :userId AND status = :status ORDER BY start_date_time ASC")
     fun getAppointmentsByStatus(
         userId: Int,
-        status: com.nhathuy.nextmeet.model.AppointmentStatus
+        status: AppointmentStatus
     ): Flow<List<AppointmentPlus>>
 
     /**
@@ -78,7 +79,7 @@ interface AppointmentPlusDao {
     @Query("UPDATE appointments SET status = :status, updated_at = :updatedAt WHERE id = :appointmentId")
     suspend fun updateAppointmentStatus(
         appointmentId: Int,
-        status: com.nhathuy.nextmeet.model.AppointmentStatus,
+        status: AppointmentStatus,
         updatedAt: Long = System.currentTimeMillis()
     )
 
@@ -114,6 +115,13 @@ interface AppointmentPlusDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateAppointment(appointment: AppointmentPlus)
+
+    /**
+     * Cập nhật thông tin cuộc hẹn.
+     * @param appointment Đối tượng AppointmentPlus đã cập nhật
+     */
+    @Update
+    suspend fun updateAppointmentPlus(appointment: AppointmentPlus)
 
     /**
      * Cập nhật trạng thái bắt đầu điều hướng.
@@ -173,27 +181,31 @@ interface AppointmentPlusDao {
     /**
      * Lấy cuôc hẹn trong ngày hôm nay
      */
-    @Query("SELECT * FROM appointments \n" +
-            "        WHERE user_id = :userId \n" +
-            "        AND DATE(start_date_time / 1000, 'unixepoch', 'localtime') = DATE('now', 'localtime')\n" +
-            "        AND status = :status\n" +
-            "        ORDER BY start_date_time ASC")
+    @Query(
+        "SELECT * FROM appointments \n" +
+                "        WHERE user_id = :userId \n" +
+                "        AND DATE(start_date_time / 1000, 'unixepoch', 'localtime') = DATE('now', 'localtime')\n" +
+                "        AND status = :status\n" +
+                "        ORDER BY start_date_time ASC"
+    )
     fun getTodayAppointments(
         userId: Int,
-        status: String = "SCHEDULED",
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED,
     ): Flow<List<AppointmentPlus>>
 
     /**
      * Lấy cuộn hẹn trong tuần này
      */
-    @Query("""
+    @Query(
+        """
     SELECT * FROM appointments 
     WHERE user_id = :userId 
       AND end_date_time >= :weekStart 
       AND start_date_time <= :weekEnd 
       AND status = :status 
     ORDER BY start_date_time ASC
-""")
+"""
+    )
     fun getThisWeekAppointments(
         userId: Int,
         weekStart: Long,
@@ -204,88 +216,214 @@ interface AppointmentPlusDao {
     /**
      * Lấy cuộc hẹn sắp tới
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM appointments 
         WHERE user_id = :userId 
           AND start_date_time >= :currentTime 
           AND status = :status 
         ORDER BY start_date_time ASC
-        """)
+        """
+    )
     fun getUpcomingAppointments(
-        userId :Int,
-        currentTime : Long = System.currentTimeMillis(),
-        status: String = "SCHEDULED"
+        userId: Int,
+        currentTime: Long = System.currentTimeMillis(),
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED
     ): Flow<List<AppointmentPlus>>
 
     /**
      * Lấy cuộc hẹn đã ghim
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM appointments 
         WHERE user_id = :userId 
         AND is_pinned = 1
         AND status = :status
         ORDER BY start_date_time ASC
-    """)
+    """
+    )
     fun getPinnedAppointments(
         userId: Int,
-        status: String = "SCHEDULED"
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED
     ): Flow<List<AppointmentPlus>>
 
     /**
      * Đếm số lượng cuộc hẹn cho mỗi filter
      */
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*) FROM appointments 
         WHERE user_id = :userId 
         AND DATE(start_date_time / 1000, 'unixepoch', 'localtime') = DATE('now', 'localtime')
         AND status = :status
-    """)
-    suspend fun getTodayAppointmentsCount(userId: Int, status: String = "SCHEDULED"): Int
+    """
+    )
+    suspend fun getTodayAppointmentsCount(
+        userId: Int,
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED
+    ): Int
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*) FROM appointments 
         WHERE user_id = :userId 
         AND start_date_time >= :weekStart 
         AND start_date_time <= :weekEnd
         AND status = :status
-    """)
+    """
+    )
     suspend fun getThisWeekAppointmentsCount(
         userId: Int,
         weekStart: Long,
         weekEnd: Long,
-        status: String = "SCHEDULED"
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED
     ): Int
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*) FROM appointments 
         WHERE user_id = :userId 
         AND start_date_time >= :currentTime
         AND status = :status
-    """)
+    """
+    )
     suspend fun getUpcomingAppointmentsCount(
         userId: Int,
         currentTime: Long = System.currentTimeMillis(),
-        status: String = "SCHEDULED"
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED
     ): Int
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*) FROM appointments 
         WHERE user_id = :userId 
         AND is_pinned = 1
         AND status = :status
-    """)
-    suspend fun getPinnedAppointmentsCount(userId: Int, status: String = "SCHEDULED"): Int
+    """
+    )
+    suspend fun getPinnedAppointmentsCount(
+        userId: Int,
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED
+    ): Int
 
     /**
      * lấy appointment voi contact tương ứng
      */
-    @Query("""
+    @Query(
+        """
         SELECT *  FROM appointments
         WHERE user_id = :userId 
         AND contact_id = :contactId 
         AND status = :status
         ORDER BY start_date_time ASC
-    """)
-    suspend fun getAppointmentByContactId(userId:Int,contactId:Int,status: AppointmentStatus) : List<AppointmentPlus>
+    """
+    )
+    suspend fun getAppointmentByContactId(
+        userId: Int,
+        contactId: Int,
+        status: AppointmentStatus
+    ): List<AppointmentPlus>
+
+
+    /**
+     * Lấy tất cả cuộc hẹn có hoạt động
+     */
+    @Query(
+        """
+        SELECT * FROM appointments
+        WHERE user_id = :userId
+        AND status IN ('SCHEDULED', 'PREPARING', 'TRAVELLING', 'IN_PROCESS', 'DELAYED')
+         AND start_date_time BETWEEN :startTime AND :endTime
+        ORDER BY start_date_time ASC
+    """
+    )
+    suspend fun getAllActiveAppointments(
+        userId: Int,
+        startTime: Long = System.currentTimeMillis() - 60 * 60 * 1000,
+        endTime: Long = System.currentTimeMillis() + 6 * 60 * 60 * 1000
+    ): List<AppointmentPlus>
+
+    /**
+     * Lấy các appointment đang active (cho background monitoring)
+     */
+    @Query(
+        """
+    SELECT * FROM appointments 
+    WHERE user_id = :userId 
+    AND status IN ('SCHEDULED', 'PREPARING', 'TRAVELLING', 'IN_PROGRESS', 'DELAYED')
+    AND start_date_time > :currentTime - 86400000  -- Trong vòng 24h qua
+    AND start_date_time < :currentTime + 86400000   -- Và 24h tới
+    ORDER BY start_date_time ASC
+"""
+    )
+    suspend fun getActiveAppointments(userId: Int, currentTime: Long): List<AppointmentPlus>
+
+
+    /**
+     * Lấy tất cả cuộc hẹn với bộ lọc trạng thái
+     * @param userId ID người dùng
+     * @param searchQuery Từ khóa tìm kiếm
+     * @param showPinnedOnly Chỉ hiển thị cuộc hẹn đã ghim (1) hoặc không (0)
+     * @param allowedStatuses Danh sách các trạng thái được phép
+     * @return Flow danh sách các cuộc hẹn phù hợp
+     */
+    @Query(
+        """
+    SELECT * FROM appointments 
+    WHERE user_id = :userId 
+    AND (:searchQuery = '' OR title LIKE :searchQuery OR description LIKE :searchQuery OR location LIKE :searchQuery)
+    AND (:showPinnedOnly = 0 OR is_pinned = 1)
+    AND status IN (:allowedStatuses)
+    ORDER BY 
+        CASE 
+            WHEN status = 'DELAYED' THEN 1
+            WHEN status = 'IN_PROGRESS' THEN 2  
+            WHEN status = 'TRAVELLING' THEN 3
+            WHEN status = 'PREPARING' THEN 4
+            WHEN status = 'SCHEDULED' THEN 5
+            ELSE 6
+        END,
+        start_date_time ASC
+"""
+    )
+    fun getAllAppointmentsWithStatusFilter(
+        userId: Int,
+        searchQuery: String,
+        showPinnedOnly: Int,
+        allowedStatuses: List<AppointmentStatus>
+    ): Flow<List<AppointmentPlus>>
+
+    /**
+     * Lấy cuoc hen trong thoi gian
+     */
+    @Query(
+        """
+            SELECT * FROM appointments 
+        WHERE user_id = :userId 
+        AND start_date_time BETWEEN :startTime AND :endTime
+        AND status NOT IN ('COMPLETED', 'CANCELLED', 'MISSED')
+        ORDER BY start_date_time ASC
+        """
+    )
+    suspend fun getAppointmentsInTimeRange(
+        userId: Int,
+        startTime: Long,
+        endTime: Long
+    ): List<AppointmentPlus>
+
+    /**
+     * cập nhật thời gian di chuyển
+     */
+    @Query(
+        """
+        UPDATE appointments SET travel_time_minutes = :travelTimeMinutes, updated_at = :updatedAt
+        WHERE id = :appointmentId
+    """
+    )
+    suspend fun updateTravelTime(
+        appointmentId: Int,
+        travelTimeMinutes: Int,
+        updatedAt: Long = System.currentTimeMillis()
+    )
 }

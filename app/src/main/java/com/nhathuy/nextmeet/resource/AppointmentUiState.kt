@@ -70,6 +70,10 @@ sealed class AppointmentUiState {
     data class StatusUpdated(val status: AppointmentStatus, val message: String) : AppointmentUiState()
 
     /**
+     * Navigation hủy
+     */
+    data class NavigationCancelled(val message: String) : AppointmentUiState()
+    /**
      * Trạng thái đã bắt đầu điều hướng.
      * @param message Thông báo bắt đầu điều hướng
      */
@@ -100,4 +104,46 @@ sealed class AppointmentUiState {
      * @param message Thông báo lỗi
      */
     data class Error(val message: String) : AppointmentUiState()
+
+    /**
+     * Trạng thái cập nhật thông tin điều hướng.
+     */
+    data class NavigationStatusUpdated(
+        val isNavigating: Boolean,
+        val message: String
+    ) : AppointmentUiState()
+
+    /**
+     * Trạng thái gợi ý thay đổi trạng thái cuộc hẹn.
+     * @param currentStatus Trạng thái hiện tại của cuộc hẹn
+     * @param suggestedStatus Trạng thái được gợi ý
+     * @param reason Lý do gợi ý
+     */
+    data class StatusSuggestion(
+        val currentStatus: AppointmentStatus,
+        val suggestedStatus: AppointmentStatus,
+        val reason: String
+    ) : AppointmentUiState()
+
+    /**
+     * Trạng thái xung đột khi cố gắng thay đổi trạng thái cuộc hẹn.
+     * @param requestedStatus Trạng thái được yêu cầu
+     * @param suggestedStatus Trạng thái được gợi ý
+     * @param reason Lý do xung đột
+     */
+    data class StatusConflict(
+        val requestedStatus: AppointmentStatus,
+        val suggestedStatus: AppointmentStatus,
+        val reason: String
+    ) : AppointmentUiState()
+
+    /**
+     * Trạng thái hoàn thành điều hướng.
+     * @param completed Trạng thái hoàn thành
+     * @param message Thông báo hoàn thành
+     */
+    data class NavigationCompleted(
+        val completed: Boolean,
+        val message: String
+    ) : AppointmentUiState()
 }

@@ -1,14 +1,351 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.HistoryFragment">
+    android:orientation="vertical"
+    android:background="@color/light_surface">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <!-- Header với filter tabs -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="0dp">
 
-</FrameLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/history_appointments"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/light_text_primary"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Filter Cards -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="4">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_all"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/primary_color"
+                    app:cardBackgroundColor="@color/primary_color">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/all"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"
+                        android:textAlignment="center"
+                        android:paddingVertical="8dp"
+                        android:paddingHorizontal="8dp" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_completed"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="3dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/gray_light"
+                    app:cardBackgroundColor="@android:color/white">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/completed"
+                        android:textSize="12sp"
+                        android:textColor="@color/light_text_secondary"
+                        android:textAlignment="center"
+                        android:paddingVertical="8dp"
+                        android:paddingHorizontal="8dp" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_cancelled"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="3dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/gray_light"
+                    app:cardBackgroundColor="@android:color/white">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cancelled"
+                        android:textSize="12sp"
+                        android:textColor="@color/light_text_secondary"
+                        android:textAlignment="center"
+                        android:paddingVertical="8dp"
+                        android:paddingHorizontal="8dp" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_missed"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/gray_light"
+                    app:cardBackgroundColor="@android:color/white">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/missed"
+                        android:textSize="12sp"
+                        android:textColor="@color/light_text_secondary"
+                        android:textAlignment="center"
+                        android:paddingVertical="8dp"
+                        android:paddingHorizontal="8dp" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Statistics Summary -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/success_background">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_completed_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/success_color"
+                    tools:text="12" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/completed"
+                    android:textSize="11sp"
+                    android:textColor="@color/success_color" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/warning_background">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_cancelled_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/warning_color"
+                    tools:text="3" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/cancelled"
+                    android:textSize="11sp"
+                    android:textColor="@color/warning_color" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/error_background">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_missed_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/error_color"
+                    tools:text="5" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/missed"
+                    android:textSize="11sp"
+                    android:textColor="@color/error_color" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+    <!-- RecyclerView cho danh sách history -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_history"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginHorizontal="16dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        tools:listitem="@layout/item_history_appointment" />
+
+    <!-- Empty State -->
+    <LinearLayout
+        android:id="@+id/layout_empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_history_empty"
+            android:alpha="0.6"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chưa có lịch sử cuộc hẹn"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/light_text_secondary"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Các cuộc hẹn đã hoàn thành, hủy hoặc bỏ lỡ sẽ hiển thị ở đây"
+            android:textSize="14sp"
+            android:textColor="@color/text_tertiary"
+            android:textAlignment="center"
+            />
+
+    </LinearLayout>
+
+    <!-- Loading State -->
+    <LinearLayout
+        android:id="@+id/layout_loading"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đang tải lịch sử..."
+            android:textSize="14sp"
+            android:textColor="@color/light_text_secondary" />
+
+    </LinearLayout>
+
+</LinearLayout>

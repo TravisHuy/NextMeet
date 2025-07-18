@@ -1,0 +1,166 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#F5F7FA"
+        android:pathData="M60,60m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0" />
+
+    <!-- Clock outline -->
+    <path
+        android:strokeColor="#BDC3C7"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M60,25m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0" />
+
+    <!-- Clock hands -->
+    <path
+        android:strokeColor="#BDC3C7"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M60,35 L60,45" />
+
+    <path
+        android:strokeColor="#BDC3C7"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M60,45 L65,40" />
+
+    <!-- Clock center dot -->
+    <circle
+        android:fillColor="#BDC3C7"
+        android:cx="60"
+        android:cy="45"
+        android:radius="1.5" />
+
+    <!-- Document stack -->
+    <path
+        android:fillColor="#E8EAED"
+        android:pathData="M35,60 L75,60 L75,85 L35,85 Z" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#BDC3C7"
+        android:strokeWidth="1.5"
+        android:pathData="M37,62 L77,62 L77,87 L37,87 Z" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#BDC3C7"
+        android:strokeWidth="1.5"
+        android:pathData="M39,64 L79,64 L79,89 L39,89 Z" />
+
+    <!-- Document lines -->
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M45,70 L73,70" />
+
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M45,74 L70,74" />
+
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M45,78 L68,78" />
+
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M45,82 L65,82" />
+
+    <!-- Checkmark -->
+    <circle
+        android:fillColor="#23B329"
+        android:cx="75"
+        android:cy="72"
+        android:radius="6" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M72,72 L74,74 L78,70" />
+
+    <!-- X mark -->
+    <circle
+        android:fillColor="#DC0505"
+        android:cx="85"
+        android:cy="80"
+        android:radius="5" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M82.5,77.5 L87.5,82.5" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M87.5,77.5 L82.5,82.5" />
+
+    <!-- Calendar icon -->
+    <path
+        android:strokeColor="#7F8C8D"
+        android:strokeWidth="1.5"
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,50 L45,50 L45,70 L25,70 Z" />
+
+    <!-- Calendar header -->
+    <path
+        android:fillColor="#7F8C8D"
+        android:pathData="M25,50 L45,50 L45,55 L25,55 Z" />
+
+    <!-- Calendar rings -->
+    <path
+        android:strokeColor="#7F8C8D"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M30,47 L30,53" />
+
+    <path
+        android:strokeColor="#7F8C8D"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M40,47 L40,53" />
+
+    <!-- Calendar grid -->
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1"
+        android:pathData="M27,58 L43,58" />
+
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1"
+        android:pathData="M27,62 L43,62" />
+
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1"
+        android:pathData="M31,55 L31,67" />
+
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1"
+        android:pathData="M35,55 L35,67" />
+
+    <path
+        android:strokeColor="#E5E7EB"
+        android:strokeWidth="1"
+        android:pathData="M39,55 L39,67" />
+
+</vector>

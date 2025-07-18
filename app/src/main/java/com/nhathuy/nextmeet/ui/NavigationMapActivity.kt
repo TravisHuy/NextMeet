@@ -2,6 +2,7 @@ package com.nhathuy.nextmeet.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ComponentCaller
 import android.content.Intent
 import android.location.Location
 import android.os.Bundle
@@ -23,9 +24,13 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.MarkerOptions
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.RouteStepAdapter
 import com.nhathuy.nextmeet.databinding.ActivityNavigationMapBinding
@@ -44,16 +49,20 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.RouteStep
+import com.nhathuy.nextmeet.utils.AppointmentStatusManager
+import com.nhathuy.nextmeet.utils.Constant.REQUEST_CODE_TURN_BY_TURN
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 @AndroidEntryPoint
 class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -70,6 +79,8 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var okHttpClient: OkHttpClient
 
     private val appointmentViewModel: AppointmentPlusViewModel by viewModels()
+    private lateinit var statusManager: AppointmentStatusManager
+
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
@@ -77,10 +88,27 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private var hasRouteData = false
     private var routeResult: RouteResult? = null
 
+    private var navigationStartTime : Long = 0L
+    private var navigationStartLocation : Location? = null
+    private var currentTransportMode: TransportMode = TransportMode.DRIVING
+    private var hasUserStartedMoving = false
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigationMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
+        }
+
+        statusManager = AppointmentStatusManager()
 
         // Initialize OkHttpClient
         okHttpClient = OkHttpClient.Builder()
@@ -128,10 +156,16 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                 tvAppointmentTitle.text = appt.title
                 tvDestinationAddress.text = appt.location
                 Log.d("NavigationMapActivity", "Appointment: ${appt.location}")
+
+                tvAppointmentStatus.text = appt.status.displayName
+                tvAppointmentStatus.setTextColor(getStatusColor(appt.status))
             }
         }
 
         updateTransportModeUI(TransportMode.DRIVING)
+        updateNavigationButtonState()
+        updateTimingDisplay()
+
 
         // Ẩn thông tin route ban đầu vì chưa có dữ liệu
         hideRouteInfo()
@@ -167,7 +201,8 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             // Ban đầu ẩn expandable content
             binding.expandableContent.visibility = View.GONE
 
-            bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            bottomSheetBehavior.addBottomSheetCallback(object :
+                BottomSheetBehavior.BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     when (newState) {
                         BottomSheetBehavior.STATE_EXPANDED -> {
@@ -175,15 +210,18 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                                 binding.expandableContent.visibility = View.VISIBLE
                             }
                         }
+
                         BottomSheetBehavior.STATE_COLLAPSED -> {
                             binding.expandableContent.visibility = View.GONE
                         }
+
                         BottomSheetBehavior.STATE_HALF_EXPANDED -> {
                             if (hasRouteData) {
                                 binding.expandableContent.visibility = View.VISIBLE
                                 binding.expandableContent.alpha = 0.7f
                             }
                         }
+
                         BottomSheetBehavior.STATE_DRAGGING -> {
                             // Đang kéo
                             binding.expandableContent.visibility = View.VISIBLE
@@ -198,7 +236,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
 //                    } else {
 //                        binding.expandableContent.alpha = 0f
 //                    }
-                    if(hasRouteData){
+                    if (hasRouteData) {
                         when {
                             slideOffset >= 0.75f -> {
                                 // Từ 75% trở lên -> hiển thị full content và auto expand
@@ -209,6 +247,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                                 }
                             }
+
                             slideOffset >= 0.30f -> {
                                 // Từ 30% đến 75% -> hiển thị content với alpha theo tỷ lệ
                                 binding.expandableContent.visibility = View.VISIBLE
@@ -216,6 +255,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                                 val normalizedOffset = (slideOffset - 0.30f) / (0.75f - 0.30f)
                                 binding.expandableContent.alpha = 0.3f + (normalizedOffset * 0.7f)
                             }
+
                             else -> {
                                 // Dưới 30% -> ẩn content
                                 binding.expandableContent.visibility = View.GONE
@@ -247,12 +287,13 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
             // Action buttons
             btnStartNavigation.setOnClickListener {
-                if (hasRouteData) {
-                    startNavigation()
-                } else {
-                    showError("Vui lòng đợi tính toán tuyến đường")
-                }
+                handleNavigationButtonClick()
             }
+
+            btnTimingInfo.setOnClickListener {
+                showTimingInfo()
+            }
+
             buttonShare.setOnClickListener { shareLocation() }
 
             buttonMyLocation.setOnClickListener {
@@ -275,12 +316,15 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                 BottomSheetBehavior.STATE_COLLAPSED -> {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                 }
+
                 BottomSheetBehavior.STATE_HALF_EXPANDED -> {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                 }
+
                 BottomSheetBehavior.STATE_EXPANDED -> {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 }
+
                 else -> {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                 }
@@ -288,6 +332,164 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun handleNavigationButtonClick() {
+        appointment?.let { appt ->
+            val timingCheck = statusManager.canStartNavigationNow(appt)
+
+            if (timingCheck.canStart) {
+                if (hasRouteData) {
+                    if (timingCheck.showWarning) {
+                        // Hiển thị dialog xác nhận nếu là navigation sớm
+                        showEarlyNavigationConfirmDialog(timingCheck.reason) {
+                            startNavigation()
+                        }
+                    } else {
+                        startNavigation()
+                    }
+                } else {
+                    showError("Vui lòng đợi tính toán tuyến đường")
+                }
+            } else {
+                // Hiển thị lý do không thể navigation
+                showNavigationBlockedDialog(timingCheck)
+            }
+        }
+    }
+
+    private fun showEarlyNavigationConfirmDialog(reason: String, onConfirm: () -> Unit) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Bắt đầu điều hướng sớm?")
+            .setMessage(reason)
+            .setPositiveButton("Đồng ý") { _, _ -> onConfirm() }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+    private fun showNavigationBlockedDialog(timingCheck: com.nhathuy.nextmeet.model.NavigationCheckResult) {
+        val iconRes = when {
+            timingCheck.showWarning -> R.drawable.ic_warning
+            timingCheck.showInfo -> R.drawable.ic_info
+            else -> R.drawable.ic_error
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Không thể điều hướng")
+            .setMessage(timingCheck.reason)
+            .setIcon(iconRes)
+            .setPositiveButton("Đã hiểu", null)
+            .show()
+    }
+
+    // hiển thị thông tin thời gian
+    private fun showTimingInfo(){
+        appointment?.let {
+            appt ->
+            val timingInfo = statusManager.getTimingInfo(appt)
+            val message = buildString {
+                append("📅 Thời gian hẹn: ${timingInfo.appointmentTime}\n")
+                append("⏰ Còn lại: ${timingInfo.timeUntilAppointment}\n")
+                if (appt.travelTimeMinutes > 0) {
+                    append("🚗 Thời gian di chuyển: ${timingInfo.travelTime}\n")
+                    append("🏃 Nên khởi hành: ${timingInfo.idealDepartureTime}\n")
+                    append("⌛ Thời gian đến lúc khởi hành: ${timingInfo.timeUntilDeparture}")
+                }
+            }
+
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Thông tin thời gian")
+                .setMessage(message)
+                .setPositiveButton("Đóng", null)
+                .show()
+        }
+    }
+
+    // cạp nhật ui
+    private fun updateNavigationButtonState(){
+        appointment?.let {
+            appt ->
+            val timingCheck = statusManager.canStartNavigationNow(appt)
+            binding.btnStartNavigation.apply {
+                when {
+                    !hasRouteData -> {
+                        isEnabled = false
+                        text = "Đang tính toán..."
+                        setBackgroundColor(ContextCompat.getColor(this@NavigationMapActivity, R.color.gray))
+                    }
+                    !appt.status.shouldShowNavigationButton() -> {
+                        isEnabled = false
+                        text = when (appt.status) {
+                            AppointmentStatus.IN_PROGRESS -> "Đang diễn ra"
+                            AppointmentStatus.COMPLETED -> "Đã hoàn thành"
+                            AppointmentStatus.CANCELLED -> "Đã hủy"
+                            AppointmentStatus.MISSED -> "Đã bỏ lỡ"
+                            else -> "Không khả dụng"
+                        }
+                        setBackgroundColor(ContextCompat.getColor(this@NavigationMapActivity, R.color.gray))
+                    }
+                    appt.status == AppointmentStatus.TRAVELLING -> {
+                        isEnabled = true
+                        text = "Tiếp tục điều hướng"
+                        setBackgroundColor(ContextCompat.getColor(this@NavigationMapActivity, R.color.green))
+                    }
+                    !timingCheck.canStart -> {
+                        isEnabled = false
+                        text = timingCheck.buttonText
+                        setBackgroundColor(ContextCompat.getColor(this@NavigationMapActivity, R.color.color_orange))
+                    }
+                    else -> {
+                        isEnabled = true
+                        text = timingCheck.buttonText
+                        setBackgroundColor(when {
+                            timingCheck.showSuccess -> ContextCompat.getColor(this@NavigationMapActivity, R.color.green)
+                            timingCheck.showWarning -> ContextCompat.getColor(this@NavigationMapActivity, R.color.color_orange)
+                            else -> ContextCompat.getColor(this@NavigationMapActivity, R.color.primary_color)
+                        })
+                    }
+                }
+            }
+        }
+    }
+    private fun updateTimingDisplay(){
+        appointment?.let { appointment ->
+            val timingInfo = statusManager.getTimingInfo(appointment)
+
+            binding.apply {
+                tvAppointmentTime.text = timingInfo.appointmentTime
+
+                // Hiển thị thông tin timing bổ sung
+                tvTimingInfo.apply {
+                    visibility = View.VISIBLE
+                    text = when {
+                        timingInfo.isToday -> "Hôm nay • ${timingInfo.timeUntilAppointment} nữa"
+                        timingInfo.isTomorrow -> "Ngày mai • ${timingInfo.timeUntilAppointment} nữa"
+                        else -> timingInfo.timeUntilAppointment
+                    }
+                }
+
+                // Hiển thị thời gian khởi hành lý tưởng nếu có travel time
+                if (appointment.travelTimeMinutes > 0) {
+                    tvDepartureTime.apply {
+                        visibility = View.VISIBLE
+                        text = "Nên khởi hành: ${timingInfo.idealDepartureTime}"
+                    }
+                } else {
+                    tvDepartureTime.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    private fun getStatusColor(status: AppointmentStatus): Int {
+        return when (status) {
+            AppointmentStatus.SCHEDULED -> ContextCompat.getColor(this, R.color.blue)
+            AppointmentStatus.PREPARING -> ContextCompat.getColor(this, R.color.color_orange)
+            AppointmentStatus.TRAVELLING -> ContextCompat.getColor(this, R.color.green)
+            AppointmentStatus.IN_PROGRESS -> ContextCompat.getColor(this, R.color.color_purple)
+            AppointmentStatus.DELAYED -> ContextCompat.getColor(this, R.color.red)
+            AppointmentStatus.COMPLETED -> ContextCompat.getColor(this, R.color.gray)
+            AppointmentStatus.CANCELLED -> ContextCompat.getColor(this, R.color.gray_dark)
+            AppointmentStatus.MISSED -> ContextCompat.getColor(this, R.color.red)
+        }
+    }
     private fun formatAppointmentTime(appointment: AppointmentPlus): String {
         val startTime = SimpleDateFormat("HH:mm", Locale.getDefault())
             .format(Date(appointment.startDateTime))
@@ -369,9 +571,28 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun checkUserMovement(currentLocation: Location) {
+        navigationStartLocation?.let { startLocation ->
+            val distance = startLocation.distanceTo(currentLocation)
+
+            // Threshold tùy theo transport mode
+            val threshold = when (currentTransportMode) {
+                TransportMode.WALKING -> 15f
+                TransportMode.DRIVING -> 50f
+                TransportMode.TRANSIT -> 25f
+            }
+
+            if (distance > threshold && !hasUserStartedMoving) {
+                hasUserStartedMoving = true
+                Log.d("NavigationMap", "${currentTransportMode.name}: User moved ${distance}m")
+            }
+        }
+    }
+
     private fun selectTransportMode(mode: TransportMode) {
         selectedTransportMode = mode
         updateTransportModeUI(mode)
+        hasUserStartedMoving = false
 
         // Tính lại route với phương tiện mới
         val currentLatLng = currentLocation?.let { LatLng(it.latitude, it.longitude) }
@@ -410,6 +631,10 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                         updateRouteInfo(result)
                         showRouteInfo()
 
+                        updateAppointmentTravelTime(result)
+
+                        updateNavigationButtonState()
+
                         // Tự động hiển thị toàn bộ tuyến đường
                         showFullRoute()
 
@@ -425,6 +650,38 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     showError("Lỗi khi tính toán tuyến đường: ${e.message}")
                     hideRouteInfo()
                 }
+            }
+        }
+    }
+
+    // cập nhật travel time cho cuộn hẹn
+    private fun updateAppointmentTravelTime(routeResult: RouteResult) {
+        appointment?.let { appt ->
+            // Chỉ cập nhật nếu travel time hiện tại là 0 hoặc khác biệt đáng kể
+            if (appt.travelTimeMinutes == 0 ||
+                abs(appt.travelTimeMinutes - routeResult.duration) > 5) {
+
+                val distance = routeResult.distanceMeters / 1000.0 // Convert to km
+
+                Log.d("NavigationMapActivity",
+                    "Updating travel time: ${routeResult.duration} minutes, distance: $distance km")
+
+                appointmentViewModel.updateAppointmentWithRouteInfo(
+                    appointmentId = appt.id,
+                    travelTimeMinutes = routeResult.duration,
+                    distance = distance,
+                    transportMode = selectedTransportMode
+                )
+
+                // Cập nhật local appointment object
+                appointment = appt.copy(
+                    travelTimeMinutes = routeResult.duration,
+                    updateAt = System.currentTimeMillis()
+                )
+
+                // Cập nhật timing display sau khi có travel time mới
+                updateTimingDisplay()
+                updateNavigationButtonState()
             }
         }
     }
@@ -482,7 +739,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // [Giữ nguyên các method khác: getRouteFromRoutesAPI, parseRouteResponse, displayRoute, updateRouteInfo, etc.]
+// [Giữ nguyên các method khác: getRouteFromRoutesAPI, parseRouteResponse, displayRoute, updateRouteInfo, etc.]
 
     private suspend fun getRouteFromRoutesAPI(
         origin: LatLng,
@@ -530,7 +787,10 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
                     .addHeader("Content-Type", "application/json")
                     .addHeader("X-Goog-Api-Key", getString(R.string.google_map_api_key))
-                    .addHeader("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.localizedValues,routes.legs.steps.polyline.encodedPolyline")
+                    .addHeader(
+                        "X-Goog-FieldMask",
+                        "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.localizedValues,routes.legs.steps.polyline.encodedPolyline"
+                    )
                     .build()
 
                 val response = okHttpClient.newCall(request).execute()
@@ -541,7 +801,10 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                         parseRouteResponse(responseBody)
                     } else null
                 } else {
-                    Log.e("NavigationMapActivity", "Routes API Error: ${response.code} - ${response.message}")
+                    Log.e(
+                        "NavigationMapActivity",
+                        "Routes API Error: ${response.code} - ${response.message}"
+                    )
                     null
                 }
             } catch (e: Exception) {
@@ -574,16 +837,25 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                             val navigationInstruction = step.optJSONObject("navigationInstruction")
                             val localizedValues = step.optJSONObject("localizedValues")
 
-                            val instruction = navigationInstruction?.optString("instructions", "Tiếp tục") ?: "Tiếp tục"
-                            val stepDistance = localizedValues?.optJSONObject("distance")?.optString("text", "") ?: ""
-                            val stepDuration = localizedValues?.optJSONObject("staticDuration")?.optString("text", "") ?: ""
+                            val instruction =
+                                navigationInstruction?.optString("instructions", "Tiếp tục")
+                                    ?: "Tiếp tục"
+                            val stepDistance =
+                                localizedValues?.optJSONObject("distance")?.optString("text", "")
+                                    ?: ""
+                            val stepDuration =
+                                localizedValues?.optJSONObject("staticDuration")
+                                    ?.optString("text", "")
+                                    ?: ""
 
-                            steps.add(RouteStep(
-                                instruction = instruction,
-                                distance = stepDistance,
-                                duration = stepDuration,
-                                iconResId = getDirectionIcon(instruction)
-                            ))
+                            steps.add(
+                                RouteStep(
+                                    instruction = instruction,
+                                    distance = stepDistance,
+                                    duration = stepDuration,
+                                    iconResId = getDirectionIcon(instruction)
+                                )
+                            )
                         }
                     }
                 }
@@ -614,12 +886,25 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         return when {
             instruction.contains("rẽ trái", ignoreCase = true) ||
                     instruction.contains("turn left", ignoreCase = true) -> R.drawable.ic_turn_left
+
             instruction.contains("rẽ phải", ignoreCase = true) ||
-                    instruction.contains("turn right", ignoreCase = true) -> R.drawable.ic_turn_right
+                    instruction.contains(
+                        "turn right",
+                        ignoreCase = true
+                    ) -> R.drawable.ic_turn_right
+
             instruction.contains("nhẹ trái", ignoreCase = true) ||
-                    instruction.contains("slight left", ignoreCase = true) -> R.drawable.ic_turn_slight_left
+                    instruction.contains(
+                        "slight left",
+                        ignoreCase = true
+                    ) -> R.drawable.ic_turn_slight_left
+
             instruction.contains("nhẹ phải", ignoreCase = true) ||
-                    instruction.contains("slight right", ignoreCase = true) -> R.drawable.ic_turn_slight_right
+                    instruction.contains(
+                        "slight right",
+                        ignoreCase = true
+                    ) -> R.drawable.ic_turn_slight_right
+
             else -> R.drawable.ic_straight
         }
     }
@@ -665,16 +950,25 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun startNavigation() {
         appointment?.let { appt ->
+            navigationStartTime = System.currentTimeMillis()
+            navigationStartLocation = currentLocation
+            hasUserStartedMoving = false
+
+            appointmentViewModel.startNavigationToAppointment(
+                appointmentId = appt.id,
+                startLocation = currentLocation
+            )
+
             val intent = Intent(this, TurnByTurnNavigationActivity::class.java)
             intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appt.id)
-            startActivity(intent)
-            updateAppointmentNavigationStatus()
+            intent.putExtra("transport_mode", currentTransportMode.name) // Thêm dòng này
+            startActivityForResult(intent, REQUEST_CODE_TURN_BY_TURN)
         }
     }
 
     private fun updateAppointmentNavigationStatus() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Update appointment to mark navigation as started
+
         }
     }
 
@@ -748,6 +1042,32 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.e("NavigationMapActivity", message)
     }
 
+    private fun showSuccess(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Log.d("NavigationMapActivity", message)
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_TURN_BY_TURN) {
+            appointment?.let { appt ->
+                appointmentViewModel.updateAppointmentBasedOnTime(appt.id)
+                if (resultCode == RESULT_OK) {
+                    val navigationCompleted =
+                        data?.getBooleanExtra("navigation_completed", false) ?: false
+                    if (navigationCompleted) {
+                        showSuccess("Đã hoàn thành điều hướng đến cuộc hẹn")
+                    }
+                }
+            }
+        }
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -762,6 +1082,16 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     showError("Cần quyền vị trí để sử dụng tính năng điều hướng")
                 }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        appointment?.let { appt ->
+            appointmentViewModel.checkAppointmentStatus(appt.id)
+
+            updateNavigationButtonState()
+            updateTimingDisplay()
         }
     }
 

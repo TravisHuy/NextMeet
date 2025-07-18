@@ -641,8 +641,9 @@ class SearchRepository @Inject constructor(
     suspend fun getAppointmentsByQuickFilter(
         userId: Int,
         filterType: String,
-        status: String = "SCHEDULED"
+        status: AppointmentStatus = AppointmentStatus.SCHEDULED
     ): Flow<List<AppointmentPlus>> {
+        val statusString = status.name
         return when (filterType) {
             Constant.FILTER_TODAY -> {
                 appointmentDao.getTodayAppointments(userId, status)
@@ -650,7 +651,7 @@ class SearchRepository @Inject constructor(
 
             Constant.FILTER_WEEK -> {
                 val (weekStart, weekEnd) = getWeekRange()
-                appointmentDao.getThisWeekAppointments(userId, weekStart, weekEnd, status)
+                appointmentDao.getThisWeekAppointments(userId, weekStart, weekEnd, statusString)
             }
 
             Constant.FILTER_PINNED -> {

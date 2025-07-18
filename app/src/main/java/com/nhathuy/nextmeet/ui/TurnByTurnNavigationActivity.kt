@@ -2,18 +2,28 @@ package com.nhathuy.nextmeet.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -34,13 +44,11 @@ import com.nhathuy.nextmeet.model.TransportMode
 import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
-import com.nhathuy.nextmeet.viewmodel.AppointmentViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Locale
 import kotlin.math.*
 
@@ -56,11 +64,13 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
 
     private val appointmentViewModel: AppointmentPlusViewModel by viewModels()
 
+    // Core navigation data
     private var appointment: AppointmentPlus? = null
     private var currentLocation: Location? = null
     private var navigationSteps: List<NavigationStep> = emptyList()
     private var currentStepIndex = 0
     private var isNavigationActive = false
+    private var hasArrivedAtDestination = false
 
     // Enhanced route tracking
     private var routePolyline: Polyline? = null
@@ -75,15 +85,34 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
     private var lastRerouteTime = 0L
     private var isRerouting = false
 
+    // Enhanced location tracking
+    private var lastBearingUpdateLocation: Location? = null
+    private var smoothedBearing: Float = 0f
+    private var lastAccurateBearing: Float = 0f
+    private var userLocationAccuracyCircle: Circle? = null
+    private var isFirstLocationUpdate = true
+
+    // Voice control
+    private var isMuted = false
+
+    // Thêm transport mode tracking - ĐƠN GIẢN
+    private var transportMode: TransportMode = TransportMode.DRIVING
+    private var hasMovedFromStart = false
+    private var startLocation: Location? = null
+
     private companion object {
-        const val LOCATION_UPDATE_INTERVAL = 2000L // 2 seconds
-        const val FASTEST_UPDATE_INTERVAL = 1000L // 1 second
+        const val LOCATION_UPDATE_INTERVAL = 1000L // 1 giây
+        const val FASTEST_UPDATE_INTERVAL = 500L // 0.5 giây
         const val STEP_COMPLETION_DISTANCE = 50f // 50 meters
-        const val REROUTE_DISTANCE_THRESHOLD = 50f // 50 meters (stricter for better detection)
-        const val BEARING_UPDATE_THRESHOLD = 10f // 10 degrees
-        const val MIN_REROUTE_INTERVAL = 30000L // 30 seconds between reroutes
-        const val OFF_ROUTE_COUNT_THRESHOLD = 3 // Consecutive off-route detections
-        const val ROUTE_POINT_SEARCH_RADIUS = 100f // meters
+        const val REROUTE_DISTANCE_THRESHOLD = 50f // 50 meters
+        const val BEARING_UPDATE_THRESHOLD = 5f // 5 degrees
+        const val MIN_REROUTE_INTERVAL = 30000L // 30 seconds
+        const val OFF_ROUTE_COUNT_THRESHOLD = 3
+        const val ROUTE_POINT_SEARCH_RADIUS = 100f
+        const val MIN_ACCURACY_THRESHOLD = 20f // meters
+        const val MIN_DISTANCE_FOR_BEARING_UPDATE = 5f // meters
+        const val CAMERA_UPDATE_DISTANCE_THRESHOLD = 10f // meters
+        const val CAMERA_UPDATE_BEARING_THRESHOLD = 15f // degrees
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,12 +120,30 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         binding = ActivityTurnByTurnNavigationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
+        }
+
+        // Keep screen on during navigation
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         val appointmentId = intent.getIntExtra(Constant.EXTRA_APPOINTMENT_ID, -1)
         if (appointmentId == -1) {
             finish()
             return
+        }
+
+        // Get transport mode từ intent
+        val transportModeStr = intent.getStringExtra("transport_mode") ?: TransportMode.DRIVING.name
+        transportMode = try {
+            TransportMode.valueOf(transportModeStr)
+        } catch (e: Exception) {
+            TransportMode.DRIVING
         }
 
         initializeComponents()
@@ -108,6 +155,9 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
     private fun initializeComponents() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         textToSpeech = TextToSpeech(this, this)
+
+        // Load voice state
+        loadVoiceState()
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
@@ -123,6 +173,12 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
             btnStopNavigation.setOnClickListener { stopNavigation() }
             btnMute.setOnClickListener { toggleMute() }
             btnRecenter.setOnClickListener { recenterCamera() }
+
+            // Long click để test voice
+            btnMute.setOnLongClickListener {
+                testVoice()
+                true
+            }
         }
     }
 
@@ -132,6 +188,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                 when (state) {
                     is AppointmentUiState.AppointmentLoaded -> {
                         appointment = state.appointment
+                        Log.d("TurnByTurnNavigationActivity", "Appointment loaded: ${appointment?.status}")
                         setupNavigationUI()
                     }
                     is AppointmentUiState.Error -> {
@@ -186,6 +243,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             location?.let {
                 currentLocation = it
+                startLocation = it // Lưu vị trí bắt đầu
                 Log.d("Navigation", "Current location: ${it.latitude}, ${it.longitude}")
                 startNavigation()
             } ?: run {
@@ -228,7 +286,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                 val result = NavigationUtils.calculateRoute(
                     LatLng(currentLoc.latitude, currentLoc.longitude),
                     LatLng(destination.latitude, destination.longitude),
-                    TransportMode.DRIVING,
+                    transportMode, // Sử dụng transport mode từ intent
                     getString(R.string.google_map_api_key)
                 )
 
@@ -240,7 +298,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                         if (routeResult.steps.isNotEmpty()) {
                             startTurnByTurnNavigation(routeResult.steps)
                             updateNavigationInfo(routeResult)
-                            announceInstruction("Bắt đầu điều hướng")
+                            announceInstruction("Bắt đầu điều hướng ${getTransportModeDisplayName()}")
                         } else {
                             Log.e("Navigation", "No navigation steps found")
                         }
@@ -254,29 +312,19 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
+    private fun getTransportModeDisplayName(): String {
+        return when (transportMode) {
+            TransportMode.WALKING -> "đi bộ"
+            TransportMode.DRIVING -> "lái xe"
+            TransportMode.TRANSIT -> "phương tiện công cộng"
+        }
+    }
+
     private fun updateNavigationInfo(routeResult: NavigationUtils.RouteResult) {
         binding.apply {
-            topStatusBar.visibility = View.VISIBLE
-
             appointment?.let { appt ->
-                tvDestinationName.text = appt.title
-                tvAppointmentTime.text = formatAppointmentTime(appt)
                 tvDestinationAddress.text = appt.location
             }
-
-            val totalDistanceKm = routeResult.distanceMeters / 1000f
-            val estimatedTimeMinutes = routeResult.duration
-
-            tvRemainingTime.text = "${estimatedTimeMinutes}p"
-            tvRemainingDistance.text = if (totalDistanceKm < 1) {
-                "${routeResult.distanceMeters}m"
-            } else {
-                "${"%.1f".format(totalDistanceKm)}km"
-            }
-
-            val arrivalTimeMillis = System.currentTimeMillis() + (estimatedTimeMinutes * 60 * 1000)
-            val arrivalTimeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            tvArrivalTime.text = arrivalTimeFormat.format(Date(arrivalTimeMillis))
 
             mainInstructionPanel.visibility = View.VISIBLE
 
@@ -288,10 +336,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
 
     private fun displayRoute(routeResult: NavigationUtils.RouteResult) {
         // Clear existing overlays
-        routePolyline?.remove()
-        passedRoutePolyline?.remove()
-        destinationMarker?.remove()
-        userLocationMarker?.remove()
+        clearMapOverlays()
 
         // Store original route points
         originalRoutePoints = NavigationUtils.decodePolyline(routeResult.encodedPolyline)
@@ -312,62 +357,100 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
             PolylineOptions()
                 .addAll(originalRoutePoints)
                 .width(12f)
-                .color(ContextCompat.getColor(this, R.color.color_blue))
+                .color(ContextCompat.getColor(this, R.color.primary_color))
                 .geodesic(true)
         )
 
-        // Create user location marker with custom icon
+        // Create user location marker
         currentLocation?.let { location ->
             createUserLocationMarker(location)
-
-            val cameraPosition = CameraPosition.Builder()
-                .target(LatLng(location.latitude, location.longitude))
-                .zoom(18f)
-                .bearing(location.bearing)
-                .tilt(45f)
-                .build()
-
-            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+            updateNavigationCamera(location)
         }
+    }
+
+    private fun clearMapOverlays() {
+        routePolyline?.remove()
+        passedRoutePolyline?.remove()
+        destinationMarker?.remove()
+        userLocationMarker?.remove()
+        userLocationAccuracyCircle?.remove()
     }
 
     private fun createUserLocationMarker(location: Location) {
         userLocationMarker?.remove()
+        userLocationAccuracyCircle?.remove()
 
-        // Create a custom marker with circle and direction arrow
         val userPosition = LatLng(location.latitude, location.longitude)
 
+        // Tạo vòng tròn độ chính xác
+        if (location.hasAccuracy() && location.accuracy <= MIN_ACCURACY_THRESHOLD) {
+            userLocationAccuracyCircle = googleMap.addCircle(
+                CircleOptions()
+                    .center(userPosition)
+                    .radius(location.accuracy.toDouble())
+                    .fillColor(ContextCompat.getColor(this, R.color.light_primary))
+                    .strokeColor(ContextCompat.getColor(this, R.color.primary_color))
+                    .strokeWidth(2f)
+            )
+        }
+
+        // Tạo marker người dùng
         userLocationMarker = googleMap.addMarker(
             MarkerOptions()
                 .position(userPosition)
                 .icon(createUserLocationIcon())
                 .anchor(0.5f, 0.5f)
-                .rotation(location.bearing)
+                .rotation(if (location.hasBearing()) location.bearing else smoothedBearing)
                 .flat(true)
+                .zIndex(100f)
         )
     }
 
     private fun createUserLocationIcon(): BitmapDescriptor {
-        // Create a blue circle with white border for user location
-        val size = 40
-        val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bitmap)
+        val size = 60
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
 
-        // Draw white border
+        // Shadow
+        val shadowPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.argb(80, 0, 0, 0)
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.FILL
+        }
+        canvas.drawCircle(size / 2f + 1, size / 2f + 1, (size / 2f) - 2, shadowPaint)
+
+        // White border
         val borderPaint = android.graphics.Paint().apply {
             color = android.graphics.Color.WHITE
             isAntiAlias = true
             style = android.graphics.Paint.Style.FILL
         }
-        canvas.drawCircle(size / 2f, size / 2f, size / 2f, borderPaint)
+        canvas.drawCircle(size / 2f, size / 2f, (size / 2f) - 2, borderPaint)
 
-        // Draw blue center
+        // Blue center
         val centerPaint = android.graphics.Paint().apply {
-            color = ContextCompat.getColor(this@TurnByTurnNavigationActivity, R.color.color_blue)
+            color = ContextCompat.getColor(this@TurnByTurnNavigationActivity, R.color.primary_color)
             isAntiAlias = true
             style = android.graphics.Paint.Style.FILL
         }
-        canvas.drawCircle(size / 2f, size / 2f, (size / 2f) - 3, centerPaint)
+        canvas.drawCircle(size / 2f, size / 2f, (size / 2f) - 6, centerPaint)
+
+        // Direction arrow
+        val arrowPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.FILL
+        }
+
+        val arrowPath = android.graphics.Path().apply {
+            moveTo(size / 2f, size / 2f - 12)
+            lineTo(size / 2f - 8, size / 2f + 8)
+            lineTo(size / 2f - 3, size / 2f + 5)
+            lineTo(size / 2f + 3, size / 2f + 5)
+            lineTo(size / 2f + 8, size / 2f + 8)
+            close()
+        }
+        canvas.drawPath(arrowPath, arrowPaint)
 
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
@@ -383,14 +466,26 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
     private fun onLocationUpdate(location: Location) {
         if (!isNavigationActive) return
 
+        // Filter inaccurate locations
+        if (location.hasAccuracy() && location.accuracy > MIN_ACCURACY_THRESHOLD * 2) {
+            Log.d("Navigation", "Location accuracy too low: ${location.accuracy}m")
+            return
+        }
+
         val previousLocation = currentLocation
         currentLocation = location
+
+        // Check movement với threshold phù hợp theo transport mode
+        checkMovementFromStart(location)
 
         // Update user location marker
         updateUserLocationMarker(location)
 
-        // Update camera
-        updateNavigationCamera(location)
+        // Update camera if needed
+        if (isFirstLocationUpdate || shouldUpdateCamera(previousLocation, location)) {
+            updateNavigationCamera(location)
+            isFirstLocationUpdate = false
+        }
 
         // Update passed route visualization
         updatePassedRoute(location)
@@ -399,21 +494,184 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         checkStepCompletion(location)
 
         // Update distance and time
-        updateDistancedAndTime(location)
+        updateDistanceAndTime(location)
 
-        // Check for off-route and reroute if necessary
+        // Check for reroute
         if (previousLocation != null) {
             checkForReroute(location)
         }
     }
 
+    // Check movement từ start location với threshold phù hợp
+    private fun checkMovementFromStart(location: Location) {
+        if (!hasMovedFromStart) {
+            startLocation?.let { start ->
+                val distance = start.distanceTo(location)
+                val threshold = when (transportMode) {
+                    TransportMode.WALKING -> 15f
+                    TransportMode.DRIVING -> 50f
+                    TransportMode.TRANSIT -> 25f
+                }
+
+                if (distance > threshold) {
+                    hasMovedFromStart = true
+                    Log.d("TurnByTurn", "${transportMode.name}: Moved ${distance}m (threshold: ${threshold}m)")
+                }
+            }
+        }
+    }
+
+    private fun shouldUpdateCamera(previousLocation: Location?, currentLocation: Location): Boolean {
+        if (previousLocation == null) return true
+
+        val distance = previousLocation.distanceTo(currentLocation)
+        val bearingChange = if (previousLocation.hasBearing() && currentLocation.hasBearing()) {
+            abs(shortestBearingDifference(previousLocation.bearing, currentLocation.bearing))
+        } else 0f
+
+        return distance > CAMERA_UPDATE_DISTANCE_THRESHOLD || bearingChange > CAMERA_UPDATE_BEARING_THRESHOLD
+    }
+
     private fun updateUserLocationMarker(location: Location) {
+        val userPosition = LatLng(location.latitude, location.longitude)
+
+        // Update accuracy circle
+        userLocationAccuracyCircle?.let { circle ->
+            if (location.hasAccuracy() && location.accuracy <= MIN_ACCURACY_THRESHOLD) {
+                circle.center = userPosition
+                circle.radius = location.accuracy.toDouble()
+            } else {
+                circle.remove()
+                userLocationAccuracyCircle = null
+            }
+        }
+
         userLocationMarker?.let { marker ->
-            marker.position = LatLng(location.latitude, location.longitude)
-            marker.rotation = location.bearing
+            animateMarkerToPosition(marker, userPosition)
+            updateMarkerBearing(marker, location)
         } ?: run {
             createUserLocationMarker(location)
         }
+    }
+
+    private fun animateMarkerToPosition(marker: Marker, newPosition: LatLng) {
+        val startPosition = marker.position
+        val handler = Handler(Looper.getMainLooper())
+        val startTime = SystemClock.uptimeMillis()
+        val duration = 1000L
+        val interpolator = AccelerateDecelerateInterpolator()
+
+        val animatePosition = object : Runnable {
+            override fun run() {
+                val elapsed = SystemClock.uptimeMillis() - startTime
+                val t = elapsed.toFloat() / duration
+                val interpolatedTime = interpolator.getInterpolation(t.coerceIn(0f, 1f))
+
+                val lat = startPosition.latitude + (newPosition.latitude - startPosition.latitude) * interpolatedTime
+                val lng = startPosition.longitude + (newPosition.longitude - startPosition.longitude) * interpolatedTime
+
+                marker.position = LatLng(lat, lng)
+
+                if (t < 1.0) {
+                    handler.postDelayed(this, 16)
+                }
+            }
+        }
+        handler.post(animatePosition)
+    }
+
+    private fun updateMarkerBearing(marker: Marker, location: Location) {
+        val newBearing = when {
+            location.hasBearing() && location.bearing != 0f -> location.bearing
+            location.hasSpeed() && location.speed > 1f -> calculateBearingFromMovement(location)
+            else -> smoothedBearing
+        }
+
+        // Handle bearing wrap-around
+        if (abs(newBearing - smoothedBearing) > 180f) {
+            smoothedBearing = if (newBearing > smoothedBearing) {
+                smoothedBearing + 360f
+            } else {
+                smoothedBearing - 360f
+            }
+        }
+
+        // Smooth interpolation
+        val bearingDiff = newBearing - smoothedBearing
+        smoothedBearing += bearingDiff * 0.3f
+        smoothedBearing = (smoothedBearing + 360f) % 360f
+
+        animateMarkerBearing(marker, smoothedBearing)
+    }
+
+    private fun calculateBearingFromMovement(currentLocation: Location): Float {
+        lastBearingUpdateLocation?.let { lastLocation ->
+            val distance = currentLocation.distanceTo(lastLocation)
+
+            if (distance >= MIN_DISTANCE_FOR_BEARING_UPDATE) {
+                val bearing = lastLocation.bearingTo(currentLocation)
+                lastBearingUpdateLocation = currentLocation
+                lastAccurateBearing = bearing
+                return bearing
+            }
+        } ?: run {
+            lastBearingUpdateLocation = currentLocation
+        }
+
+        return lastAccurateBearing
+    }
+
+    private fun animateMarkerBearing(marker: Marker, targetBearing: Float) {
+        val startBearing = marker.rotation
+        val bearingDiff = shortestBearingDifference(startBearing, targetBearing)
+
+        if (abs(bearingDiff) < BEARING_UPDATE_THRESHOLD) return
+
+        val handler = Handler(Looper.getMainLooper())
+        val startTime = SystemClock.uptimeMillis()
+        val duration = 300L
+
+        val animateBearing = object : Runnable {
+            override fun run() {
+                val elapsed = SystemClock.uptimeMillis() - startTime
+                val t = (elapsed.toFloat() / duration).coerceIn(0f, 1f)
+
+                val currentBearing = startBearing + bearingDiff * t
+                marker.rotation = (currentBearing + 360f) % 360f
+
+                if (t < 1.0) {
+                    handler.postDelayed(this, 16)
+                }
+            }
+        }
+        handler.post(animateBearing)
+    }
+
+    private fun shortestBearingDifference(from: Float, to: Float): Float {
+        var diff = to - from
+        if (diff > 180f) diff -= 360f
+        if (diff < -180f) diff += 360f
+        return diff
+    }
+
+    private fun updateNavigationCamera(location: Location) {
+        val targetPosition = LatLng(location.latitude, location.longitude)
+
+        val newCameraPosition = CameraPosition.Builder()
+            .target(targetPosition)
+            .zoom(19f)
+            .bearing(if (location.hasBearing()) location.bearing else smoothedBearing)
+            .tilt(60f)
+            .build()
+
+        googleMap.animateCamera(
+            CameraUpdateFactory.newCameraPosition(newCameraPosition),
+            1500,
+            object : GoogleMap.CancelableCallback {
+                override fun onFinish() {}
+                override fun onCancel() {}
+            }
+        )
     }
 
     private fun updatePassedRoute(currentLocation: Location) {
@@ -425,9 +683,8 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         if (closestPointIndex > currentRoutePointIndex) {
             currentRoutePointIndex = closestPointIndex
 
-            // Update passed route polyline
+            // Update passed route
             passedRoutePolyline?.remove()
-
             if (currentRoutePointIndex > 0) {
                 val passedPoints = originalRoutePoints.subList(0, currentRoutePointIndex + 1)
                 passedRoutePolyline = googleMap.addPolyline(
@@ -458,7 +715,6 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         var closestIndex = currentRoutePointIndex
         var minDistance = Float.MAX_VALUE
 
-        // Search within a reasonable range around current index
         val searchStart = maxOf(0, currentRoutePointIndex - 10)
         val searchEnd = minOf(originalRoutePoints.size - 1, currentRoutePointIndex + 50)
 
@@ -481,20 +737,6 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
             results
         )
         return results[0]
-    }
-
-    private fun updateNavigationCamera(location: Location) {
-        val cameraPosition = CameraPosition.Builder()
-            .target(LatLng(location.latitude, location.longitude))
-            .zoom(18f)
-            .bearing(location.bearing)
-            .tilt(45f)
-            .build()
-
-        googleMap.animateCamera(
-            CameraUpdateFactory.newCameraPosition(cameraPosition),
-            1000, null
-        )
     }
 
     private fun checkStepCompletion(currentLocation: Location) {
@@ -538,7 +780,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-    private fun updateDistancedAndTime(currentLocation: Location) {
+    private fun updateDistanceAndTime(currentLocation: Location) {
         appointment?.let { appt ->
             val destinationLocation = Location("destination").apply {
                 latitude = appt.latitude
@@ -546,22 +788,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
             }
 
             val remainingDistance = currentLocation.distanceTo(destinationLocation)
-            val remainingDistanceKm = remainingDistance / 1000f
-
-            binding.apply {
-                tvRemainingDistance.text = if (remainingDistanceKm < 1) {
-                    "${remainingDistance.toInt()}m"
-                } else {
-                    "${"%.1f".format(remainingDistanceKm)}km"
-                }
-
-                val estimatedTimeMinutes = (remainingDistanceKm / 0.5f).toInt()
-                tvRemainingTime.text = "${estimatedTimeMinutes}p"
-
-                val arrivalTime = System.currentTimeMillis() + (estimatedTimeMinutes * 60 * 1000)
-                tvArrivalTime.text = SimpleDateFormat("HH:mm", Locale.getDefault())
-                    .format(Date(arrivalTime))
-            }
+            // Update UI if needed
         }
     }
 
@@ -571,7 +798,6 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastRerouteTime < MIN_REROUTE_INTERVAL) return
 
-        // Check if user is off route
         val isOffRoute = isUserOffRoute(currentLocation)
 
         if (isOffRoute) {
@@ -609,7 +835,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                 val result = NavigationUtils.calculateRoute(
                     LatLng(currentLoc.latitude, currentLoc.longitude),
                     LatLng(destination.latitude, destination.longitude),
-                    TransportMode.DRIVING,
+                    transportMode, // Sử dụng transport mode hiện tại
                     getString(R.string.google_map_api_key)
                 )
 
@@ -631,19 +857,20 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
 
     private fun onNavigationCompleted() {
         isNavigationActive = false
+        hasArrivedAtDestination = true
 
         binding.apply {
             tvCurrentInstruction.text = "Bạn đã đến nơi"
             tvStepDistance.text = ""
             tvNextInstruction.visibility = View.GONE
             btnStopNavigation.text = "Hoàn thành"
+        }
 
-            announceInstruction("Bạn đã đến điểm hẹn")
+        announceInstruction("Bạn đã đến điểm hẹn")
 
-            lifecycleScope.launch {
-                appointment?.let { appt ->
-                    // Update appointment status if needed
-                }
+        lifecycleScope.launch {
+            appointment?.let { appt ->
+                appointmentViewModel.checkAppointmentStatus(appt.id)
             }
         }
     }
@@ -654,53 +881,224 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
+    // Voice control functions
     private fun toggleMute() {
-        val iconRes = if (binding.btnMute.tag == "muted") {
-            R.drawable.ic_volume
+        isMuted = !isMuted
+        updateMuteButtonUI()
+        saveVoiceState()
+
+        // Announce state change
+        if (isMuted) {
+            // Phát thông báo cuối cùng trước khi tắt
+            if (::textToSpeech.isInitialized) {
+                textToSpeech.speak("Đã tắt tiếng", TextToSpeech.QUEUE_FLUSH, null, null)
+            }
         } else {
-            R.drawable.ic_volume_off
+            announceInstruction("Đã bật tiếng")
         }
-        binding.btnMute.icon = ContextCompat.getDrawable(this, iconRes)
+
+        Log.d("Navigation", "Voice ${if (isMuted) "muted" else "unmuted"}")
     }
 
-    private fun stopNavigation() {
-        isNavigationActive = false
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-        finish()
-    }
+    private fun updateMuteButtonUI() {
+        val iconRes = if (isMuted) {
+            R.drawable.ic_volume_off
+        } else {
+            R.drawable.ic_volume
+        }
 
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            val result = textToSpeech.setLanguage(Locale("vi", "VN"))
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                textToSpeech.setLanguage(Locale.US)
+        binding.btnMute.apply {
+            icon = ContextCompat.getDrawable(this@TurnByTurnNavigationActivity, iconRes)
+            tag = if (isMuted) "muted" else "unmuted"
+
+            backgroundTintList = if (isMuted) {
+                ContextCompat.getColorStateList(this@TurnByTurnNavigationActivity, R.color.red)
+            } else {
+                ContextCompat.getColorStateList(this@TurnByTurnNavigationActivity, R.color.white)
+            }
+
+            iconTint = if (isMuted) {
+                ContextCompat.getColorStateList(this@TurnByTurnNavigationActivity, R.color.white)
+            } else {
+                ContextCompat.getColorStateList(this@TurnByTurnNavigationActivity, R.color.gray_dark)
             }
         }
     }
 
-    private fun announceInstruction(instruction: String) {
-        if (::textToSpeech.isInitialized) {
-            textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, null)
+    private fun saveVoiceState() {
+        val prefs = getSharedPreferences("navigation_prefs", MODE_PRIVATE)
+        prefs.edit().putBoolean("is_muted", isMuted).apply()
+    }
+
+    private fun loadVoiceState() {
+        val prefs = getSharedPreferences("navigation_prefs", MODE_PRIVATE)
+        isMuted = prefs.getBoolean("is_muted", false)
+        updateMuteButtonUI()
+    }
+
+    private fun testVoice() {
+        if (ensureTTSReady()) {
+            val wasTemporarilyMuted = isMuted
+            isMuted = false // Temporarily unmute for test
+            announceInstruction("Đây là kiểm tra âm thanh")
+            isMuted = wasTemporarilyMuted // Restore original state
         }
     }
 
-    private fun formatAppointmentTime(appointment: AppointmentPlus): String {
-        val startTime = SimpleDateFormat("HH:mm", Locale.getDefault())
-            .format(Date(appointment.startDateTime))
-        return "Cuộc hẹn lúc $startTime"
+    private fun ensureTTSReady(): Boolean {
+        if (!::textToSpeech.isInitialized) {
+            Log.w("Navigation", "TTS not initialized, reinitializing...")
+            textToSpeech = TextToSpeech(this, this)
+            return false
+        }
+        return true
+    }
+
+    private fun announceInstruction(instruction: String) {
+        if (::textToSpeech.isInitialized && !isMuted) {
+            textToSpeech.stop()
+
+            val params = Bundle().apply {
+                putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f)
+            }
+
+            textToSpeech.speak(
+                instruction,
+                TextToSpeech.QUEUE_FLUSH,
+                params,
+                "navigation_instruction"
+            )
+
+            Log.d("Navigation", "Announcing: $instruction")
+        } else {
+            Log.d("Navigation", "Voice is muted or TTS not initialized")
+        }
+    }
+
+    // Sửa stopNavigation để return transport mode và movement data
+    private fun stopNavigation() {
+        isNavigationActive = false
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+
+        // Tạo result data với transport mode và movement info
+        val resultIntent = Intent().apply {
+            putExtra("navigation_completed", hasArrivedAtDestination)
+            putExtra("has_moved_from_start", hasMovedFromStart)
+            putExtra("transport_mode", transportMode.name) // Thêm transport mode
+            putExtra("current_location_lat", currentLocation?.latitude ?: 0.0)
+            putExtra("current_location_lng", currentLocation?.longitude ?: 0.0)
+        }
+
+        setResult(
+            if (hasArrivedAtDestination) RESULT_OK else RESULT_CANCELED,
+            resultIntent
+        )
+
+        finish()
+    }
+
+    // Override back button với confirm dialog transport mode aware
+    override fun onBackPressed() {
+        val transportName = getTransportModeDisplayName()
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Dừng điều hướng $transportName?")
+            .setMessage(getStopNavigationMessage())
+            .setPositiveButton("Dừng") { _, _ -> stopNavigation() }
+            .setNegativeButton("Tiếp tục", null)
+            .show()
+    }
+
+    private fun getStopNavigationMessage(): String {
+        return when (transportMode) {
+            TransportMode.WALKING -> {
+                if (hasMovedFromStart) {
+                    "Bạn đã bắt đầu đi bộ. Dừng điều hướng đi bộ?"
+                } else {
+                    "Bạn chưa bắt đầu đi bộ. Dừng chuẩn bị điều hướng?"
+                }
+            }
+            TransportMode.DRIVING -> {
+                if (hasMovedFromStart) {
+                    "Bạn đã bắt đầu lái xe. Dừng điều hướng?"
+                } else {
+                    "Bạn chưa bắt đầu lái xe. Dừng chuẩn bị điều hướng?"
+                }
+            }
+            TransportMode.TRANSIT -> {
+                if (hasMovedFromStart) {
+                    "Bạn đang sử dụng phương tiện công cộng. Dừng điều hướng?"
+                } else {
+                    "Bạn đang chuẩn bị sử dụng phương tiện công cộng. Dừng điều hướng?"
+                }
+            }
+        }
+    }
+
+    // TTS Initialization
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = textToSpeech.setLanguage(Locale("vi", "VN"))
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.w("Navigation", "Vietnamese TTS not supported, using English")
+                textToSpeech.setLanguage(Locale.US)
+            }
+
+            textToSpeech.apply {
+                setSpeechRate(1.0f)
+                setPitch(1.0f)
+            }
+
+            Log.d("Navigation", "TTS initialized successfully")
+
+            if (!isMuted && isNavigationActive) {
+                announceInstruction("Hệ thống điều hướng đã sẵn sàng")
+            }
+        } else {
+            Log.e("Navigation", "TTS initialization failed")
+        }
+    }
+
+    // Lifecycle methods
+    override fun onPause() {
+        super.onPause()
+        if (::textToSpeech.isInitialized) {
+            textToSpeech.stop()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!::textToSpeech.isInitialized) {
+            textToSpeech = TextToSpeech(this, this)
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // Cleanup map overlays
+        clearMapOverlays()
+
+        // Update appointment status
+        appointment?.let { appt ->
+            lifecycleScope.launch {
+                appointmentViewModel.checkAppointmentStatus(appt.id)
+            }
+        }
+
+        // Cleanup TTS
         if (::textToSpeech.isInitialized) {
             textToSpeech.stop()
             textToSpeech.shutdown()
         }
 
+        // Cleanup location updates
         if (::fusedLocationClient.isInitialized) {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
 
+        // Clear screen flags
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 

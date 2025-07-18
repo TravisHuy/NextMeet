@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.adapter
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.ItemAppointmentLayoutBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
+import com.nhathuy.nextmeet.model.AppointmentStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -87,6 +89,10 @@ class AppointmentPlusAdapter(
 
                 ivPin.setOnClickListener { onPinClickListener(appointment) }
 
+                // Bind status
+                bindStatus(appointment)
+
+
                 setupBackgroundColor(appointment.color)
 
                 //click
@@ -118,6 +124,37 @@ class AppointmentPlusAdapter(
             }
         }
 
+        private fun bindStatus(appointment: AppointmentPlus) {
+            binding.tvStatus.apply {
+                text = appointment.status.displayName.uppercase()
+
+                // Set background color based on status
+                val backgroundColor = getStatusColor(appointment.status)
+                background = ContextCompat.getDrawable(context, R.drawable.status_badge_background)
+                backgroundTintList = ColorStateList.valueOf(backgroundColor)
+
+                // Set text color (white for most, dark for light backgrounds)
+                setTextColor(getStatusTextColor(appointment.status))
+            }
+        }
+        private fun getStatusColor(status: AppointmentStatus): Int {
+            return when (status) {
+                AppointmentStatus.SCHEDULED -> ContextCompat.getColor(binding.root.context, R.color.blue)
+                AppointmentStatus.PREPARING -> ContextCompat.getColor(binding.root.context, R.color.orange)
+                AppointmentStatus.TRAVELLING -> ContextCompat.getColor(binding.root.context, R.color.light_primary)
+                AppointmentStatus.IN_PROGRESS -> ContextCompat.getColor(binding.root.context, R.color.green)
+                AppointmentStatus.DELAYED -> ContextCompat.getColor(binding.root.context, R.color.red)
+                else -> 0
+            }
+        }
+
+        private fun getStatusTextColor(status: AppointmentStatus): Int {
+            // Hầu hết status dùng text trắng, chỉ một số status nhạt dùng text đen
+            return when (status) {
+                AppointmentStatus.COMPLETED -> ContextCompat.getColor(binding.root.context, R.color.black)
+                else -> ContextCompat.getColor(binding.root.context, R.color.white)
+            }
+        }
         private fun setupClickListeners(appointment: AppointmentPlus){
             binding.apply {
                 // Click listener for the appointment card

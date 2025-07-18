@@ -11,12 +11,14 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.nhathuy.nextmeet.AlarmReceiver
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.Notification
 import com.nhathuy.nextmeet.model.NotificationAction
 import com.nhathuy.nextmeet.model.NotificationType
 import com.nhathuy.nextmeet.repository.NotificationRepository
+import com.nhathuy.nextmeet.ui.SolutionActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -355,6 +357,46 @@ class NotificationManagerService @Inject constructor(
             Log.d("NotificationManager", "Đã huỷ thông báo $notificationId")
         } catch (e: Exception) {
             Log.e("NotificationManager", "Lỗi khi huỷ thông báo", e)
+        }
+    }
+
+    /**
+     * gửi thông báo cho status của cuộc hẹn
+     */
+    suspend fun sendSimpleNotification(
+        appointmentId : Int,
+        title:String,
+        message: String
+    ) = withContext(Dispatchers.IO) {
+        try {
+            val notificationId = appointmentId + 1000
+
+            val openAppIntent = Intent(context, SolutionActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("appointment_id", appointmentId)
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context, notificationId, openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(
+                context, APPOINTMENT_CHANNEL_ID
+            )
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setVibrate(longArrayOf(0, 200, 100, 200))
+                .build()
+            notificationManager.notify(notificationId, notification)
+            Log.d("NotificationManager", "Sent simple notification: $title")
+        }
+        catch (e: Exception){
+            Log.e("NotificationManager", "Error sending simple notification", e)
         }
     }
 

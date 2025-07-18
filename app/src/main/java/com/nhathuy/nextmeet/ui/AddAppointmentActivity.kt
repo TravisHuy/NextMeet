@@ -802,30 +802,49 @@ class AddAppointmentActivity : AppCompatActivity() {
             return
         }
 
-        val endTime = reminderTime!! + (60 * 60 * 1000)
+        lifecycleScope.launch {
+            try {
+                val originalAppointment = getOriginalAppointment()
+                if (originalAppointment == null) {
+                    showMessage("Không tìm thấy cuộc hẹn gốc")
+                    binding.btnSave.isEnabled = true
+                    return@launch
+                }
 
-        val updatedAppointment = AppointmentPlus(
-            id = appointmentId,
-            userId = currentUserId,
-            contactId = currentContactId,
-            title = title,
-            description = notes,
-            startDateTime = reminderTime!!,
-            endDateTime = endTime,
-            location = appointmentLocation,
-            latitude = latitude ?: 0.0,
-            longitude = longitude ?: 0.0,
-            status = AppointmentStatus.SCHEDULED,
-            color = selectedColorName,
-            travelTimeMinutes = 0,
-            isPinned = isPinned
-        )
+                val endTime = reminderTime!! + (60 * 60 * 1000)
 
-        if(reminderTime != null){
-            appointmentViewModel.updateAppointment(updatedAppointment,true)
+                // Giữ nguyên status gốc, chỉ update các field cần thiết
+                val updatedAppointment = originalAppointment.copy(
+                    title = title,
+                    description = notes,
+                    startDateTime = reminderTime!!,
+                    endDateTime = endTime,
+                    location = appointmentLocation,
+                    latitude = latitude ?: originalAppointment.latitude,
+                    longitude = longitude ?: originalAppointment.longitude,
+                    color = selectedColorName,
+                    isPinned = isPinned,
+                    updateAt = System.currentTimeMillis()
+                )
+
+                appointmentViewModel.updateAppointment(updatedAppointment, reminderTime != null)
+
+            } catch (e: Exception) {
+                showMessage("Lỗi khi cập nhật: ${e.message}")
+                binding.btnSave.isEnabled = true
+            }
         }
-        else{
-            appointmentViewModel.updateAppointment(updatedAppointment,false)
+    }
+    private suspend fun getOriginalAppointment(): AppointmentPlus? {
+        return try {
+            val result = appointmentViewModel.getAppointmentByIdSync(appointmentId)
+            if (result.isSuccess) {
+                result.getOrNull()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -844,6 +863,12 @@ class AddAppointmentActivity : AppCompatActivity() {
 
         if (reminderTime == null) {
             Toast.makeText(this, "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        val currentTime = System.currentTimeMillis()
+        if (reminderTime!! < currentTime) {
+            Toast.makeText(this, "Thời gian đã qua. Vui lòng chọn thời gian trong tương lai", Toast.LENGTH_SHORT).show()
             return false
         }
 
