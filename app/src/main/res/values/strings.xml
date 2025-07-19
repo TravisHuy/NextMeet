@@ -193,6 +193,7 @@
     <string name="cancelled">Cancelled</string>
     <string name="missed">Missed</string>
     <string name="history_appointments">History Appointments</string>
+    <string name="delete_all">Delete all</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

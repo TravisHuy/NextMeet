@@ -533,7 +533,6 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         }
     }
 
-    // MARK: - Data Observers
     private fun observeUserData() {
         // Already handled in setupUserInfo()
     }
@@ -597,6 +596,9 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
 
                 // Refresh data nếu cần
                 refreshAppointmentsList()
+            }
+            is AppointmentUiState.AppointmentCancelled -> {
+                showMessage(state.message)
             }
             else -> {}
         }
@@ -703,7 +705,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
 
         val snackbar = Snackbar.make(
             binding.root,
-            "Đã xóa ${selectedAppointments.size} cuộc hẹn",
+            "Đã hủy ${selectedAppointments.size} cuộc hẹn",
             Snackbar.LENGTH_LONG
         )
 
@@ -713,7 +715,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
             isUndoClicked = true
             // Restore lại vào UI
             appointmentAdapter.restoreAppointments(backupAppointments)
-            showMessage("Đã hoàn tác xóa cuộc hẹn")
+            showMessage("Đã hoàn tác hủy cuộc hẹn")
         }
 
         snackbar.addCallback(object : Snackbar.Callback() {
@@ -725,7 +727,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
                 if (!isUndoClicked && event != DISMISS_EVENT_ACTION) {
                     // Thực hiện xóa thật khỏi database
                     backupAppointments.forEach { appointment ->
-                        appointmentViewModel.deleteAppointment(appointment.id)
+                        appointmentViewModel.cancelAppointment(appointment.id)
                     }
                 }
             }

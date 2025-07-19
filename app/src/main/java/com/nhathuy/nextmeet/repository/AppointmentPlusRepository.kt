@@ -5,7 +5,11 @@ import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.AppointmentWithContact
+import com.nhathuy.nextmeet.model.HistoryCounts
+import com.nhathuy.nextmeet.model.HistoryStatistics
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -469,5 +473,108 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             allowedStatuses = allowedStatuses
         )
     }
+
+
+    // History dao
+
+    /**
+     * Lấy tất cả cuộc hẹn lịch sử
+     */
+    fun getAllHistoryAppointments(userId: Int) : Flow<List<AppointmentWithContact>>{
+        return appointmentPlusDao.getAllHistoryAppointments(userId)
+            .catch {
+                e-> Log.e("AppointmentRepository", "Error fetching history appointments", e)
+                emit(emptyList())
+            }
+    }
+
+    /**
+     * Lấy cuộc hẹn lịch sử theo status
+     */
+    fun getHistoryAppointmentsByStatus(
+        userId: Int,
+        status: AppointmentStatus
+    ): Flow<List<AppointmentWithContact>> {
+        return appointmentPlusDao.getHistoryAppointmentsByStatus(userId, status)
+            .catch { e ->
+                Log.e("AppointmentRepository", "Error getting history appointments by status", e)
+                emit(emptyList())
+            }
+    }
+
+    /**
+     * Lấy thống kê lịch sử cuộc hẹn
+     */
+    suspend fun getHistoryStatistics(userId: Int): Result<HistoryStatistics> {
+        return try {
+            val rawStats = appointmentPlusDao.getHistoryStatistics(userId)
+            val statistics = HistoryStatistics(
+                totalAppointments = rawStats.total,
+                completedCount = rawStats.completed,
+                cancelledCount = rawStats.cancelled,
+                missedCount = rawStats.missed,
+                completionRate = if (rawStats.total > 0) {
+                    rawStats.completed.toFloat() / rawStats.total.toFloat()
+                } else 0f
+            )
+            Result.success(statistics)
+        } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Error getting history statistics", e)
+            Result.failure(e)
+        }
+    }
+    /**
+     * Lấy lịch sử cuộc hẹn trong khoảng thời gian
+     */
+    fun getHistoryAppointmentsInRange(
+        userId: Int,
+        startTime: Long,
+        endTime: Long
+    ): Flow<List<AppointmentWithContact>> {
+        return appointmentPlusDao.getHistoryAppointmentsInRange(userId, startTime, endTime)
+            .catch { e ->
+                Log.e("AppointmentRepository", "Error getting history appointments in range", e)
+                emit(emptyList())
+            }
+    }
+
+    /**
+     * Lấy cuộc hẹn gần đây nhất theo status
+     */
+    suspend fun getLatestAppointmentByStatus(
+        userId: Int,
+        status: AppointmentStatus
+    ): Result<AppointmentPlus?> {
+        return try {
+            val appointment = appointmentPlusDao.getLatestAppointmentByStatus(userId, status)
+            Result.success(appointment)
+        } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Error getting latest appointment by status", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Lấy số lượng cuộc hẹn theo từng status lịch sử
+     */
+    suspend fun getHistoryCounts(userId: Int): Result<HistoryCounts> {
+        return try {
+            val completedCount = appointmentPlusDao.getCompletedCount(userId)
+            val cancelledCount = appointmentPlusDao.getCancelledCount(userId)
+            val missedCount = appointmentPlusDao.getMissedCount(userId)
+
+            val counts = HistoryCounts(
+                completed = completedCount,
+                cancelled = cancelledCount,
+                missed = missedCount,
+                total = completedCount + cancelledCount + missedCount
+            )
+            Result.success(counts)
+        } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Error getting history counts", e)
+            Result.failure(e)
+        }
+    }
+
 
 }
