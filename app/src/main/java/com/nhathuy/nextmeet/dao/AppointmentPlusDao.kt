@@ -8,6 +8,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.AppointmentWithContact
 import com.nhathuy.nextmeet.model.HistoryCounts
 import kotlinx.coroutines.flow.Flow
 
@@ -435,13 +436,15 @@ interface AppointmentPlusDao {
      */
     @Query(
         """
-        SELECT * FROM appointments 
-        WHERE user_id = :userId
-        AND status IN ('COMPLETED', 'CANCELLED', 'MISSED')
-        ORDER BY start_date_time DESC
+        SELECT a.*, c.name as contactName 
+        FROM appointments a 
+        LEFT JOIN contacts c ON a.contact_id = c.id 
+        WHERE a.user_id = :userId 
+        AND a.status IN ('COMPLETED', 'CANCELLED', 'MISSED')
+        ORDER BY a.start_date_time DESC
     """
     )
-    fun getAllHistoryAppointments(userId: Int): Flow<List<AppointmentPlus>>
+    fun getAllHistoryAppointments(userId: Int): Flow<List<AppointmentWithContact>>
 
 
     /**
@@ -449,15 +452,16 @@ interface AppointmentPlusDao {
      */
     @Query(
         """
-        SELECT * FROM appointments 
-        WHERE user_id = :userId 
-        AND status = :status
-        ORDER BY start_date_time DESC
+        SELECT a.*, c.name as contactName 
+        FROM appointments a 
+        LEFT JOIN contacts c ON a.contact_id = c.id 
+        WHERE a.user_id = :userId AND a.status = :status
+        ORDER BY a.start_date_time DESC
         """
     )
     fun getHistoryAppointmentsByStatus(
         userId: Int, status: AppointmentStatus
-    ): Flow<List<AppointmentPlus>>
+    ): Flow<List<AppointmentWithContact>>
 
     /**
      * Đếm số lượng cuộc hẹn đã hoàn thành, bị hủy và bị bỏ lỡ
@@ -505,7 +509,7 @@ interface AppointmentPlusDao {
         userId: Int,
         startTime: Long,
         endTime: Long
-    ): Flow<List<AppointmentPlus>>
+    ): Flow<List<AppointmentWithContact>>
 
     /**
      * Lấy cuộc hẹn gần đây nhất theo status

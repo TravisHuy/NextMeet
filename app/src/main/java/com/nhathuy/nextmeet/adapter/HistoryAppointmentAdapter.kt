@@ -1,6 +1,5 @@
 package com.nhathuy.nextmeet.adapter
 
-import android.content.ClipData
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,25 +10,90 @@ import androidx.recyclerview.widget.RecyclerView
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.ItemHistoryAppointmentBinding
 import com.nhathuy.nextmeet.model.AppointmentPlus
+import com.nhathuy.nextmeet.model.AppointmentWithContact
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class HistoryAppointmentAdapter(
-    private val onItemClick: (AppointmentPlus) -> Unit,
-    private val onRepeatClick: (AppointmentPlus) -> Unit
-) : ListAdapter<AppointmentPlus, HistoryAppointmentAdapter.HistoryViewHolder>(HistoryDiffCallback()) {
+    private val onItemClick: (AppointmentWithContact) -> Unit,
+    private val onRepeatClick: (AppointmentWithContact) -> Unit,
+    private val onLongClick : (AppointmentWithContact) -> Unit
+) : ListAdapter<AppointmentWithContact, HistoryAppointmentAdapter.HistoryViewHolder>(HistoryDiffCallback()) {
+
+    private val appointmentWithContact = mutableListOf<AppointmentWithContact>()
+    private val selectedAppointments = mutableSetOf<Int>()
+
+    fun getSelectedAppointments() : List<AppointmentWithContact> {
+        return appointmentWithContact.filter { selectedAppointments.contains(it.appointment.id) }
+    }
+
+    //xóa appointment
+    fun removeAppointments(appointmentsToRemove: List<AppointmentWithContact>) {
+        appointmentsToRemove.forEach { appointment ->
+            val position = appointmentWithContact.indexOf(appointment)
+            if (position != -1) {
+                appointmentWithContact.removeAt(position)
+                notifyItemRemoved(position)
+            }
+        }
+        selectedAppointments.clear()
+    }
+
+    fun restoreAppointments(appointmentsToRestore : List<AppointmentWithContact>) {
+        appointmentsToRestore.forEach { appointment ->
+            val insertPosition = findInsertPosition(appointment)
+            appointmentWithContact.add(insertPosition, appointment)
+            notifyItemInserted(insertPosition)
+        }
+    }
+
+    private fun  findInsertPosition(appointment: AppointmentWithContact) : Int{
+        for(i in appointmentWithContact.indices){
+            if(appointmentWithContact[i].appointment.startDateTime > appointment.appointment.startDateTime) {
+                return i
+            }
+        }
+
+        return appointmentWithContact.size
+    }
+
 
     inner class HistoryViewHolder(private val binding: ItemHistoryAppointmentBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(appointment: AppointmentPlus) {
+
+        fun bind(appointmentWithContact: AppointmentWithContact) {
+            val appointment = appointmentWithContact.appointment
+
             with(binding) {
                 tvTitle.text = appointment.title
                 tvDateTime.text = formatDateTime(appointment.startDateTime)
-                tvLocation.text = appointment.location
 
-                tvDescription.text = appointment.description
+                if (appointment.location.isNotEmpty()) {
+                    layoutLocation.visibility = View.VISIBLE
+                    tvLocation.text = appointment.location
+                } else {
+                    layoutLocation.visibility = View.GONE
+                }
+
+                if (appointment.description.isNotEmpty()) {
+                    tvDescription.visibility = View.VISIBLE
+                    tvDescription.text = appointment.description
+                } else {
+                    tvDescription.visibility = View.GONE
+                }
+
+                // Xử lý hiển thị contact name
+                if (appointment.contactId != null && !appointmentWithContact.contactName.isNullOrEmpty()) {
+                    layoutContact.visibility = View.VISIBLE
+                    tvContactName.text = appointmentWithContact.contactName
+                } else if (appointment.contactId != null) {
+                    layoutContact.visibility = View.VISIBLE
+                    tvContactName.text = "Liên hệ đã bị xóa"
+                } else {
+                    layoutContact.visibility = View.GONE
+                }
 
                 val duration = calculateDuration(appointment.startDateTime, appointment.endDateTime)
                 tvDuration.text = duration
@@ -45,13 +109,18 @@ class HistoryAppointmentAdapter(
 
                 if (appointment.status == AppointmentStatus.COMPLETED) {
                     layoutActions.visibility = View.VISIBLE
-                    btnRepeat.setOnClickListener { onRepeatClick(appointment) }
-                    btnViewDetails.setOnClickListener { onItemClick(appointment) }
+                    btnRepeat.setOnClickListener { onRepeatClick(appointmentWithContact) }
+                    btnViewDetails.setOnClickListener { onItemClick(appointmentWithContact) }
                 } else {
                     layoutActions.visibility = View.GONE
                 }
 
-                root.setOnClickListener { onItemClick(appointment) }
+                root.setOnClickListener { onItemClick(appointmentWithContact) }
+
+                root.setOnLongClickListener {
+                    onLongClick(appointmentWithContact)
+                    true
+                }
             }
         }
 
@@ -163,11 +232,7 @@ class HistoryAppointmentAdapter(
         }
     }
 
-
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): HistoryAppointmentAdapter.HistoryViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {
         val binding = ItemHistoryAppointmentBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -176,21 +241,21 @@ class HistoryAppointmentAdapter(
         return HistoryViewHolder(binding)
     }
 
-    override fun onBindViewHolder(
-        holder: HistoryAppointmentAdapter.HistoryViewHolder,
-        position: Int
-    ) {
+    override fun onBindViewHolder(holder: HistoryViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class HistoryDiffCallback : DiffUtil.ItemCallback<AppointmentPlus>() {
-        override fun areItemsTheSame(oldItem: AppointmentPlus, newItem: AppointmentPlus): Boolean {
-            return oldItem.id == newItem.id
+    class HistoryDiffCallback : DiffUtil.ItemCallback<AppointmentWithContact>() {
+        override fun areItemsTheSame(
+            oldItem: AppointmentWithContact,
+            newItem: AppointmentWithContact
+        ): Boolean {
+            return oldItem.appointment.id == newItem.appointment.id
         }
 
         override fun areContentsTheSame(
-            oldItem: AppointmentPlus,
-            newItem: AppointmentPlus
+            oldItem: AppointmentWithContact,
+            newItem: AppointmentWithContact
         ): Boolean {
             return oldItem == newItem
         }

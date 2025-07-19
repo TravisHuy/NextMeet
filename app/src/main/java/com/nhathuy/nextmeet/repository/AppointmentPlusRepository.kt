@@ -5,6 +5,7 @@ import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.AppointmentWithContact
 import com.nhathuy.nextmeet.model.HistoryCounts
 import com.nhathuy.nextmeet.model.HistoryStatistics
 import kotlinx.coroutines.flow.Flow
@@ -479,7 +480,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
     /**
      * Lấy tất cả cuộc hẹn lịch sử
      */
-    fun getAllHistoryAppointments(userId: Int) : Flow<List<AppointmentPlus>>{
+    fun getAllHistoryAppointments(userId: Int) : Flow<List<AppointmentWithContact>>{
         return appointmentPlusDao.getAllHistoryAppointments(userId)
             .catch {
                 e-> Log.e("AppointmentRepository", "Error fetching history appointments", e)
@@ -493,7 +494,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
     fun getHistoryAppointmentsByStatus(
         userId: Int,
         status: AppointmentStatus
-    ): Flow<List<AppointmentPlus>> {
+    ): Flow<List<AppointmentWithContact>> {
         return appointmentPlusDao.getHistoryAppointmentsByStatus(userId, status)
             .catch { e ->
                 Log.e("AppointmentRepository", "Error getting history appointments by status", e)
@@ -529,7 +530,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         userId: Int,
         startTime: Long,
         endTime: Long
-    ): Flow<List<AppointmentPlus>> {
+    ): Flow<List<AppointmentWithContact>> {
         return appointmentPlusDao.getHistoryAppointmentsInRange(userId, startTime, endTime)
             .catch { e ->
                 Log.e("AppointmentRepository", "Error getting history appointments in range", e)

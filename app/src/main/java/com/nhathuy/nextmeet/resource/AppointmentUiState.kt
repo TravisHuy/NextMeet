@@ -70,6 +70,10 @@ sealed class AppointmentUiState {
     data class StatusUpdated(val status: AppointmentStatus, val message: String) : AppointmentUiState()
 
     /**
+     * Trạng thái cuộn hẹn bị hủy.
+     */
+    data class AppointmentCancelled(val message: String) : AppointmentUiState()
+    /**
      * Navigation hủy
      */
     data class NavigationCancelled(val message: String) : AppointmentUiState()
