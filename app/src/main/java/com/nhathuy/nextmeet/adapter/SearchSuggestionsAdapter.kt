@@ -45,7 +45,10 @@ class SearchSuggestionsAdapter(
                 root.setOnClickListener { onSuggestionClick(suggestion) }
 
                 if (suggestion.resultCount > 0) {
-                    binding.tvResultCount.text = "${suggestion.resultCount} results"
+                    binding.tvResultCount.text = root.context.getString(
+                        R.string.search_result_count,
+                        suggestion.resultCount
+                    )
                     binding.tvResultCount.visibility = View.VISIBLE
                 } else {
                     binding.tvResultCount.visibility = View.GONE

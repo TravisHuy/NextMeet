@@ -1,6 +1,8 @@
 package com.nhathuy.nextmeet.repository
 
+import android.content.Context
 import android.util.Log
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.AppointmentPlus
@@ -26,8 +28,11 @@ import javax.inject.Singleton
  * @version 2.0
  */
 @Singleton
-class AppointmentPlusRepository @Inject constructor(private val appointmentPlusDao: AppointmentPlusDao,
-                                                    private val contactDao: ContactDao) {
+class AppointmentPlusRepository @Inject constructor(
+    private val appointmentPlusDao: AppointmentPlusDao,
+    private val contactDao: ContactDao,
+    private val context: Context
+) {
 
     /**
      * Lấy tất cả cuộc hẹn theo userId, cho phép tìm kiếm và lọc theo trạng thái.
@@ -121,24 +126,24 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         isPinned: Boolean = false
     ): Result<Long> {
         if (userId <= 0) {
-            return Result.failure(IllegalArgumentException("User ID không hợp lệ"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.error_invalid_user_id)))
         }
 
         if (contactId <= 0) {
-            return Result.failure(IllegalArgumentException("Contact ID không hợp lệ"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.error_invalid_contact_id)))
         }
 
         val validationResult = validateAppointmentInputs(title, startDateTime, endDateTime)
         if (validationResult.isFailure) {
             return Result.failure(
                 IllegalArgumentException(
-                    validationResult.exceptionOrNull()?.message ?: "Dữ liệu đầu vào không hợp lệ"
+                    validationResult.exceptionOrNull()?.message ?: context.getString(R.string.invalid_input_data)
                 )
             )
         }
 
         if (!isValidHexColor(color)) {
-            return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.invalid_color)))
         }
 
 
@@ -183,19 +188,19 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         endDateTime: Long?
     ): Result<Unit> {
         if (title.isBlank()) {
-            return Result.failure(IllegalArgumentException("Tiêu đề cuộc hẹn không được để trống"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.error_empty_title)))
         }
 
         if (startDateTime == null || startDateTime <= 0) {
-            return Result.failure(IllegalArgumentException("Thời gian bắt đầu không hợp lệ"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.error_invalid_start_time)))
         }
 
         if (endDateTime == null || endDateTime <= 0) {
-            return Result.failure(IllegalArgumentException("Thời gian kết thúc không hợp lệ"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.error_invalid_end_time)))
         }
 
         if (endDateTime <= startDateTime) {
-            return Result.failure(IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.error_end_time_before_start)))
         }
 
         return Result.success(Unit)
@@ -230,7 +235,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             val appointment = appointmentPlusDao.getAppointmentById(appointmentId)
             if (appointment == null) {
                 Log.e("AppointmentRepository", "Appointment $appointmentId not found")
-                return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
+                return Result.failure(IllegalArgumentException(context.getString(R.string.error_appointment_not_found)))
             }
 
             Log.d("AppointmentRepository", "Current appointment status: ${appointment.status}")
@@ -240,14 +245,17 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
 
             // Verify update
             val updatedAppointment = appointmentPlusDao.getAppointmentById(appointmentId)
-            Log.d("AppointmentRepository", "Updated appointment status: ${updatedAppointment?.status}")
+            Log.d(
+                "AppointmentRepository",
+                "Updated appointment status: ${updatedAppointment?.status}"
+            )
 
             if (updatedAppointment?.status == status) {
                 Log.d("AppointmentRepository", "Status update successful")
                 Result.success(Unit)
             } else {
                 Log.e("AppointmentRepository", "Status update failed - status not changed")
-                Result.failure(RuntimeException("Failed to update status"))
+                Result.failure(RuntimeException(context.getString(R.string.error_failed_to_update_status)))
             }
         } catch (e: Exception) {
             Log.e("AppointmentRepository", "Exception updating appointment status", e)
@@ -332,7 +340,10 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
     /**
      * Bắt đầu điều hướng đến cuộc hẹn.
      */
-    suspend fun updateNavigationStatus(appointmentId: Int, hasStartedNavigation: Boolean): Result<Boolean> {
+    suspend fun updateNavigationStatus(
+        appointmentId: Int,
+        hasStartedNavigation: Boolean
+    ): Result<Boolean> {
         return try {
             appointmentPlusDao.updateNavigationStatus(appointmentId, hasStartedNavigation)
             Result.success(true)
@@ -382,7 +393,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
                 matchFound = true
             }
 
-            if(searchInContactName){
+            if (searchInContactName) {
                 try {
                     val contact = contactDao.getContactById(appointment.contactId!!)
                     if (contact?.name?.contains(query, ignoreCase = true) == true) {
@@ -407,8 +418,8 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
      * @param query Từ khóa tìm kiếm.
      * @return Danh sách tối đa 10 gợi ý tìm kiếm.
      */
-    suspend fun getSearchSuggestions(userId:Int, query: String) : List<String> {
-        if(query.isBlank()){
+    suspend fun getSearchSuggestions(userId: Int, query: String): List<String> {
+        if (query.isBlank()) {
             return emptyList()
         }
 
@@ -416,11 +427,19 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
         val suggestions = mutableSetOf<String>()
 
         appointments.forEach { appointment ->
-            if(appointment.title.contains(query, ignoreCase = true) && appointment.title.isNotEmpty()){
+            if (appointment.title.contains(
+                    query,
+                    ignoreCase = true
+                ) && appointment.title.isNotEmpty()
+            ) {
                 suggestions.add(appointment.title)
             }
 
-            if (appointment.location.contains(query, ignoreCase = true) && appointment.location.isNotEmpty()) {
+            if (appointment.location.contains(
+                    query,
+                    ignoreCase = true
+                ) && appointment.location.isNotEmpty()
+            ) {
                 suggestions.add(appointment.location)
             }
         }
@@ -431,24 +450,24 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
     /**
      * lấy tất cả cuộc hẹn đang hoạt động của người dùng.
      */
-    suspend fun getAllActiveAppointments(userId:Int) : List<AppointmentPlus> =
+    suspend fun getAllActiveAppointments(userId: Int): List<AppointmentPlus> =
         appointmentPlusDao.getActiveAppointments(userId, System.currentTimeMillis())
 
     /**
      * lấy tất cả cuộc hẹn đã hoàn thành của người dùng.
      */
     suspend fun getAppointmentsInTimeRange(
-        userId : Int,
-        startTime : Long,
+        userId: Int,
+        startTime: Long,
         endTime: Long
-    ) : List<AppointmentPlus> =
+    ): List<AppointmentPlus> =
         appointmentPlusDao.getAppointmentsInTimeRange(userId, startTime, endTime)
             .sortedBy { it.startDateTime }
 
     /**
      * update appointment với travel time
      */
-    suspend fun updateTravelTime(appointmentId:Int,travelTimeMinutes: Int) : Result<Boolean>{
+    suspend fun updateTravelTime(appointmentId: Int, travelTimeMinutes: Int): Result<Boolean> {
         return try {
             appointmentPlusDao.updateTravelTime(appointmentId, travelTimeMinutes)
             Result.success(true)
@@ -457,6 +476,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             Result.failure(e)
         }
     }
+
     /**
      * Lấy tất cả cuộc hẹn với filter status cụ thể
      */
@@ -480,10 +500,10 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
     /**
      * Lấy tất cả cuộc hẹn lịch sử
      */
-    fun getAllHistoryAppointments(userId: Int) : Flow<List<AppointmentWithContact>>{
+    fun getAllHistoryAppointments(userId: Int): Flow<List<AppointmentWithContact>> {
         return appointmentPlusDao.getAllHistoryAppointments(userId)
-            .catch {
-                e-> Log.e("AppointmentRepository", "Error fetching history appointments", e)
+            .catch { e ->
+                Log.e("AppointmentRepository", "Error fetching history appointments", e)
                 emit(emptyList())
             }
     }
@@ -523,6 +543,7 @@ class AppointmentPlusRepository @Inject constructor(private val appointmentPlusD
             Result.failure(e)
         }
     }
+
     /**
      * Lấy lịch sử cuộc hẹn trong khoảng thời gian
      */

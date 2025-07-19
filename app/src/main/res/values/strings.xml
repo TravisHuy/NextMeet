@@ -194,6 +194,30 @@
     <string name="missed">Missed</string>
     <string name="history_appointments">History Appointments</string>
     <string name="delete_all">Delete all</string>
+    <string name="contact_deleted">Contact has been deleted</string>
+    <string name="successful_comletion">Successful completion</string>
+    <string name="appointment_count_format">%1$d cuộc hẹn</string>
+    <string name="upcoming_count_format">%1$d sắp tới</string>
+    <string name="just_now">Just now</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="m_ago">%1$dm ago</string>
+    <string name="h_ago">%1$dh ago</string>
+    <string name="d_ago">%1$dd ago</string>
+    <string name="more">+%1$d more</string>
+    <string name="search_result_count">%1$d results</string>
+    <string name="scheduled">Scheduled</string>
+    <string name="in_progress">In Progress</string>
+    <string name="create_note_date">Created: %1$s</string>
+    <string name="error_invalid_user_id">Invalid user ID</string>
+    <string name="error_invalid_contact_id">Invalid contact ID</string>
+    <string name="invalid_input_data">Invalid input data</string>
+    <string name="invalid_color">Invalid color</string>
+    <string name="error_empty_title">Appointment title must not be empty</string>
+    <string name="error_invalid_start_time">Invalid start time</string>
+    <string name="error_invalid_end_time">Invalid end time</string>
+    <string name="error_end_time_before_start">End time must be after start time</string>
+    <string name="error_appointment_not_found">Appointment not found</string>
+    <string name="error_failed_to_update_status">Failed to update appointment status</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

@@ -2,24 +2,18 @@ package com.nhathuy.nextmeet.di
 
 import android.content.Context
 import com.nhathuy.nextmeet.dao.AlarmHistoryDao
-import com.nhathuy.nextmeet.dao.AppointmentDao
 import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
-import com.nhathuy.nextmeet.dao.CustomerDao
 import com.nhathuy.nextmeet.dao.NoteDao
 import com.nhathuy.nextmeet.dao.NoteImageDao
 import com.nhathuy.nextmeet.dao.SearchHistoryDao
-import com.nhathuy.nextmeet.dao.TransactionDao
 import com.nhathuy.nextmeet.dao.UserDao
 import com.nhathuy.nextmeet.repository.AlarmHistoryRepository
 import com.nhathuy.nextmeet.repository.AppointmentPlusRepository
-import com.nhathuy.nextmeet.repository.AppointmentRepository
 import com.nhathuy.nextmeet.repository.ContactRepository
-import com.nhathuy.nextmeet.repository.CustomerRepository
 import com.nhathuy.nextmeet.repository.NoteRepository
 import com.nhathuy.nextmeet.repository.NotificationRepository
 import com.nhathuy.nextmeet.repository.SearchRepository
-import com.nhathuy.nextmeet.repository.TransactionRepository
 import com.nhathuy.nextmeet.repository.UserRepository
 import com.nhathuy.nextmeet.utils.ImageManager
 import com.nhathuy.nextmeet.utils.NotificationManagerService
@@ -48,23 +42,6 @@ object ObjectModule {
         return UserRepository(userDao, sessionManager)
     }
 
-    @Singleton
-    @Provides
-    fun provideCustomerRepository(customerDao: CustomerDao): CustomerRepository {
-        return CustomerRepository(customerDao)
-    }
-
-    @Singleton
-    @Provides
-    fun providerAppointmentRepository(appointmentDao: AppointmentDao): AppointmentRepository {
-        return AppointmentRepository(appointmentDao)
-    }
-
-    @Singleton
-    @Provides
-    fun providerTransactionRepository(transactionDao: TransactionDao): TransactionRepository {
-        return TransactionRepository(transactionDao)
-    }
 
     @Singleton
     @Provides

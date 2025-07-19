@@ -4,7 +4,6 @@ import android.location.Location
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nhathuy.nextmeet.model.Appointment
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.Contact

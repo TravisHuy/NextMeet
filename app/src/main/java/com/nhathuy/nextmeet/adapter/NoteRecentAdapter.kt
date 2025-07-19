@@ -117,37 +117,38 @@ class NoteRecentAdapter(private var notes: MutableList<Note>) :
             }.filter { it.text.isNotBlank() }
         }
 
-    }
+        fun formatTime(timestamp: Long): String {
+            val now = System.currentTimeMillis()
+            val diff = now - timestamp
 
-    fun formatTime(timestamp: Long): String {
-        val now = System.currentTimeMillis()
-        val diff = now - timestamp
+            return when {
+                diff < TimeUnit.MINUTES.toMillis(1) -> binding.root.context.getString(R.string.just_now)
 
-        return when {
-            diff < TimeUnit.MINUTES.toMillis(1) -> "Just now"
+                diff < TimeUnit.HOURS.toMillis(1) -> {
+                    val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
+                    binding.root.context.getString(R.string.m_ago, minutes)
+                }
 
-            diff < TimeUnit.HOURS.toMillis(1) -> {
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
-                "${minutes}m ago"
-            }
+                diff < TimeUnit.DAYS.toMillis(1) -> {
+                    val hours = TimeUnit.MILLISECONDS.toHours(diff)
+                    binding.root.context.getString(R.string.h_ago, hours)
+                }
 
-            diff < TimeUnit.DAYS.toMillis(1) -> {
-                val hours = TimeUnit.MILLISECONDS.toHours(diff)
-                "${hours}h ago"
-            }
+                diff < TimeUnit.DAYS.toMillis(2) -> binding.root.context.getString(R.string.yesterday)
+                diff < TimeUnit.DAYS.toMillis(7) -> {
+                    val days = TimeUnit.MILLISECONDS.toDays(diff)
+                    binding.root.context.getString(R.string.d_ago, days)
+                }
 
-            diff < TimeUnit.DAYS.toMillis(2) -> "Yesterday"
-            diff < TimeUnit.DAYS.toMillis(7) -> {
-                val days = TimeUnit.MILLISECONDS.toDays(diff)
-                "${days}d ago"
-            }
-
-            else -> {
-                val dateFormat = SimpleDateFormat("MMM dd", Locale.getDefault())
-                dateFormat.format(Date(timestamp))
+                else -> {
+                    val dateFormat = SimpleDateFormat("MMM dd", Locale.getDefault())
+                    dateFormat.format(Date(timestamp))
+                }
             }
         }
     }
+
+
 
     override fun onCreateViewHolder(
         parent: ViewGroup, viewType: Int
