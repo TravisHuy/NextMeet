@@ -35,7 +35,9 @@ import com.nhathuy.nextmeet.ui.AddNoteActivity
 import com.nhathuy.nextmeet.ui.EditNoteActivity
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.utils.NavigationCallback
+import com.nhathuy.nextmeet.viewmodel.ContactViewModel
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
+import com.nhathuy.nextmeet.viewmodel.SearchViewModel
 import com.nhathuy.nextmeet.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -81,6 +83,7 @@ class NotesFragment : Fragment(), NavigationCallback {
         setupFabMenu()
         setupObservers()
     }
+
 
     private fun setupUserInfo() {
         userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->

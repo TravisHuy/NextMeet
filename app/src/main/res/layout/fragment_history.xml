@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/light_surface">
+    android:background="@color/light_surface"
+    tools:context=".fragment.HistoryFragment"
+    >
 
     <!-- Header với filter tabs -->
     <com.google.android.material.card.MaterialCardView
@@ -297,6 +299,7 @@
         tools:visibility="visible">
 
         <ImageView
+            android:id="@+id/ivEmptyIcon"
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@drawable/ic_history_empty"
@@ -304,6 +307,7 @@
             android:layout_marginBottom="16dp" />
 
         <TextView
+            android:id="@+id/tvEmptyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Chưa có lịch sử cuộc hẹn"
@@ -313,6 +317,7 @@
             android:layout_marginBottom="8dp" />
 
         <TextView
+            android:id="@+id/tvEmptyDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Các cuộc hẹn đã hoàn thành, hủy hoặc bỏ lỡ sẽ hiển thị ở đây"

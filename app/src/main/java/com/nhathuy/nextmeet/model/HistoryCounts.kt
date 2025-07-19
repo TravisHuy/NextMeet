@@ -6,9 +6,9 @@ package com.nhathuy.nextmeet.model
  * @author TravisHuy (Ho Nhat Huy)
  * @since 18/07/2025
  */
-data class HistoryStatisticsRaw(
-    val total: Int,
+data class HistoryCounts(
     val completed: Int,
     val cancelled: Int,
-    val missed: Int
+    val missed: Int,
+    val total: Int
 )

@@ -8,6 +8,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
+import com.nhathuy.nextmeet.model.HistoryCounts
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -426,4 +427,100 @@ interface AppointmentPlusDao {
         travelTimeMinutes: Int,
         updatedAt: Long = System.currentTimeMillis()
     )
+
+    // history appointment
+
+    /**
+     * Lấy tất cả cuộc hẹn lịch sử
+     */
+    @Query(
+        """
+        SELECT * FROM appointments 
+        WHERE user_id = :userId
+        AND status IN ('COMPLETED', 'CANCELLED', 'MISSED')
+        ORDER BY start_date_time DESC
+    """
+    )
+    fun getAllHistoryAppointments(userId: Int): Flow<List<AppointmentPlus>>
+
+
+    /**
+     * Lấy cuộc hẹn lịch sử theo ID
+     */
+    @Query(
+        """
+        SELECT * FROM appointments 
+        WHERE user_id = :userId 
+        AND status = :status
+        ORDER BY start_date_time DESC
+        """
+    )
+    fun getHistoryAppointmentsByStatus(
+        userId: Int, status: AppointmentStatus
+    ): Flow<List<AppointmentPlus>>
+
+    /**
+     * Đếm số lượng cuộc hẹn đã hoàn thành, bị hủy và bị bỏ lỡ
+     */
+    @Query("SELECT COUNT(*) FROM appointments WHERE user_id = :userId AND status = 'COMPLETED'")
+    suspend fun getCompletedCount(userId: Int): Int
+
+    @Query("SELECT COUNT(*) FROM appointments WHERE user_id = :userId AND status = 'CANCELLED'")
+    suspend fun getCancelledCount(userId: Int): Int
+
+    @Query("SELECT COUNT(*) FROM appointments WHERE user_id = :userId AND status = 'MISSED'")
+    suspend fun getMissedCount(userId: Int): Int
+
+
+    /**
+     * Lấy thống kê tổng quan lịch sử
+     */
+    @Query(
+        """
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled,
+            SUM(CASE WHEN status = 'MISSED' THEN 1 ELSE 0 END) as missed
+        FROM appointments 
+        WHERE user_id = :userId 
+        AND status IN ('COMPLETED', 'CANCELLED', 'MISSED')
+        """
+    )
+    suspend fun getHistoryStatistics(userId: Int): HistoryCounts
+
+    /**
+     * Lấy cuộc hẹn lịch sử trong khoảng thời gian
+     */
+    @Query(
+        """
+        SELECT * FROM appointments 
+        WHERE user_id = :userId 
+        AND status IN ('COMPLETED', 'CANCELLED', 'MISSED')
+        AND start_date_time BETWEEN :startTime AND :endTime
+        ORDER BY start_date_time DESC
+        """
+    )
+    fun getHistoryAppointmentsInRange(
+        userId: Int,
+        startTime: Long,
+        endTime: Long
+    ): Flow<List<AppointmentPlus>>
+
+    /**
+     * Lấy cuộc hẹn gần đây nhất theo status
+     */
+    @Query(
+        """
+        SELECT * FROM appointments 
+        WHERE user_id = :userId 
+        AND status = :status
+        ORDER BY start_date_time DESC
+        LIMIT 1
+        """
+    )
+    suspend fun getLatestAppointmentByStatus(
+        userId: Int,
+        status: AppointmentStatus
+    ): AppointmentPlus?
 }
