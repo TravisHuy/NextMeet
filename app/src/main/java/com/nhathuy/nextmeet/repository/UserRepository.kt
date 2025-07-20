@@ -1,10 +1,13 @@
 package com.nhathuy.nextmeet.repository
 
+import android.content.Context
 import androidx.lifecycle.LiveData
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.dao.UserDao
 import com.nhathuy.nextmeet.model.User
 import com.nhathuy.nextmeet.resource.Resource
 import com.nhathuy.nextmeet.utils.SessionManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -25,40 +28,42 @@ import javax.inject.Singleton
  * @since 16.05.2025
  */
 @Singleton
-class UserRepository @Inject constructor(private val userDao: UserDao,private val sessionManager: SessionManager) {
+class UserRepository @Inject constructor(
+    private val userDao: UserDao,
+    private val sessionManager: SessionManager,
+    private val context: Context
+    ) {
 
-    suspend fun register(user:User) : Flow<Resource<Boolean>> = flow{
+    suspend fun register(user: User): Flow<Resource<Boolean>> = flow {
         emit(Resource.Loading())
         try {
-            if(userDao.isPhoneExists(user.phone)){
-                emit(Resource.Error("Phone number already registered"))
+            if (userDao.isPhoneExists(user.phone)) {
+                emit(Resource.Error(context.getString(R.string.phone_already_registered)))
                 return@flow
             }
             val userId = userDao.register(user)
             emit(Resource.Success(userId > 0))
-        }
-        catch (e:Exception){
-            emit(Resource.Error("Registration failed: ${e.message}"))
+        } catch (e: Exception) {
+            emit(Resource.Error(context.getString(R.string.registration_faileds, e.message)))
         }
     }.flowOn(Dispatchers.IO)
 
-    suspend fun login(phone:String,password:String,rememberMe:Boolean): Flow<Resource<User>> = flow{
-        emit(Resource.Loading())
-        try {
-            val user = userDao.login(phone, password)
+    suspend fun login(phone: String, password: String, rememberMe: Boolean): Flow<Resource<User>> =
+        flow {
+            emit(Resource.Loading())
+            try {
+                val user = userDao.login(phone, password)
 
-            if(user != null){
-                sessionManager.createLoginSession(user.id,rememberMe,phone)
-                emit(Resource.Success(user))
+                if (user != null) {
+                    sessionManager.createLoginSession(user.id, rememberMe, phone)
+                    emit(Resource.Success(user))
+                } else {
+                    emit(Resource.Error(context.getString(R.string.invalid_credentials)))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(context.getString(R.string.invalid_phone_or_password)))
             }
-            else{
-                emit(Resource.Error("Invalid credentials"))
-            }
-        }
-        catch (e:Exception) {
-            emit(Resource.Error("Invalid phone or password"))
-        }
-    }.flowOn(Dispatchers.IO)
+        }.flowOn(Dispatchers.IO)
 
     /**
      * Tạo phiên đăng nhập mới
@@ -66,29 +71,28 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
     fun createLoginSession(userId: Int, rememberMe: Boolean, phone: String) {
         sessionManager.createLoginSession(userId, rememberMe, phone)
     }
-    suspend fun  updateUser(user: User) : Flow<Resource<Boolean>> = flow{
+
+    suspend fun updateUser(user: User): Flow<Resource<Boolean>> = flow {
         emit(Resource.Loading())
-        try{
+        try {
             // kiểm tra số điện thoại đã tồn tại cho người dùng khác
             if (userDao.isPhoneExistsForOtherUser(user.phone, user.id)) {
-                emit(Resource.Error("Số điện thoại đã được sử dụng bởi người dùng khác"))
+                emit(Resource.Error(context.getString(R.string.phone_used_by_another_user)))
                 return@flow
             }
             userDao.updateUser(user)
             emit(Resource.Success(true))
-        }
-        catch(e:Exception){
-            emit(Resource.Error("Update failed: ${e.message}"))
+        } catch (e: Exception) {
+            emit(Resource.Error(context.getString(R.string.update_failed, e.message)))
         }
     }.flowOn(Dispatchers.IO)
 
-    fun getCurrentUser() : LiveData<User?>{
+    fun getCurrentUser(): LiveData<User?> {
         val userId = sessionManager.getUserId()
-        return if(userId!=-1 && sessionManager.isLoggedIn()){
+        return if (userId != -1 && sessionManager.isLoggedIn()) {
             userDao.getUserById(userId)
-        }
-        else{
-            object :LiveData<User?>(){
+        } else {
+            object : LiveData<User?>() {
                 init {
                     value = null
                 }
@@ -96,35 +100,33 @@ class UserRepository @Inject constructor(private val userDao: UserDao,private va
         }
     }
 
-    suspend fun logout() : Flow<Resource<Boolean>> = flow{
+    suspend fun logout(): Flow<Resource<Boolean>> = flow {
         emit(Resource.Loading())
         try {
             sessionManager.logout()
             emit(Resource.Success(true))
-        }
-        catch (e:Exception){
-            emit(Resource.Error("Logout failed: ${e.message}"))
+        } catch (e: Exception) {
+            emit(Resource.Error(context.getString(R.string.logout_faileds,e.message)))
         }
     }
 
-    suspend fun updatePassword(phone:String,newPassword:String): Flow<Resource<Boolean>> = flow{
+    suspend fun updatePassword(phone: String, newPassword: String): Flow<Resource<Boolean>> = flow {
         emit(Resource.Loading())
         try {
-            val rowsUpdated= userDao.updatePassword(phone,newPassword)
-            if(rowsUpdated > 0){
+            val rowsUpdated = userDao.updatePassword(phone, newPassword)
+            if (rowsUpdated > 0) {
                 emit(Resource.Success(true))
             }
-        }
-        catch (e:Exception){
-            emit(Resource.Error("Updated password failed: ${e.message}"))
+        } catch (e: Exception) {
+            emit(Resource.Error(context.getString(R.string.update_password_failed, e.message)))
         }
     }
 
-    fun isRememberMeEnabled():Boolean {
+    fun isRememberMeEnabled(): Boolean {
         return sessionManager.isRememberMeEnable()
     }
 
-    fun isLoggedIn(): Boolean{
+    fun isLoggedIn(): Boolean {
         return sessionManager.isLoggedIn()
     }
 

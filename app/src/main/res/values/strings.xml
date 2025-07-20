@@ -218,6 +218,52 @@
     <string name="error_end_time_before_start">End time must be after start time</string>
     <string name="error_appointment_not_found">Appointment not found</string>
     <string name="error_failed_to_update_status">Failed to update appointment status</string>
+    <string name="appointment_not_found">Appointment not found</string>
+    <string name="invalid_contact_inputs">Invalid contact inputs</string>
+    <string name="contact_not_found">Contact not found</string>
+    <string name="note_not_found">Note not found</string>
+    <string name="error_note_empty">Note must not be empty</string>
+    <string name="cannot_share_blank_notes">Cannot share blank notes</string>
+    <string name="list">List:\n</string>
+    <string name="shared_from_nextmeet">Shared from NextMeet</string>
+    <string name="reminder_time_must_be_in_the_future">Reminder time must be in the future</string>
+
+    <string name="copy_suffix">(Copy)</string>
+    <string name="copy_suffix_with_number">(Copy %d)</string>
+    <string name="copy_only">Copy</string>
+    <string name="role">Role\n</string>
+
+
+    <string name="desc_favorite_contact">Pinned contact</string>
+    <string name="desc_have_phone">Contact with phone number</string>
+    <string name="desc_have_email">Contact with email</string>
+    <string name="desc_have_address">Contact with address</string>
+
+    <string name="desc_today_appointment">Appointments today</string>
+    <string name="desc_upcoming_appointment">Upcoming appointments</string>
+    <string name="desc_pinned_appointment">Pinned appointments</string>
+    <string name="desc_week_appointment">Appointments this week</string>
+
+    <string name="desc_pinned_note">Pinned note</string>
+    <string name="desc_reminder_note">Note with reminder</string>
+    <string name="desc_checklist_note">Checklist</string>
+    <string name="desc_recent_note">Recent notes</string>
+
+    <string name="desc_favorite_all">All favorites</string>
+    <string name="desc_today_all">Todays activity</string>
+    <string name="desc_recent_all">Recently created</string>
+
+
+
+    <string name="phone_already_registered">Phone number already registered</string>
+    <string name="registration_faileds">Registration failed: %1$s</string>
+    <string name="invalid_credentials">Invalid credentials</string>
+    <string name="update_failed">Update failed: %1$s</string>
+    <string name="logout_faileds">Logout failed: %1$s</string>
+    <string name="update_password_failed">Updated password failed: %1$s</string>
+    <string name="phone_used_by_another_user">Phone number is already used by another user</string>
+    <string name="invalid_phone_or_password">Invalid phone or password</string>
+
 
     <!-- String Arrays -->
     <string-array name="day_options">

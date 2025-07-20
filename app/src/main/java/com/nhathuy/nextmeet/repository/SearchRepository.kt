@@ -309,7 +309,7 @@ class SearchRepository @Inject constructor(
                             type = SearchSuggestionType.AUTOCOMPLETE,
                             searchType = searchType,
                             icon = R.drawable.ic_role,
-                            subtitle = "Vai trò"
+                            subtitle = context.getString(R.string.role)
                         )
                     )
                 }
@@ -419,28 +419,28 @@ class SearchRepository @Inject constructor(
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_favorite_heart,
-                    "Liên hệ đã ghim"
+                    context.getString(R.string.desc_favorite_contact)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.have_phone_number),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_phone,
-                    "Liên hệ có SĐT"
+                    context.getString(R.string.desc_have_phone)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.have_email),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_email,
-                    "Liên hệ có email"
+                    context.getString(R.string.desc_have_email)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.have_address),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_geo,
-                    "Liên hệ có địa chỉ"
+                    context.getString(R.string.desc_have_address)
                 )
             )
 
@@ -450,28 +450,28 @@ class SearchRepository @Inject constructor(
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_today,
-                    "Cuộc hẹn hôm nay"
+                    context.getString(R.string.desc_today_appointment)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.upcoming),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_upcoming,
-                    "Cuộc hẹn sắp tới"
+                    context.getString(R.string.desc_upcoming_appointment)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.pinned),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_pin,
-                    "Cuộc hẹn đã ghim"
+                    context.getString(R.string.desc_pinned_appointment)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.weekend),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_week_calendar,
-                    "Cuộc hẹn tuần này"
+                    context.getString(R.string.desc_week_appointment)
                 )
             )
 
@@ -481,28 +481,28 @@ class SearchRepository @Inject constructor(
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_pin,
-                    "Ghi chú đã ghim"
+                    context.getString(R.string.desc_pinned_note)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.reminder),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_alarm,
-                    "Ghi chú có nhắc nhở"
+                    context.getString(R.string.desc_reminder_note)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.check_list),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_checklist,
-                    "Checklist"
+                    context.getString(R.string.desc_checklist_note)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.recent),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_history,
-                    "Ghi chú gần đây"
+                    context.getString(R.string.desc_recent_note)
                 )
             )
 
@@ -512,25 +512,26 @@ class SearchRepository @Inject constructor(
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_favorite_heart,
-                    "Tất cả mục yêu thích"
+                    context.getString(R.string.desc_favorite_all)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.today),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_today,
-                    "Hoạt động hôm nay"
+                    context.getString(R.string.desc_today_all)
                 ),
                 SearchSuggestion(
                     context.getString(R.string.recent),
                     SearchSuggestionType.QUICK_FILTER,
                     searchType,
                     R.drawable.ic_history,
-                    "Được tạo gần đây"
+                    context.getString(R.string.desc_recent_all)
                 )
             )
         }
     }
+
 
 
     /**

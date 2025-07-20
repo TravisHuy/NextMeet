@@ -269,7 +269,7 @@ class AppointmentPlusRepository @Inject constructor(
     suspend fun togglePin(appointmentId: Int): Result<Boolean> {
         return try {
             val appointment = appointmentPlusDao.getAppointmentById(appointmentId)
-                ?: return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.appointment_not_found)))
 
             val newPinStatus = !appointment.isPinned
             appointmentPlusDao.updatePinStatus(appointmentId, newPinStatus)
@@ -285,7 +285,7 @@ class AppointmentPlusRepository @Inject constructor(
     suspend fun deleteAppointment(appointmentId: Int): Result<Unit> {
         return try {
             val appointment = appointmentPlusDao.getAppointmentById(appointmentId)
-                ?: return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.appointment_not_found)))
 
             appointmentPlusDao.deleteAppointment(appointment)
             Result.success(Unit)
@@ -300,7 +300,7 @@ class AppointmentPlusRepository @Inject constructor(
     suspend fun updateAppointment(appointment: AppointmentPlus): Result<Unit> {
         return try {
             val existingAppointment = appointmentPlusDao.getAppointmentById(appointment.id)
-                ?: return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.appointment_not_found)))
 
             val validationResult = validateAppointmentInputs(
                 appointment.title,
@@ -330,7 +330,7 @@ class AppointmentPlusRepository @Inject constructor(
     suspend fun getAppointmentById(appointmentId: Int): Result<AppointmentPlus> {
         return try {
             val appointment = appointmentPlusDao.getAppointmentById(appointmentId)
-                ?: return Result.failure(IllegalArgumentException("Cuộc hẹn không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.appointment_not_found)))
             Result.success(appointment)
         } catch (e: Exception) {
             Result.failure(e)
