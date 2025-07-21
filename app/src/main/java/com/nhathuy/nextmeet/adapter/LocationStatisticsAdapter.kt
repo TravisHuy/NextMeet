@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.databinding.ItemLocationStatisticsBinding
 import com.nhathuy.nextmeet.model.LocationStatistics
 
@@ -31,9 +32,15 @@ class LocationStatisticsAdapter(
         fun bind(locationStatistics: LocationStatistics) {
             binding.apply {
                 tvLocationName.text = locationStatistics.locationName
-                tvAppointmentCount.text = "${locationStatistics.appointmentCount} cuộc hẹn"
+                tvAppointmentCount.text = root.context.getString(
+                    R.string.appointment_count_format,
+                    locationStatistics.appointmentCount
+                )
                 if (locationStatistics.upcomingCount > 0) {
-                    tvUpcomingCount.text = "${locationStatistics.upcomingCount} sắp tới"
+                    tvUpcomingCount.text = root.context.getString(
+                        R.string.upcoming_count_format,
+                        locationStatistics.upcomingCount
+                    )
                     tvUpcomingCount.visibility = android.view.View.VISIBLE
                 } else {
                     tvUpcomingCount.visibility = android.view.View.GONE

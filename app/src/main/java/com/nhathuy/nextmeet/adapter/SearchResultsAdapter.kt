@@ -111,7 +111,7 @@ class SearchResultsAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SearchResultItem.HeaderItem) {
             binding.tvHeaderTitle.text = item.title
-            binding.tvHeaderCount.text = "${item.count} kết quả"
+            binding.tvHeaderCount.text = context.getString(R.string.search_result_count, item.count)
         }
     }
 
@@ -143,22 +143,22 @@ class SearchResultsAdapter(
                 // Handle status
                 when (appointment.status) {
                     AppointmentStatus.SCHEDULED-> {
-                        tvResultStatus.text = "Đã lên lịch"
+                        tvResultStatus.text = context.getString(R.string.scheduled)
                         tvResultStatus.setTextColor(binding.root.context.getColor(R.color.primary_color))
                     }
 
                     AppointmentStatus.IN_PROGRESS-> {
-                        tvResultStatus.text = "Đang diễn ra"
+                        tvResultStatus.text = context.getString(R.string.in_progress)
                         tvResultStatus.setTextColor(binding.root.context.getColor(R.color.primary_color))
                     }
 
                     AppointmentStatus.COMPLETED -> {
-                        tvResultStatus.text = "Đã hoàn thành"
+                        tvResultStatus.text = context.getString(R.string.completed)
                         tvResultStatus.setTextColor(binding.root.context.getColor(R.color.green))
                     }
 
                     AppointmentStatus.CANCELLED -> {
-                        tvResultStatus.text = "Đã hủy"
+                        tvResultStatus.text = context.getString(R.string.cancelled)
                         tvResultStatus.setTextColor(binding.root.context.getColor(R.color.red))
                     }
                     else -> {}
@@ -208,7 +208,8 @@ class SearchResultsAdapter(
                 // Format creation date
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 val date = Date(note.createdAt)
-                tvResultTime.text = "Tạo: ${dateFormat.format(date)}"
+                tvResultTime.text =
+                    context.getString(R.string.create_note_date, dateFormat.format(date))
                 tvResultTime.visibility = View.VISIBLE
 
                 // Hide description and status for notes

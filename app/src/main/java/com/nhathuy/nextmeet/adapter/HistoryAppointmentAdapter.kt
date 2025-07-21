@@ -90,7 +90,7 @@ class HistoryAppointmentAdapter(
                     tvContactName.text = appointmentWithContact.contactName
                 } else if (appointment.contactId != null) {
                     layoutContact.visibility = View.VISIBLE
-                    tvContactName.text = "Liên hệ đã bị xóa"
+                    tvContactName.text = root.context.getString(R.string.contact_deleted)
                 } else {
                     layoutContact.visibility = View.GONE
                 }
@@ -179,7 +179,7 @@ class HistoryAppointmentAdapter(
                     AppointmentStatus.COMPLETED -> {
                         layoutAdditionalInfo.visibility = View.VISIBLE
                         ivAdditionalIcon.setImageResource(R.drawable.ic_check_circle)
-                        tvAdditionalInfo.text = "Hoàn thành thành công"
+                        tvAdditionalInfo.text = root.context.getString(R.string.successful_comletion)
 
                         val iconColor = ContextCompat.getColor(root.context, R.color.success_color)
                         ivAdditionalIcon.setColorFilter(iconColor)
@@ -189,7 +189,7 @@ class HistoryAppointmentAdapter(
                     AppointmentStatus.CANCELLED -> {
                         layoutAdditionalInfo.visibility = View.VISIBLE
                         ivAdditionalIcon.setImageResource(R.drawable.ic_cancel)
-                        tvAdditionalInfo.text = "Đã hủy"
+                        tvAdditionalInfo.text = root.context.getString(R.string.cancelled)
 
                         val iconColor = ContextCompat.getColor(root.context, R.color.warning_color)
                         ivAdditionalIcon.setColorFilter(iconColor)
@@ -199,7 +199,7 @@ class HistoryAppointmentAdapter(
                     AppointmentStatus.MISSED -> {
                         layoutAdditionalInfo.visibility = View.VISIBLE
                         ivAdditionalIcon.setImageResource(R.drawable.ic_error)
-                        tvAdditionalInfo.text = "Đã bỏ lỡ"
+                        tvAdditionalInfo.text = root.context.getString(R.string.missed)
 
                         val iconColor = ContextCompat.getColor(root.context, R.color.error_color)
                         ivAdditionalIcon.setColorFilter(iconColor)

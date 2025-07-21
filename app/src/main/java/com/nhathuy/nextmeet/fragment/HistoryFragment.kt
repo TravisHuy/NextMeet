@@ -21,7 +21,6 @@ import android.view.Window
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.databinding.BottomSheetHistoryBinding
-import com.nhathuy.nextmeet.model.Appointment
 import com.nhathuy.nextmeet.model.AppointmentWithContact
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
 import dagger.hilt.android.AndroidEntryPoint

@@ -1,5 +1,7 @@
 package com.nhathuy.nextmeet.repository
 
+import android.content.Context
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.dao.ContactDao
 import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.model.ContactNameId
@@ -20,7 +22,7 @@ import javax.inject.Singleton
  * @since 2025-06-06
  */
 @Singleton
-class ContactRepository @Inject constructor(private val contactDao: ContactDao) {
+class ContactRepository @Inject constructor(private val contactDao: ContactDao,private val context: Context) {
 
     /**
      * Lấy danh bạ theo userId, cho phép tìm kiếm và lọc theo yêu thích.
@@ -116,14 +118,14 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
         isFavorite: Boolean = false
     ): Result<Long> {
         if (userId <= 0) {
-            return Result.failure(IllegalArgumentException("User Id không hợp lệ"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.error_invalid_user_id)))
         }
 
         val validationResult = validateContactInputs(name, address, phone, email)
         if (validationResult.isFailure) {
             return Result.failure(
                 IllegalArgumentException(
-                    validationResult.exceptionOrNull()?.message ?: "Invalid contact inputs"
+                    validationResult.exceptionOrNull()?.message ?:  context.getString(R.string.invalid_contact_inputs)
                 )
             )
         }
@@ -169,7 +171,7 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
 
         val error = validators.firstOrNull { !it.isValid }
         return if (error != null) {
-            Result.failure(IllegalArgumentException(error.errorMessage ?: "Invalid input"))
+            Result.failure(IllegalArgumentException(error.errorMessage ?: context.getString(R.string.invalid_contact_inputs)))
         } else {
             Result.success(Unit)
         }
@@ -181,7 +183,7 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
     suspend fun toggleFavorite(contactId: Int): Result<Boolean> {
         return try {
             val contact = contactDao.getContactById(contactId)
-                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn taại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.contact_not_found)))
 
             val newFavoriteStatus = !contact.isFavorite
             contactDao.updateFavoriteStatus(contactId, newFavoriteStatus)
@@ -197,8 +199,8 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
     suspend fun deleteContact(contactId: Int): Result<Unit> {
         return try {
             val contact = contactDao.getContactById(contactId) ?: return Result.failure(
-                IllegalArgumentException("Liên hệ không tồn tại")
-            )
+                IllegalArgumentException(context.getString(R.string.contact_not_found)))
+
             contactDao.deleteContact(contact)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -232,7 +234,7 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
             if(validationResult.isFailure){
                 return Result.failure(
                     IllegalArgumentException(
-                        validationResult.exceptionOrNull()?.message ?: "Invalid contact inputs"
+                        validationResult.exceptionOrNull()?.message ?: context.getString(R.string.invalid_contact_inputs)
                     )
                 )
             }
@@ -244,7 +246,7 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
             if (result > 0) {
                 Result.success(Unit)
             } else {
-                Result.failure(IllegalArgumentException("Contact not found"))
+                Result.failure(IllegalArgumentException(context.getString(R.string.contact_not_found)))
             }
         }
         catch (e:Exception){
@@ -261,7 +263,7 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao) 
             if (contact != null) {
                 Result.success(contact)
             } else {
-                Result.failure(IllegalArgumentException("Contact not found"))
+                Result.failure(IllegalArgumentException(context.getString(R.string.contact_not_found)))
             }
         } catch (e: Exception) {
             Result.failure(e)

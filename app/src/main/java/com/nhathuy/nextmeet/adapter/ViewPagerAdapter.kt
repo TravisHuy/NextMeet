@@ -3,7 +3,6 @@ package com.nhathuy.nextmeet.adapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.nhathuy.nextmeet.fragment.AppointmentFragment
 import com.nhathuy.nextmeet.fragment.AppointmentMapFragment
 import com.nhathuy.nextmeet.fragment.ContactFragment
 import com.nhathuy.nextmeet.fragment.DashBoardFragment

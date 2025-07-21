@@ -498,11 +498,15 @@ interface AppointmentPlusDao {
      */
     @Query(
         """
-        SELECT * FROM appointments 
-        WHERE user_id = :userId 
-        AND status IN ('COMPLETED', 'CANCELLED', 'MISSED')
-        AND start_date_time BETWEEN :startTime AND :endTime
-        ORDER BY start_date_time DESC
+         SELECT 
+        a.*, 
+        c.name AS contactName
+    FROM appointments a
+    LEFT JOIN contacts c ON a.contact_id = c.id
+    WHERE a.user_id = :userId
+        AND a.status IN ('COMPLETED', 'CANCELLED', 'MISSED')
+        AND a.start_date_time BETWEEN :startTime AND :endTime
+    ORDER BY a.start_date_time DESC
         """
     )
     fun getHistoryAppointmentsInRange(

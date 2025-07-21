@@ -39,7 +39,6 @@ import com.nhathuy.nextmeet.utils.AppointmentNavigationCallback
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.utils.NavigationCallback
 import com.nhathuy.nextmeet.viewmodel.AppointmentPlusViewModel
-import com.nhathuy.nextmeet.viewmodel.AppointmentViewModel
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
 import com.nhathuy.nextmeet.viewmodel.NoteViewModel
 import com.nhathuy.nextmeet.viewmodel.SearchViewModel

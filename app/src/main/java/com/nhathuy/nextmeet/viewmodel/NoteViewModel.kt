@@ -1,8 +1,10 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.Note
 import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.model.NoteImage
@@ -12,6 +14,7 @@ import com.nhathuy.nextmeet.resource.FilterState
 import com.nhathuy.nextmeet.resource.NoteUiState
 import com.nhathuy.nextmeet.utils.NotificationManagerService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +37,8 @@ import javax.inject.Inject
 @HiltViewModel
 class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
-    private val notificationManagerService: NotificationManagerService
+    private val notificationManagerService: NotificationManagerService,
+    @ApplicationContext private val context : Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<NoteUiState>(NoteUiState.Idle)
@@ -60,7 +64,7 @@ class NoteViewModel @Inject constructor(
             _uiState.value = NoteUiState.NotesLoaded(notes)
             notes
         }.catch { error ->
-            _uiState.value = NoteUiState.Error(error.message ?: "Unknow error")
+            _uiState.value = NoteUiState.Error(error.message ?: context.getString(R.string.error_unknown))
             emit(emptyList())
         }
     }
@@ -78,11 +82,11 @@ class NoteViewModel @Inject constructor(
                     _uiState.value = if (note != null) {
                         NoteUiState.NoteLoaded(note)
                     } else {
-                        NoteUiState.Error("Ghi chú không tồn tại")
+                        NoteUiState.Error(context.getString(R.string.note_not_found))
                     }
                 }
                 .onFailure { error ->
-                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi tải ghi chú")
+                    _uiState.value = NoteUiState.Error(error.message ?: context.getString(R.string.error_loading_note))
                 }
         }
     }
@@ -115,10 +119,10 @@ class NoteViewModel @Inject constructor(
                         scheduleNoteNotification(noteWithId)
                     }
                     _uiState.value =
-                        NoteUiState.NoteCreated(noteId, "Ghi chú đã được tạo thành công")
+                        NoteUiState.NoteCreated(noteId, context.getString(R.string.note_created_success))
                 }
                 .onFailure { error ->
-                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi tạo ghi chú")
+                    _uiState.value = NoteUiState.Error(error.message ?: context.getString(R.string.error_creating_note))
                 }
         }
     }
@@ -139,68 +143,14 @@ class NoteViewModel @Inject constructor(
 
             noteRepository.updateNote(noteId, title, content, noteType, color, checkListItems)
                 .onSuccess {
-                    _uiState.value = NoteUiState.NoteUpdated("Ghi chú đã được cập nhật")
+                    _uiState.value = NoteUiState.NoteUpdated(context.getString(R.string.note_updated_success))
                 }
                 .onFailure { error ->
-                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi cập nhật ghi chú")
+                    _uiState.value = NoteUiState.Error(error.message ?: context.getString(R.string.error_updating_note))
                 }
         }
     }
 
-
-//    fun updateNote(
-//        noteId: Int,
-//        title: String? = null,
-//        content: String? = null,
-//        noteType: NoteType? = null,
-//        color: String? = null,
-//        reminderTime: Long? = null,
-//        checkListItems: String? = null,
-//        shouldSetReminder: Boolean = false
-//    ) {
-//        viewModelScope.launch {
-//            _uiState.value = NoteUiState.Loading
-//
-//            try {
-//                noteRepository.getNoteById(noteId)
-//                    .onSuccess { currentNote ->
-//                        if (currentNote != null) {
-//                            noteRepository.updateNote(
-//                                noteId = noteId,
-//                                title = title,
-//                                content = content,
-//                                noteType = noteType,
-//                                color = color,
-//                                reminderTime = reminderTime,
-//                                checkListItems = checkListItems,
-//                            ).onSuccess {
-//                                handleNotificationUpdate(
-//                                    currentNote = currentNote,
-//                                    newReminderTime = reminderTime,
-//                                    shouldUpdateReminder = shouldSetReminder,
-//                                    updatedTitle = title,
-//                                    updatedContent = content
-//                                )
-//
-//                                _uiState.value = NoteUiState.NoteUpdated("Ghi chú đã được cập nhật")
-//                            }.onFailure { error ->
-//                                _uiState.value =
-//                                    NoteUiState.Error(error.message ?: "Lỗi khi cập nhật ghi chú")
-//                            }
-//                        } else {
-//                            _uiState.value = NoteUiState.Error("Ghi chú không tồn tại")
-//                        }
-//                    }
-//                    .onFailure { error ->
-//                        _uiState.value =
-//                            NoteUiState.Error(error.message ?: "Lỗi khi lấy thông tin ghi chú")
-//                    }
-//            } catch (e: Exception) {
-//                _uiState.value = NoteUiState.Error(e.message ?: "Lỗi không xác định")
-//            }
-//
-//        }
-//    }
 
     /**
      * Xử lý notification khi update note
@@ -259,12 +209,12 @@ class NoteViewModel @Inject constructor(
                                 if (!note.checkListItems.isNullOrEmpty()) {
                                     formatChecklistForNotification(note.checkListItems)
                                 } else {
-                                    note.content.ifEmpty { "Checklist empty" }
+                                    note.content.ifEmpty { context.getString(R.string.checklist_empty) }
                                 }
                             }
 
                             else -> {
-                                note.content.ifEmpty { "Note Empty" }
+                                note.content.ifEmpty { context.getString(R.string.note_empty) }
                             }
                         }
                         val success = notificationManagerService.scheduleNoteNotification(
@@ -332,10 +282,10 @@ class NoteViewModel @Inject constructor(
             noteRepository.deleteNote(noteId)
                 .onSuccess {
                     cancelNoteNotification(noteId)
-                    _uiState.value = NoteUiState.NoteDeleted("Ghi chú đã được xóa")
+                    _uiState.value = NoteUiState.NoteDeleted(context.getString(R.string.note_deleted_success))
                 }
                 .onFailure { error ->
-                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi xóa ghi chú")
+                    _uiState.value = NoteUiState.Error(error.message ?: context.getString(R.string.error_deleting_note))
                 }
         }
     }
@@ -366,11 +316,11 @@ class NoteViewModel @Inject constructor(
         viewModelScope.launch {
             noteRepository.togglePin(noteId)
                 .onSuccess { isPinned ->
-                    val message = if (isPinned) "Đã pin ghi chú" else "Đã bỏ pin ghi chú"
+                    val message = if (isPinned) context.getString(R.string.note_pinned) else context.getString(R.string.note_unpinned)
                     _uiState.value = NoteUiState.NotePinToggled(isPinned, message)
                 }
                 .onFailure { error ->
-                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi pin ghi chú")
+                    _uiState.value = NoteUiState.Error(error.message ?: context.getString(R.string.error_pin_note))
                 }
         }
     }
@@ -406,12 +356,12 @@ class NoteViewModel @Inject constructor(
             noteRepository.toggleShare(noteId)
                 .onSuccess { shareResult ->
                     val message =
-                        if (shareResult.isShared) "Đã chia sẻ ghi chú" else "Đã hủy chia sẻ"
+                        if (shareResult.isShared) context.getString(R.string.note_shared_success) else context.getString(R.string.note_unshared_success)
                     _uiState.value = NoteUiState.NoteShared(shareResult, message)
                 }
                 .onFailure { error ->
                     _uiState.value =
-                        NoteUiState.Error(error.message ?: "Lỗi khi chia sẻ ghi chú")
+                        NoteUiState.Error(error.message ?: context.getString(R.string.error_sharing_note))
                 }
         }
     }
@@ -421,7 +371,7 @@ class NoteViewModel @Inject constructor(
      */
     fun shareNoteWithOtherApps(noteId: Int){
         if (noteId <= 0) {
-            _uiState.value = NoteUiState.Error("Invalid note ID for sharing")
+            _uiState.value = NoteUiState.Error(context.getString(R.string.error_invalid_note_id))
             return
         }
         viewModelScope.launch {
@@ -434,7 +384,7 @@ class NoteViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _uiState.value =
-                        NoteUiState.Error(error.message ?: "Lỗi khi chia sẻ ghi chú")
+                        NoteUiState.Error(error.message ?: context.getString(R.string.error_sharing_note))
                 }
         }
     }
@@ -445,26 +395,26 @@ class NoteViewModel @Inject constructor(
     private fun buildShareContent(note: Note): String {
         val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return buildString {
-            append("📝 Tiêu đề: ${note.title}\n")
+            append(context.getString(R.string.share_note_title, note.title))
 
             when(note.noteType){
                 NoteType.TEXT -> {
                     append("${note.content}\n\n")
                 }
                 NoteType.CHECKLIST -> {
-                    append("📋 Danh sách công việc:\n")
+                    append(context.getString(R.string.share_note_checklist_title))
                     note.checkListItems?.let { json ->
                         val items = formatChecklistForNotification(json)
                         append("$items\n")
-                    } ?: append("Không có mục nào.\n\n")
+                    } ?: append(context.getString(R.string.share_note_no_checklist))
                 }
                 NoteType.PHOTO, NoteType.VIDEO -> {
-                    append("📝 Mô tả: ${note.content}\n\n")
+                    append(context.getString(R.string.share_note_description),note.content)
                 }
             }
 
-            append("⏰ Được chia sẻ lúc: ${formatter.format(Date())}\n")
-            append("📱 Từ NextMeet App")
+            append(context.getString(R.string.share_note_time),formatter.format(Date()))
+            append(context.getString(R.string.share_note_footer))
         }
     }
     /**
@@ -491,15 +441,15 @@ class NoteViewModel @Inject constructor(
             noteRepository.updateReminder(noteId, reminderTime)
                 .onSuccess {
                     val message = if (reminderTime != null) {
-                        "Đã đặt lời nhắc"
+                        context.getString(R.string.note_reminder_set)
                     } else {
-                        "Đã xóa lời nhắc"
+                        context.getString(R.string.note_reminder_removed)
                     }
                     _uiState.value = NoteUiState.ReminderUpdated(reminderTime, message)
                 }
                 .onFailure { error ->
                     _uiState.value =
-                        NoteUiState.Error(error.message ?: "Lỗi khi cập nhật lời nhắc")
+                        NoteUiState.Error(error.message ?: context.getString(R.string.error_updating_reminder))
                 }
         }
     }
@@ -514,10 +464,10 @@ class NoteViewModel @Inject constructor(
             noteRepository.duplicateNote(noteId)
                 .onSuccess { newNoteId ->
                     _uiState.value =
-                        NoteUiState.NoteDuplicated(newNoteId, "Đã tạo bản sao ghi chú")
+                        NoteUiState.NoteDuplicated(newNoteId, context.getString(R.string.note_duplicated))
                 }
                 .onFailure { error ->
-                    _uiState.value = NoteUiState.Error(error.message ?: "Lỗi khi tạo bản sao")
+                    _uiState.value = NoteUiState.Error(error.message ?: context.getString(R.string.error_duplicating_note))
                 }
         }
     }
@@ -529,9 +479,9 @@ class NoteViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 noteRepository.insertImagesForNote(images)
-                _uiState.value = NoteUiState.ImagesInserted("Đã lưu ghi chú với ảnh")
+                _uiState.value = NoteUiState.ImagesInserted(context.getString(R.string.note_images_saved))
             } catch (e: Exception) {
-                _uiState.value = NoteUiState.Error(e.message ?: "Lỗi khi lưu ảnh")
+                _uiState.value = NoteUiState.Error(e.message ?: context.getString(R.string.error_saving_images))
             }
         }
     }

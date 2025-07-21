@@ -1,7 +1,9 @@
 package com.nhathuy.nextmeet.repository
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.dao.NoteDao
 import com.nhathuy.nextmeet.dao.NoteImageDao
 import com.nhathuy.nextmeet.model.Note
@@ -24,7 +26,8 @@ import javax.inject.Singleton
 class NoteRepository @Inject constructor(
     private val noteDao: NoteDao,
     private val noteImageDao: NoteImageDao,
-    private val imageManager: ImageManager
+    private val imageManager: ImageManager,
+    private val context: Context
 ) {
 
     /**
@@ -113,15 +116,15 @@ class NoteRepository @Inject constructor(
     ): Result<Long> {
         return try {
             if (userId <= 0) {
-                return Result.failure(IllegalArgumentException("User Id không hợp lệ"))
+                return Result.failure(IllegalArgumentException(context.getString(R.string.error_invalid_user_id)))
             }
 
             if (title.isBlank() && content.isBlank() && checkListItems.isNullOrEmpty()) {
-                return Result.failure(IllegalArgumentException("Ghi chú không thể trống"))
+                return Result.failure(IllegalArgumentException(context.getString(R.string.note_not_found)))
             }
 
             if (!isValidHexColor(color)) {
-                return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
+                return Result.failure(IllegalArgumentException(context.getString(R.string.invalid_color)))
             }
 
             val note = Note(
@@ -173,12 +176,12 @@ class NoteRepository @Inject constructor(
     ): Result<Unit> {
         return try {
             val existingNote = noteDao.getNoteById(noteId)
-                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.note_not_found)))
 
             // Kiểm tra nhập input
             color?.let {
                 if (!isValidHexColor(it)) {
-                    return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
+                    return Result.failure(IllegalArgumentException(context.getString(R.string.invalid_color)))
                 }
             }
 
@@ -195,7 +198,7 @@ class NoteRepository @Inject constructor(
             if (updatedNote.title.isBlank() && updatedNote.content.isBlank() &&
                 updatedNote.checkListItems.isNullOrBlank()
             ) {
-                return Result.failure(IllegalArgumentException("Ghi chú không thể trống"))
+                return Result.failure(IllegalArgumentException(context.getString(R.string.error_note_empty)))
             }
 
             noteDao.updateNote(updatedNote)
@@ -229,7 +232,7 @@ class NoteRepository @Inject constructor(
     suspend fun togglePin(noteId: Int): Result<Boolean> {
         return try {
             val note = noteDao.getNoteById(noteId)
-                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn taại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.note_not_found)))
 
             val newPinStatus = !note.isPinned
             noteDao.updatePinStatus(noteId, newPinStatus)
@@ -245,10 +248,10 @@ class NoteRepository @Inject constructor(
     suspend fun toggleShare(noteId: Int): Result<ShareResult> {
         return try {
             val note = noteDao.getNoteById(noteId)
-                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn taại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.note_not_found)))
 
             if (note.title.isBlank() && note.content.isBlank()) {
-                return Result.failure(IllegalArgumentException("Không thể chia sẽ ghi chú trống"))
+                return Result.failure(IllegalArgumentException(context.getString(R.string.cannot_share_blank_notes)))
             }
 
             val newShareStatus = !note.isShared
@@ -380,11 +383,11 @@ class NoteRepository @Inject constructor(
 
             if (!note.checkListItems.isNullOrBlank()) {
                 appendLine()
-                appendLine("Danh sách:")
+                appendLine(context.getString(R.string.list))
                 appendLine(note.checkListItems)
             }
             appendLine()
-            appendLine("Được chia sẽ từ NextMeet")
+            appendLine(context.getString(R.string.shared_from_nextmeet))
         }
     }
 
@@ -394,11 +397,11 @@ class NoteRepository @Inject constructor(
     suspend fun updateNoteColor(noteId: Int, color: String): Result<Unit> {
         return try {
             if (!isValidHexColor(color)) {
-                return Result.failure(IllegalArgumentException("Màu sắc không hợp lệ"))
+                return Result.failure(IllegalArgumentException(context.getString(R.string.invalid_color)))
             }
 
             val note = noteDao.getNoteById(noteId)
-                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.note_not_found)))
 
             noteDao.updateNoteColor(noteId, color)
             Result.success(Unit)
@@ -414,12 +417,12 @@ class NoteRepository @Inject constructor(
     suspend fun updateReminder(noteId: Int, reminderTime: Long?): Result<Unit> {
         return try {
             val note = noteDao.getNoteById(noteId)
-                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.note_not_found)))
 
             // Kiểm tra thời gian hẹn lịch
             reminderTime?.let {
                 if (it <= System.currentTimeMillis()) {
-                    return Result.failure(IllegalArgumentException("Thời gian nhắc nhở phải trong tương lai"))
+                    return Result.failure(IllegalArgumentException(context.getString(R.string.reminder_time_must_be_in_the_future)))
                 }
             }
 
@@ -436,7 +439,7 @@ class NoteRepository @Inject constructor(
     suspend fun duplicateNote(noteId: Int): Result<Long> {
         return try {
             val originalNote = noteDao.getNoteById(noteId)
-                ?: return Result.failure(IllegalArgumentException("Ghi chú không tồn tại"))
+                ?: return Result.failure(IllegalArgumentException(context.getString(R.string.note_not_found)))
 
             val duplicatedNote = originalNote.copy(
                 id = 0,
@@ -459,20 +462,22 @@ class NoteRepository @Inject constructor(
      * Tạo bản sao title
      */
     private fun generateDuplicateTitle(originalTitle: String): String {
+        val copyLabel = context.getString(R.string.copy_suffix)
+        val copyWithNumber = context.getString(R.string.copy_suffix_with_number)
+
         return when {
-            originalTitle.isBlank() -> "bản sao"
-            originalTitle.contains("(Bản sao)") -> {
-                val regex = Regex("""\(Bản sao( \d+)?\)$""")
+            originalTitle.isBlank() -> context.getString(R.string.copy_only)
+            originalTitle.contains(copyLabel) -> {
+                val regex = Regex("""\(${Regex.escape(copyLabel.removeSurrounding("(", ")"))}( (\d+))?\)$""")
                 val match = regex.find(originalTitle)
                 if (match != null) {
-                    val number = match.groupValues[1].trim().toIntOrNull() ?: 1
-                    originalTitle.replace(regex, "(Bản sao ${number + 1})")
+                    val number = match.groupValues.getOrNull(2)?.toIntOrNull() ?: 1
+                    originalTitle.replace(regex, copyWithNumber.format(number + 1))
                 } else {
-                    "$originalTitle (Bản sao 2)"
+                    "$originalTitle ${copyWithNumber.format(2)}"
                 }
             }
-
-            else -> "$originalTitle (bản sao)"
+            else -> "$originalTitle $copyLabel"
         }
     }
 

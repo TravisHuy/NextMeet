@@ -201,7 +201,7 @@ class NotesAdapter(
                     val remainingCount = checklistItems.size - maxItems
                     if (remainingCount > 0) {
                         tvChecklistCount.visibility = View.VISIBLE
-                        tvChecklistCount.text = "+$remainingCount more"
+                        tvChecklistCount.text = binding.root.context.getString(R.string.more, remainingCount)
                         tvChecklistCount.setOnClickListener {
                             handleNoteClick(note)
                         }
