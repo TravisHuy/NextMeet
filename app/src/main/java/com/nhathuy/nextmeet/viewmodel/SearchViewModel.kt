@@ -1,8 +1,10 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchSuggestionType
 import com.nhathuy.nextmeet.model.SearchType
@@ -10,13 +12,15 @@ import com.nhathuy.nextmeet.model.UniversalSearchResult
 import com.nhathuy.nextmeet.resource.SearchUiState
 import com.nhathuy.nextmeet.utils.UniversalSearchManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchViewModel @Inject constructor(private val searchManager: UniversalSearchManager) : ViewModel() {
+class SearchViewModel @Inject constructor(private val searchManager: UniversalSearchManager,
+    @ApplicationContext private val context: Context) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
@@ -265,7 +269,7 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
      * appply contact quickfilter
      */
     fun applyContactFilter(contactId: Int, contactName: String) {
-        _currentQuery.value = "Contact: $contactName"
+        _currentQuery.value = context.getString(R.string.contact_names, contactName)
         _currentSearchType.value = SearchType.APPOINTMENT
         _isSearching.value = true
         _uiState.value = SearchUiState.Loading
@@ -279,7 +283,7 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
                 _searchResults.value = result
                 _uiState.value = SearchUiState.SearchResultsLoaded(
                     results = result,
-                    query = "Contact: $contactName",
+                    query = context.getString(R.string.contact_names, contactName),
                     searchType = SearchType.APPOINTMENT
                 )
             },
@@ -294,7 +298,7 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
     * Check if current search is a contact filter
     */
     fun isContactFilter(): Boolean {
-        return _currentQuery.value.startsWith("Contact: ")
+        return _currentQuery.value.startsWith(context.getString(R.string.search_filter_contact_prefix))
     }
 
     /**
@@ -302,7 +306,7 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
      */
     fun getContactNameFromFilter(): String? {
         return if (isContactFilter()) {
-            _currentQuery.value.removePrefix("Contact: ")
+            _currentQuery.value.removePrefix(context.getString(R.string.search_filter_contact_prefix))
         } else null
     }
     /**
@@ -322,7 +326,7 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
             searchText = suggestion.text,
             searchType = suggestion.searchType,
             onComplete = {
-                _uiState.value = SearchUiState.SearchHistoryDeleted("Search history deleted")
+                _uiState.value = SearchUiState.SearchHistoryDeleted(context.getString(R.string.search_history_deleted))
                 // Refresh suggestions
                 generateSuggestions(_currentQuery.value)
             },
@@ -340,7 +344,7 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
             userId = currentUserId,
             searchType = _currentSearchType.value,
             onComplete = {
-                _uiState.value = SearchUiState.SearchHistoryCleared("Search history cleared")
+                _uiState.value = SearchUiState.SearchHistoryCleared(context.getString(R.string.search_history_cleared))
                 // Refresh suggestions
                 generateSuggestions(_currentQuery.value)
             },
@@ -357,7 +361,7 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
         searchManager.clearAllSearchHistory(
             userId = currentUserId,
             onComplete = {
-                _uiState.value = SearchUiState.SearchHistoryCleared("Search history cleared all")
+                _uiState.value = SearchUiState.SearchHistoryCleared(context.getString(R.string.search_history_cleared_all))
                 generateSuggestions(_currentQuery.value)
             },
             onError = { error ->
@@ -396,16 +400,6 @@ class SearchViewModel @Inject constructor(private val searchManager: UniversalSe
         generateSuggestions(query)
     }
 
-//    /**
-//     * Reset to initial state but keep current search type
-//     */
-//    fun resetToInitialStateWithType(searchType: SearchType) {
-//        _currentQuery.value = ""
-//        _searchResults.value = UniversalSearchResult()
-//        _isSearching.value = false
-//        _currentSearchType.value = searchType
-//        generateSuggestions("") // Generate suggestions for the specific type
-//    }
 
 
     /**

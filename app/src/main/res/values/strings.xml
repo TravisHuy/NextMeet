@@ -254,7 +254,6 @@
     <string name="desc_recent_all">Recently created</string>
 
 
-
     <string name="phone_already_registered">Phone number already registered</string>
     <string name="registration_faileds">Registration failed: %1$s</string>
     <string name="invalid_credentials">Invalid credentials</string>
@@ -263,6 +262,153 @@
     <string name="update_password_failed">Updated password failed: %1$s</string>
     <string name="phone_used_by_another_user">Phone number is already used by another user</string>
     <string name="invalid_phone_or_password">Invalid phone or password</string>
+
+
+    <string name="error_select_contact">Please select a contact for the appointment</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_creating_appointment">Error while creating appointment</string>
+    <string name="appointment_created_successfully">Appointment created successfully</string>
+
+    <string name="error_loading_appointments">Failed to load appointments</string>
+    <string name="error_pin_appointment">Failed to pin appointment</string>
+    <string name="appointment_pinned">Appointment pinned</string>
+    <string name="appointment_unpinned">Appointment unpinned</string>
+    <string name="appointment_status_updated">Appointment status updated</string>
+    <string name="error_update_status">Failed to update appointment status</string>
+
+    <string name="error_deleting_appointment">Error while deleting the appointment</string>
+
+    <!-- Delete message -->
+    <string name="appointment_delete_success">Appointment was deleted successfully</string>
+
+    <!-- Other -->
+    <string name="notification_create_failed">Failed to create notification for appointment %1$d</string>
+    <string name="appointment_load_error">Error while loading the appointment</string>
+
+    <string name="appointment_update_success">Appointment was updated successfully</string>
+    <string name="appointment_update_error">Error while updating the appointment</string>
+
+
+    <!-- Navigation -->
+    <string name="navigation_started">Navigation started</string>
+    <string name="navigation_start_error">Error starting navigation: %1$s</string>
+    <string name="navigation_cancelled">Navigation cancelled</string>
+    <string name="navigation_cancel_error">Error cancelling navigation</string>
+    <string name="navigation_status_updated">Navigation status updated successfully</string>
+    <string name="navigation_status_update_error">Error updating navigation status</string>
+    <string name="navigation_notification_failed">Failed to create notification for appointment %1$d</string>
+    <string name="navigation_status_transition_message">%1$s → %2$s</string>
+    <string name="updated_appointmnet">Updated Appointment</string>
+
+
+    <string name="notification_delayed_title">⚠️ Appointment Almost Late</string>
+    <string name="notification_delayed_message">Your appointment \'%1$s\' is about to start. You should leave now!</string>
+
+    <string name="notification_missed_title">❌ Missed Appointment</string>
+    <string name="notification_missed_message">Your appointment \'%1$s\' has started and you haven't arrived.</string>
+
+    <string name="appointment_cannot_cancel">Cannot cancel appointment in status %1$s</string>
+    <string name="appointment_cancel_error">Error while cancelling appointment</string>
+    <string name="appointment_cancel_success">Appointment \'%1$s\' was successfully cancelled</string>
+    <string name="appointment_cancelled_title">🚫 Appointment Cancelled</string>
+    <string name="appointment_cancelled_message">Appointment \'%1$s\' was cancelled\nDetails: %2$s</string>
+    <string name="no_description">No description</string>
+    <string name="appointment_canncelled_message">Appointment \'%1$s\' has been cancelled/n</string>
+    <string name="cancel_appointment_description">Content: %1$s</string>
+
+
+    <string name="contact_created_success">Contact created successfully</string>
+    <string name="contact_updated_success">Contact updated successfully</string>
+    <string name="contact_deleted_success">Contact deleted successfully</string>
+    <string name="contact_favorited">Contact favorited</string>
+    <string name="contact_unfavorited">Contact unfavorited</string>
+
+    <string name="error_contact_not_found">Contact not found</string>
+    <string name="error_creating_contact">Error creating contact</string>
+    <string name="error_updating_contact">Error updating contact</string>
+    <string name="error_deleting_contact">Error deleting contact</string>
+    <string name="error_loading_contacts">Error loading contacts</string>
+    <string name="error_loading_contact_names">Error loading contact names</string>
+    <string name="error_phone_invalid">Invalid phone number</string>
+    <string name="error_phone_exists">This phone number is already in use</string>
+    <string name="error_phone_exists_with_contact">This phone number is already used for contact: %1$s</string>
+    <string name="error_name_empty">Name must not be empty</string>
+    <string name="error_phone_empty">Phone number must not be empty</string>
+    <string name="error_role_empty">Role must not be empty</string>
+    <string name="error_favorited_contact">Error while favoriting contact</string>
+    <string name="unknown_error_adding_contact">Unknown error adding contact</string>
+
+    <!-- Error messages -->
+    <string name="error_loading_history">Lỗi khi tải lịch sử cuộc hẹn: %1$s</string>
+    <string name="error_loading_data">Lỗi khi tải dữ liệu: %1$s</string>
+    <string name="error_loading_range">Lỗi khi tải cuộc hẹn trong khoảng thời gian</string>
+    <string name="error_loading_statistics">Lỗi khi tải thống kê</string>
+
+    <!-- Summary text -->
+    <string name="history_summary_all">Tổng cộng %1$d cuộc hẹn</string>
+    <string name="history_summary_completed">%1$d cuộc hẹn đã hoàn thành</string>
+    <string name="history_summary_cancelled">%1$d cuộc hẹn đã hủy</string>
+    <string name="history_summary_missed">%1$d cuộc hẹn đã bỏ lỡ</string>
+
+    <!-- Completion rate -->
+    <string name="history_completion_rate">%1$d%%</string>
+
+    <string name="error_loading_note">Error loading note</string>
+    <string name="note_created_success">Note created successfully</string>
+    <string name="note_updated_success">Note updated successfully</string>
+    <string name="error_creating_note">Failed to create note</string>
+    <string name="error_updating_note">Failed to update note</string>
+    <string name="checklist_empty">Checklist empty</string>
+    <string name="note_empty">Note Empty</string>
+    <string name="note_deleted_success">Note deleted successfully</string>
+    <string name="error_deleting_note">Failed to delete note</string>
+
+    <string name="note_pinned">Note pinned</string>
+    <string name="note_unpinned">Note unpinned</string>
+    <string name="error_pin_note">Error pinning note</string>
+
+    <!-- Share -->
+    <string name="note_shared_success">Note shared</string>
+    <string name="note_unshared_success">Share removed</string>
+    <string name="error_sharing_note">Error while sharing note</string>
+
+    <!-- Share with other apps -->
+    <string name="error_invalid_note_id">Invalid note ID</string>
+    <string name="share_note_title">📝 Title: %1$s\n</string>
+    <string name="share_note_checklist_title">📋 Checklist:\n</string>
+    <string name="share_note_no_checklist">No items.\n\n</string>
+    <string name="share_note_description">📝 Description: %1$s\n\n</string>
+    <string name="share_note_time">⏰ Shared at: %1$s\n</string>
+    <string name="share_note_footer">📱 From NextMeet App</string>
+
+    <!-- Reminder -->
+    <string name="note_reminder_set">Reminder set</string>
+    <string name="note_reminder_removed">Reminder removed</string>
+    <string name="error_updating_reminder">Error while updating reminder</string>
+
+    <!-- Duplicate -->
+    <string name="note_duplicated">Note duplicated</string>
+    <string name="error_duplicating_note">Error while duplicating note</string>
+
+    <!-- Images -->
+    <string name="note_images_saved">Note saved with images</string>
+    <string name="error_saving_images">Error while saving images</string>
+
+    <!-- Quick filter / contact filter -->
+    <string name="search_filter_contact_prefix">Contact: </string>
+
+    <!-- Search history actions -->
+    <string name="search_history_deleted">Search history deleted</string>
+    <string name="search_history_cleared">Search history cleared</string>
+    <string name="search_history_cleared_all">Search history cleared all</string>
+
+    <!-- UI State / messages -->
+    <string name="search_loading">Searching...</string>
+    <string name="search_results_loaded">Search completed</string>
+    <string name="search_error">An error occurred: %1$s</string>
+    <string name="search_cleared">Search cleared</string>
+    <string name="search_reset">Search reset to default</string>
+    <string name="contact_names">Contact: %1$s</string>
 
 
     <!-- String Arrays -->

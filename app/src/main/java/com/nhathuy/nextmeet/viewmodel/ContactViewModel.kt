@@ -1,7 +1,9 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.Contact
 import com.nhathuy.nextmeet.model.ContactNameId
 import com.nhathuy.nextmeet.repository.ContactRepository
@@ -9,13 +11,17 @@ import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.NoteUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ContactViewModel @Inject constructor(private val contactRepository: ContactRepository) :
+class ContactViewModel @Inject constructor(
+    private val contactRepository: ContactRepository,
+    @ApplicationContext private val context: Context
+) :
     ViewModel() {
 
     private val _contactUiState = MutableStateFlow<ContactUiState>(ContactUiState.Idle)
@@ -47,14 +53,14 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                 if (result.isSuccess) {
                     _contactUiState.value = ContactUiState.ContactCreated(
                         result.getOrThrow(),
-                        "Contact created successfully"
+                        context.getString(R.string.contact_created_success)
                     )
                 } else {
                     _contactUiState.value =
-                        ContactUiState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+                        ContactUiState.Error(result.exceptionOrNull()?.message ?: context.getString(R.string.error_unknown))
                 }
             } catch (e: Exception) {
-                _contactUiState.value = ContactUiState.Error(e.message ?: "Error creating contact")
+                _contactUiState.value = ContactUiState.Error(e.message ?: context.getString(R.string.error_creating_contact))
             }
         }
     }
@@ -71,7 +77,7 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                         _contactUiState.value = ContactUiState.ContactsLoaded(contacts)
                     }
             } catch (e: Exception) {
-                _contactUiState.value = ContactUiState.Error(e.message ?: "Error loading contacts")
+                _contactUiState.value = ContactUiState.Error(e.message ?: context.getString(R.string.error_loading_contacts))
             }
         }
     }
@@ -82,12 +88,13 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
         viewModelScope.launch {
             contactRepository.toggleFavorite(contactId)
                 .onSuccess { isFavorited ->
-                    val message = if (isFavorited) "Đã pin ghi chú" else "Đã bỏ pin ghi chú"
+                    val message =
+                        if (isFavorited) context.getString(R.string.contact_favorited) else context.getString(R.string.contact_unfavorited)
                     _contactUiState.value = ContactUiState.FavoriteToggled(isFavorited, message)
                 }
                 .onFailure { error ->
                     _contactUiState.value =
-                        ContactUiState.Error(error.message ?: "Lỗi khi pin ghi chú")
+                        ContactUiState.Error(error.message ?: context.getString(R.string.error_favorited_contact))
                 }
         }
     }
@@ -101,9 +108,9 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
             try {
                 contactRepository.deleteContact(contactId)
                 _contactUiState.value =
-                    ContactUiState.ContactDeleted("Contact deleted successfully")
+                    ContactUiState.ContactDeleted(context.getString(R.string.contact_deleted_success))
             } catch (e: Exception) {
-                _contactUiState.value = ContactUiState.Error(e.message ?: "Error deleting contact")
+                _contactUiState.value = ContactUiState.Error(e.message ?: context.getString(R.string.error_deleting_contact))
             }
         }
     }
@@ -122,7 +129,7 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                 }
             } catch (e: Exception) {
                 _contactUiState.value =
-                    ContactUiState.Error(e.message ?: "Error loading contact names")
+                    ContactUiState.Error(e.message ?: context.getString(R.string.error_loading_contact_names))
             }
         }
     }
@@ -138,11 +145,11 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                     _contactUiState.value = ContactUiState.ContactsLoaded(listOf(contact))
                 }.onFailure { error ->
                     _contactUiState.value = ContactUiState.Error(
-                        error.message ?: "Error loading contact"
+                        error.message ?: context.getString(R.string.error_loading_contacts)
                     )
                 }
             } catch (e: Exception) {
-                _contactUiState.value = ContactUiState.Error(e.message ?: "Error loading contact")
+                _contactUiState.value = ContactUiState.Error(e.message ?: context.getString(R.string.error_loading_contacts))
             }
         }
     }
@@ -157,15 +164,15 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                 contactRepository.updateContact(contact)
                     .onSuccess {
                         _contactUiState.value =
-                            ContactUiState.ContactUpdated("Contact updated successfully")
+                            ContactUiState.ContactUpdated(context.getString(R.string.contact_updated_success))
                     }
                     .onFailure { error ->
                         _contactUiState.value = ContactUiState.Error(
-                            error.message ?: "Error updating contact"
+                            error.message ?: context.getString(R.string.error_updating_contact)
                         )
                     }
             } catch (e: Exception) {
-                _contactUiState.value = ContactUiState.Error(e.message ?: "Error updating contact")
+                _contactUiState.value = ContactUiState.Error(e.message ?: context.getString(R.string.error_updating_contact))
             }
         }
     }
@@ -182,17 +189,17 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
         return try {
             // Validate input
             if (name.trim().isEmpty()) {
-                _contactUiState.value = ContactUiState.Error("Tên không được để trống")
+                _contactUiState.value = ContactUiState.Error(context.getString(R.string.error_name_empty))
                 return null
             }
 
             if (phone.trim().isEmpty()) {
-                _contactUiState.value = ContactUiState.Error("Số điện thoại không được để trống")
+                _contactUiState.value = ContactUiState.Error(context.getString(R.string.error_phone_empty))
                 return null
             }
 
             if (role.trim().isEmpty()) {
-                _contactUiState.value = ContactUiState.Error("Vai trò không được để trống")
+                _contactUiState.value = ContactUiState.Error(context.getString(R.string.error_role_empty))
                 return null
             }
 
@@ -200,18 +207,20 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
             val phonePattern = "^[+]?[0-9]{10,15}$".toRegex()
             val cleanPhone = phone.trim().replace("\\s".toRegex(), "")
             if (!cleanPhone.matches(phonePattern)) {
-                _contactUiState.value = ContactUiState.Error("Số điện thoại không hợp lệ")
+                _contactUiState.value = ContactUiState.Error(context.getString(R.string.error_phone_empty))
                 return null
             }
 
             // Kiểm tra xem phone đã tồn tại chưa
             val existingContact = contactRepository.getContactByUserIdAndPhone(userId, cleanPhone)
             existingContact.getOrNull()?.let { existing ->
-                _contactUiState.value = ContactUiState.Error("Số điện thoại này đã được sử dụng cho liên hệ: ${existing.name}")
+                _contactUiState.value =
+                    ContactUiState.Error(context.getString(R.string.error_phone_exists_with_contact, existing.name))
                 return null
             }
 
-            val result = contactRepository.quickAddContact(userId, name.trim(), cleanPhone, role.trim())
+            val result =
+                contactRepository.quickAddContact(userId, name.trim(), cleanPhone, role.trim())
 
             if (result.isSuccess) {
                 val contactId = result.getOrThrow()
@@ -223,7 +232,7 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                     createdContact?.let {
                         _contactUiState.value = ContactUiState.ContactCreated(
                             it.id.toLong(),
-                            "Đã thêm liên hệ thành công"
+                            context.getString(R.string.contact_created_success)
                         )
                     }
                 }
@@ -237,8 +246,9 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
                 val exception = result.exceptionOrNull()
                 val errorMessage = when {
                     exception?.message?.contains("UNIQUE constraint failed") == true ->
-                        "Số điện thoại này đã được sử dụng"
-                    else -> exception?.message ?: "Lỗi khi thêm liên hệ"
+                       context.getString(R.string.error_phone_exists)
+
+                    else -> exception?.message ?: context.getString(R.string.error_creating_contact)
                 }
                 _contactUiState.value = ContactUiState.Error(errorMessage)
                 null
@@ -246,13 +256,15 @@ class ContactViewModel @Inject constructor(private val contactRepository: Contac
         } catch (e: Exception) {
             val errorMessage = when {
                 e.message?.contains("UNIQUE constraint failed") == true ->
-                    "Số điện thoại này đã được sử dụng"
-                else -> e.message ?: "Lỗi không xác định khi thêm liên hệ"
+                    context.getString(R.string.error_phone_exists)
+
+                else -> e.message ?: context.getString(R.string.unknown_error_adding_contact)
             }
             _contactUiState.value = ContactUiState.Error(errorMessage)
             null
         }
     }
+
     /**
      * Reset Ui state ve Idle
      */

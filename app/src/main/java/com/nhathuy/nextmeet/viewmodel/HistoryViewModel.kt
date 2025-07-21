@@ -1,8 +1,10 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentWithContact
 import com.nhathuy.nextmeet.model.AppointmentStatus
@@ -10,6 +12,7 @@ import com.nhathuy.nextmeet.model.HistoryCounts
 import com.nhathuy.nextmeet.model.HistoryStatistics
 import com.nhathuy.nextmeet.repository.AppointmentPlusRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,7 +21,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val appointmentRepository: AppointmentPlusRepository
+    private val appointmentRepository: AppointmentPlusRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     // UI States
@@ -42,10 +46,11 @@ class HistoryViewModel @Inject constructor(
     private val _historyStatistics = MutableStateFlow<HistoryStatistics?>(null)
     val historyStatistics: StateFlow<HistoryStatistics?> = _historyStatistics.asStateFlow()
 
-    // Raw data from repository - THAY ĐỔI: sử dụng AppointmentWithContact
-    private val _allHistoryAppointments = MutableStateFlow<List<AppointmentWithContact>>(emptyList())
+    // Raw data from repository
+    private val _allHistoryAppointments =
+        MutableStateFlow<List<AppointmentWithContact>>(emptyList())
 
-    // Filtered and processed data for UI - THAY ĐỔI: sử dụng AppointmentWithContact
+    // Filtered and processed data for UI
     val filteredAppointments: StateFlow<List<AppointmentWithContact>> = combine(
         _allHistoryAppointments,
         _currentFilter,
@@ -66,7 +71,7 @@ class HistoryViewModel @Inject constructor(
                 appointment.title.contains(query, ignoreCase = true) ||
                         appointment.description.contains(query, ignoreCase = true) ||
                         appointment.location.contains(query, ignoreCase = true) ||
-                        contactName.contains(query, ignoreCase = true) // THÊM: tìm kiếm theo contact name
+                        contactName.contains(query, ignoreCase = true)
             }
         }
 
@@ -77,7 +82,7 @@ class HistoryViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    // Grouped appointments by date for better UI organization - THAY ĐỔI: sử dụng AppointmentWithContact
+    // Grouped appointments by date for better UI organization
     val groupedAppointments: StateFlow<Map<String, List<AppointmentWithContact>>> =
         filteredAppointments.map { appointments ->
             appointments.groupByDate()
@@ -93,7 +98,6 @@ class HistoryViewModel @Inject constructor(
         ALL, COMPLETED, CANCELLED, MISSED
     }
 
-    // ===== PUBLIC METHODS =====
 
     /**
      * Load all history data for user
@@ -109,7 +113,8 @@ class HistoryViewModel @Inject constructor(
                 appointmentRepository.getAllHistoryAppointments(userId)
                     .catch { e ->
                         Log.e("HistoryViewModel", "Error loading history appointments", e)
-                        _errorMessage.value = "Lỗi khi tải lịch sử cuộc hẹn: ${e.message}"
+                        _errorMessage.value =
+                            context.getString(R.string.error_loading_history, e.message)
                         _isLoading.value = false
                     }
                     .collect { appointmentsWithContact ->
@@ -126,7 +131,7 @@ class HistoryViewModel @Inject constructor(
 
             } catch (e: Exception) {
                 Log.e("HistoryViewModel", "Error in loadHistoryData", e)
-                _errorMessage.value = "Lỗi khi tải dữ liệu: ${e.message}"
+                _errorMessage.value = context.getString(R.string.error_loading_data, e.message)
                 _isLoading.value = false
             }
         }
@@ -178,17 +183,16 @@ class HistoryViewModel @Inject constructor(
                     endTime = endDate.timeInMillis
                 ).catch { e ->
                     Log.e("HistoryViewModel", "Error loading appointments in range", e)
-                    _errorMessage.value = "Lỗi khi tải cuộc hẹn trong khoảng thời gian"
+                    _errorMessage.value = context.getString(R.string.error_loading_range)
                     _isLoading.value = false
                 }.collect { appointmentsWithContact ->
-                    // THAY ĐỔI: Không cần chuyển đổi, sử dụng trực tiếp AppointmentWithContact
                     _allHistoryAppointments.value = appointmentsWithContact
                     updateCounts(appointmentsWithContact)
                     _isLoading.value = false
                 }
             } catch (e: Exception) {
                 Log.e("HistoryViewModel", "Error in getAppointmentsInDateRange", e)
-                _errorMessage.value = "Lỗi khi tải dữ liệu: ${e.message}"
+                _errorMessage.value = context.getString(R.string.error_loading_statistics)
                 _isLoading.value = false
             }
         }
@@ -217,7 +221,6 @@ class HistoryViewModel @Inject constructor(
         _errorMessage.value = null
     }
 
-    // ===== PRIVATE METHODS =====
 
     private suspend fun loadHistoryStatistics(userId: Int) {
         try {
@@ -247,7 +250,6 @@ class HistoryViewModel @Inject constructor(
         )
     }
 
-    // ===== UTILITY METHODS =====
 
     /**
      * Get completion rate as percentage string
@@ -264,10 +266,13 @@ class HistoryViewModel @Inject constructor(
     fun getSummaryText(): String {
         val counts = _historyCounts.value
         return when (_currentFilter.value) {
-            HistoryFilter.ALL -> "Tổng cộng ${counts.total} cuộc hẹn"
-            HistoryFilter.COMPLETED -> "${counts.completed} cuộc hẹn đã hoàn thành"
-            HistoryFilter.CANCELLED -> "${counts.cancelled} cuộc hẹn đã hủy"
-            HistoryFilter.MISSED -> "${counts.missed} cuộc hẹn đã bỏ lỡ"
+            HistoryFilter.ALL -> context.getString(R.string.history_summary_all, counts.total)
+            HistoryFilter.COMPLETED -> context.getString(
+                R.string.history_summary_completed,
+                counts.completed
+            )
+            HistoryFilter.CANCELLED -> context.getString(R.string.history_summary_cancelled,counts.cancelled)
+            HistoryFilter.MISSED -> context.getString(R.string.history_summary_missed,counts.missed)
         }
     }
 
@@ -297,7 +302,11 @@ private fun List<AppointmentWithContact>.groupByDate(): Map<String, List<Appoint
     val calendar = Calendar.getInstance()
     return this.groupBy { appointmentWithContact ->
         calendar.timeInMillis = appointmentWithContact.appointment.startDateTime
-        "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
+        "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${
+            calendar.get(
+                Calendar.YEAR
+            )
+        }"
     }
 }
 
@@ -307,5 +316,9 @@ private fun List<AppointmentWithContact>.groupByDate(): Map<String, List<Appoint
 private fun Long.toDateKey(): String {
     val calendar = Calendar.getInstance()
     calendar.timeInMillis = this
-    return "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
+    return "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${
+        calendar.get(
+            Calendar.YEAR
+        )
+    }"
 }

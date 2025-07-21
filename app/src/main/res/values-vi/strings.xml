@@ -130,6 +130,155 @@
     <string name="select_all">Chọn tất cả</string>
     <string name="deselect_all">Bỏ chọn tất cả</string>
 
+
+    <!-- Thông báo thành công -->
+    <string name="appointment_created_successfully">Cuộc hẹn đã được tạo thành công</string>
+    <string name="appointment_pinned">Đã pin cuộc hẹn</string>
+    <string name="appointment_unpinned">Đã bỏ pin cuộc hẹn</string>
+    <string name="appointment_status_updated">Trạng thái cuộc hẹn đã được cập nhật</string>
+
+    <!-- Thông báo lỗi -->
+    <string name="error_select_contact">Vui lòng chọn liên hệ cho cuộc hẹn</string>
+    <string name="error_unknown">Lỗi không xác định</string>
+    <string name="error_creating_appointment">Lỗi khi tạo cuộc hẹn</string>
+    <string name="error_loading_appointments">Lỗi khi tải danh sách cuộc hẹn</string>
+    <string name="error_pin_appointment">Lỗi khi pin cuộc hẹn</string>
+    <string name="error_update_status">Lỗi khi cập nhật trạng thái</string>
+    <string name="error_deleting_appointment">Lỗi khi xóa cuộc hẹn</string>
+
+    <!-- Thông báo xóa -->
+    <string name="appointment_delete_success">Cuộc hẹn đã được xóa thành công</string>
+
+    <!-- Thông báo khác -->
+    <string name="notification_create_failed">Không thể tạo thông báo cho cuộc hẹn %1$d</string>
+    <string name="appointment_load_error">Lỗi khi tải cuộc hẹn</string>
+
+    <string name="appointment_update_success">Cuộc hẹn đã được cập nhật thành công</string>
+    <string name="appointment_update_error">Lỗi khi cập nhật cuộc hẹn</string>
+
+    <!-- Navigation -->
+    <string name="navigation_started">Đã bắt đầu điều hướng</string>
+    <string name="navigation_start_error">Lỗi khi bắt đầu điều hướng: %1$s</string>
+    <string name="navigation_cancelled">Đã hủy điều hướng</string>
+    <string name="navigation_cancel_error">Lỗi khi hủy điều hướng</string>
+    <string name="navigation_status_updated">Cập nhật trạng thái điều hướng thành công</string>
+    <string name="navigation_status_update_error">Lỗi khi cập nhật trạng thái điều hướng</string>
+    <string name="navigation_notification_failed">Không thể tạo thông báo cho cuộc hẹn %1$d</string>
+    <string name="navigation_status_transition_message">%1$s → %2$s</string>
+    <string name="updated_appointmnet">Cập nhật cuộc hẹn</string>
+
+
+    <string name="notification_delayed_title">⚠️ Sắp trễ cuộc hẹn</string>
+    <string name="notification_delayed_message">Cuộc hẹn \'%1$s\' sắp diễn ra. Bạn nên khởi hành ngay!</string>
+
+    <string name="notification_missed_title">❌ Đã bỏ lỡ cuộc hẹn</string>
+    <string name="notification_missed_message">Cuộc hẹn \'%1$s\' đã bắt đầu và bạn chưa đến.</string>
+
+
+    <string name="appointment_not_found">Không tìm thấy cuộc hẹn</string>
+    <string name="appointment_cannot_cancel">Không thể hủy cuộc hẹn ở trạng thái %1$s</string>
+    <string name="appointment_cancel_error">Lỗi khi hủy cuộc hẹn</string>
+    <string name="appointment_cancel_success">Cuộc hẹn \'%1$s\' đã được hủy thành công</string>
+    <string name="appointment_cancelled_title">🚫 Cuộc hẹn đã hủy</string>
+    <string name="appointment_cancelled_message">Cuộc hẹn \'%1$s\' đã được hủy\nNội dung: %2$s</string>
+    <string name="no_description">Không có mô tả</string>
+    <string name="appointment_canncelled_message">Cuộc hẹn \'%1$s\' đã được hủy/n</string>
+    <string name="cancel_appointment_description">Nội dung: %1$s</string>
+
+
+    <string name="contact_created_success">Đã tạo liên hệ thành công</string>
+    <string name="contact_updated_success">Đã cập nhật liên hệ thành công</string>
+    <string name="contact_deleted_success">Đã xóa liên hệ thành công</string>
+    <string name="contact_favorited">Đã yêu thích liên hệ</string>
+    <string name="contact_unfavorited">Đã bỏ yêu thích liên hệ</string>
+
+    <string name="error_contact_not_found">Không tìm thấy liên hệ</string>
+    <string name="error_creating_contact">Lỗi khi tạo liên hệ</string>
+    <string name="error_updating_contact">Lỗi khi cập nhật liên hệ</string>
+    <string name="error_deleting_contact">Lỗi khi xóa liên hệ</string>
+    <string name="error_loading_contacts">Lỗi khi tải liên hệ</string>
+    <string name="error_loading_contact_names">Lỗi khi tải danh sách liên hệ</string>
+    <string name="error_phone_invalid">Số điện thoại không hợp lệ</string>
+    <string name="error_phone_exists">Số điện thoại này đã được sử dụng</string>
+    <string name="error_phone_exists_with_contact">Số điện thoại này đã được sử dụng cho liên hệ: %1$s</string>
+    <string name="error_name_empty">Tên không được để trống</string>
+    <string name="error_phone_empty">Số điện thoại không được để trống</string>
+    <string name="error_role_empty">Vai trò không được để trống</string>
+    <string name="error_favorited_contact">Lỗi khi yêu thích liên hệ</string>
+    <string name="unknown_error_adding_contact">Lỗi không xác định khi thêm liên hệ</string>
+
+    <!-- Error messages -->
+    <string name="error_loading_history">Lỗi khi tải lịch sử cuộc hẹn: %1$s</string>
+    <string name="error_loading_data">Lỗi khi tải dữ liệu: %1$s</string>
+    <string name="error_loading_range">Lỗi khi tải cuộc hẹn trong khoảng thời gian</string>
+    <string name="error_loading_statistics">Lỗi khi tải thống kê</string>
+
+    <!-- Summary text -->
+    <string name="history_summary_all">Tổng cộng %1$d cuộc hẹn</string>
+    <string name="history_summary_completed">%1$d cuộc hẹn đã hoàn thành</string>
+    <string name="history_summary_cancelled">%1$d cuộc hẹn đã hủy</string>
+    <string name="history_summary_missed">%1$d cuộc hẹn đã bỏ lỡ</string>
+
+    <!-- Completion rate -->
+    <string name="history_completion_rate">%1$d%%</string>
+
+    <!--Error note-->
+    <string name="error_loading_note">Lỗi khi tải ghi chú</string>
+    <string name="note_created_success">Ghi chú đã được tạo thành công</string>
+    <string name="note_updated_success">Ghi chú đã được cập nhật</string>
+    <string name="error_creating_note">Lỗi khi tạo ghi chú</string>
+    <string name="error_updating_note">Lỗi khi cập nhật ghi chú</string>
+    <string name="checklist_empty">Danh sách kiểm tra trống</string>
+    <string name="note_empty">Ghi chú trống</string>
+    <string name="note_deleted_success">Ghi chú đã được xóa thành công</string>
+    <string name="error_deleting_note">Không xóa được ghi chú</string>
+
+    <string name="note_pinned">Ghi chú đã được ghim</string>
+    <string name="note_unpinned">Ghi chú đã được bỏ ghim</string>
+    <string name="error_pin_note">Lỗi khi ghim ghi chú</string>
+
+    <!-- Share -->
+    <string name="note_shared_success">Đã chia sẻ ghi chú</string>
+    <string name="note_unshared_success">Đã hủy chia sẻ</string>
+    <string name="error_sharing_note">Lỗi khi chia sẻ ghi chú</string>
+
+    <!-- Share with other apps -->
+    <string name="error_invalid_note_id">ID ghi chú không hợp lệ</string>
+    <string name="share_note_title">📝 Tiêu đề: %1$s\n</string>
+    <string name="share_note_checklist_title">📋 Danh sách công việc:\n</string>
+    <string name="share_note_no_checklist">Không có mục nào.\n\n</string>
+    <string name="share_note_description">📝 Mô tả: %1$s\n\n</string>
+    <string name="share_note_time">⏰ Được chia sẻ lúc: %1$s\n</string>
+    <string name="share_note_footer">📱 Từ NextMeet App</string>
+
+    <!-- Reminder -->
+    <string name="note_reminder_set">Đã đặt lời nhắc</string>
+    <string name="note_reminder_removed">Đã xóa lời nhắc</string>
+    <string name="error_updating_reminder">Lỗi khi cập nhật lời nhắc</string>
+
+    <!-- Duplicate -->
+    <string name="note_duplicated">Đã tạo bản sao ghi chú</string>
+    <string name="error_duplicating_note">Lỗi khi tạo bản sao</string>
+
+    <!-- Images -->
+    <string name="note_images_saved">Đã lưu ghi chú với ảnh</string>
+    <string name="error_saving_images">Lỗi khi lưu ảnh</string>
+
+
+    <string name="search_filter_contact_prefix">Liên hệ: </string>
+
+    <!-- Thao tác lịch sử tìm kiếm -->
+    <string name="search_history_deleted">Đã xóa lịch sử tìm kiếm</string>
+    <string name="search_history_cleared">Đã xóa lịch sử tìm kiếm</string>
+    <string name="search_history_cleared_all">Đã xóa toàn bộ lịch sử tìm kiếm</string>
+
+    <!-- Trạng thái giao diện người dùng / tin nhắn -->
+    <string name="search_loading">Đang tìm kiếm...</string>
+    <string name="search_results_loaded">Đã hoàn tất tìm kiếm</string>
+    <string name="search_error">Đã xảy ra lỗi: %1$s</string>
+    <string name="search_cleared">Đã xóa tìm kiếm</string>
+    <string name="search_reset">Đã đặt lại tìm kiếm về mặc định</string>
+    <string name="contact_names">Liên hệ: %1$s</string>
     <!-- String Arrays -->
     <string-array name="day_options">
         <item>Hôm nay</item>

@@ -1,9 +1,11 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.AppointmentPlus
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.Contact
@@ -30,7 +32,8 @@ import javax.inject.Inject
 class AppointmentPlusViewModel @Inject constructor(
     private val appointmentRepository: AppointmentPlusRepository,
     private val contactRepository: ContactRepository,
-    private val notificationManagerService: NotificationManagerService
+    private val notificationManagerService: NotificationManagerService,
+    private val context : Context
 ) : ViewModel() {
 
     private val _appointmentUiState = MutableStateFlow<AppointmentUiState>(AppointmentUiState.Idle)
@@ -68,7 +71,7 @@ class AppointmentPlusViewModel @Inject constructor(
             try {
                 if (appointment.contactId == null) {
                     _appointmentUiState.value =
-                        AppointmentUiState.Error("Vui lòng chọn liên hệ cho cuộc hẹn")
+                        AppointmentUiState.Error(context.getString(R.string.error_invalid_contact_id))
                     return@launch
                 }
                 val result = appointmentRepository.createAppointment(
@@ -101,16 +104,16 @@ class AppointmentPlusViewModel @Inject constructor(
 
                     _appointmentUiState.value = AppointmentUiState.AppointmentCreated(
                         result.getOrThrow(),
-                        "Cuộc hẹn đã được tạo thành công"
+                        context.getString(R.string.appointment_created_successfully)
                     )
                 } else {
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        result.exceptionOrNull()?.message ?: "Lỗi không xác định"
+                        result.exceptionOrNull()?.message ?: context.getString(R.string.error_unknown)
                     )
                 }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi tạo cuộc hẹn"
+                    e.message ?: context.getString(R.string.error_creating_appointment)
                 )
             }
         }
@@ -136,7 +139,7 @@ class AppointmentPlusViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi tải danh sách cuộc hẹn"
+                    e.message ?: context.getString(R.string.error_loading_appointments)
                 )
             }
         }
@@ -150,17 +153,17 @@ class AppointmentPlusViewModel @Inject constructor(
             try {
                 appointmentRepository.togglePin(appointmentId)
                     .onSuccess { isPinned ->
-                        val message = if (isPinned) "Đã pin cuộc hẹn" else "Đã bỏ pin cuộc hẹn"
+                        val message = if (isPinned) context.getString(R.string.appointment_pinned) else context.getString(R.string.appointment_unpinned)
                         _appointmentUiState.value = AppointmentUiState.PinToggled(isPinned, message)
                     }
                     .onFailure { error ->
                         _appointmentUiState.value = AppointmentUiState.Error(
-                            error.message ?: "Lỗi khi pin cuộc hẹn"
+                            error.message ?: context.getString(R.string.error_pin_appointment)
                         )
                     }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi pin cuộc hẹn"
+                    e.message ?: context.getString(R.string.error_pin_appointment)
                 )
             }
         }
@@ -186,19 +189,19 @@ class AppointmentPlusViewModel @Inject constructor(
 
                     _appointmentUiState.value = AppointmentUiState.StatusUpdated(
                         status,
-                        "Trạng thái cuộc hẹn đã được cập nhật"
+                        context.getString(R.string.appointment_status_updated)
                     )
 
                     _appointmentUiState.value =
                         AppointmentUiState.AppointmentsLoaded(allAppointments)
                 } else {
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        result.exceptionOrNull()?.message ?: "Lỗi khi cập nhật trạng thái"
+                        result.exceptionOrNull()?.message ?: context.getString(R.string.error_update_status)
                     )
                 }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi cập nhật trạng thái cuộc hẹn"
+                    e.message ?: context.getString(R.string.error_update_status)
                 )
             }
         }
@@ -217,16 +220,16 @@ class AppointmentPlusViewModel @Inject constructor(
                 val result = appointmentRepository.deleteAppointment(appointmentId)
                 if (result.isSuccess) {
                     _appointmentUiState.value = AppointmentUiState.AppointmentDeleted(
-                        "Cuộc hẹn đã được xóa thành công"
+                        context.getString(R.string.appointment_delete_success)
                     )
                 } else {
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        result.exceptionOrNull()?.message ?: "Lỗi khi xóa cuộc hẹn"
+                        result.exceptionOrNull()?.message ?: context.getString(R.string.error_deleting_appointment)
                     )
                 }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi xóa cuộc hẹn"
+                    e.message ?: context.getString(R.string.error_deleting_appointment)
                 )
             }
         }
@@ -246,12 +249,12 @@ class AppointmentPlusViewModel @Inject constructor(
                     )
                 } else {
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        result.exceptionOrNull()?.message ?: "Lỗi khi tải cuộc hẹn"
+                        result.exceptionOrNull()?.message ?: context.getString(R.string.appointment_load_error)
                     )
                 }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi tải cuộc hẹn"
+                    e.message ?: context.getString(R.string.appointment_load_error)
                 )
             }
         }
@@ -293,16 +296,16 @@ class AppointmentPlusViewModel @Inject constructor(
                     }
 
                     _appointmentUiState.value = AppointmentUiState.AppointmentUpdated(
-                        "Cuộc hẹn đã được cập nhật thành công"
+                        context.getString(R.string.appointment_update_success),
                     )
                 } else {
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        result.exceptionOrNull()?.message ?: "Lỗi không xác định"
+                        result.exceptionOrNull()?.message ?: context.getString(R.string.error_unknown)
                     )
                 }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi cập nhật cuộc hẹn"
+                    e.message ?: context.getString(R.string.appointment_update_error)
                 )
             }
         }
@@ -323,9 +326,9 @@ class AppointmentPlusViewModel @Inject constructor(
                     // Lấy thông tin contact để hiển thị trong notification
                     val contactResult = contactRepository.getContactById(contactId)
                     val contactName = if (contactResult.isSuccess) {
-                        contactResult.getOrNull()?.name ?: "Không rõ"
+                        contactResult.getOrNull()?.name ?: context.getString(R.string.error_unknown)
                     } else {
-                        "Không rõ"
+                        context.getString(R.string.error_unknown)
                     }
 
                     val success = notificationManagerService.scheduleAppointmentNotification(
@@ -442,19 +445,19 @@ class AppointmentPlusViewModel @Inject constructor(
                             }
 
                             _appointmentUiState.value = AppointmentUiState.NavigationStarted(
-                                "Đã bắt đầu điều hướng"
+                                context.getString(R.string.navigation_started)
                             )
                         }
                     }
                 } else {
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        "Lỗi khi bắt đầu điều hướng: ${navResult.exceptionOrNull()?.message}"
+                        context.getString(R.string.navigation_start_error,navResult.exceptionOrNull()?.message)
                     )
                 }
             } catch (e: Exception) {
                 Log.e("AppointmentViewModel", "Error starting navigation", e)
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi bắt đầu điều hướng"
+                    e.message ?: context.getString(R.string.navigation_cancel_error)
                 )
             }
         }
@@ -481,7 +484,7 @@ class AppointmentPlusViewModel @Inject constructor(
                         appointmentRepository.updateNavigationStatus(appointmentId, false)
                     if (navResult.isFailure) {
                         _appointmentUiState.value =
-                            AppointmentUiState.Error("Lỗi khi hủy navigation")
+                            AppointmentUiState.Error(context.getString(R.string.navigation_cancel_error))
                         return@launch
                     }
 
@@ -528,7 +531,7 @@ class AppointmentPlusViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("AppointmentViewModel", "Error cancelling navigation with mode", e)
-                _appointmentUiState.value = AppointmentUiState.Error("Lỗi khi hủy điều hướng")
+                _appointmentUiState.value = AppointmentUiState.Error(context.getString(R.string.navigation_cancel_error))
             }
         }
     }
@@ -642,7 +645,7 @@ class AppointmentPlusViewModel @Inject constructor(
 
             notificationManagerService.sendSimpleNotification(
                 appointmentId = appointment.id,
-                title = "Cập nhật cuộc hẹn",
+                title = context.getString(R.string.updated_appointmnet),
                 message = "${appointment.title}: $message"
             )
 
@@ -808,11 +811,13 @@ class AppointmentPlusViewModel @Inject constructor(
         try {
             val (title, message) = when (newStatus) {
                 AppointmentStatus.DELAYED -> {
-                    "⚠️ Sắp trễ cuộc hẹn" to "Cuộc hẹn '${appointment.title}' sắp diễn ra. Bạn nên khởi hành ngay!"
+                    context.getString(R.string.notification_delayed_title) to
+                            context.getString(R.string.notification_delayed_message, appointment.title)
                 }
 
                 AppointmentStatus.MISSED -> {
-                    "❌ Đã bỏ lỡ cuộc hẹn" to "Cuộc hẹn '${appointment.title}' đã bắt đầu và bạn chưa đến."
+                    context.getString(R.string.notification_missed_title) to
+                            context.getString(R.string.notification_missed_message, appointment.title)
                 }
 
                 else -> return
@@ -937,120 +942,128 @@ class AppointmentPlusViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi tải danh sách cuộc hẹn"
+                    e.message ?: context.getString(R.string.error_loading_appointments)
                 )
             }
         }
     }
 
-    fun cancelAppointment(appointmentId: Int) {
-        viewModelScope.launch {
-            _appointmentUiState.value = AppointmentUiState.Loading
-            try {
+        fun cancelAppointment(appointmentId: Int) {
+            viewModelScope.launch {
+                _appointmentUiState.value = AppointmentUiState.Loading
+                try {
 
-                // lấy appointment hiện tại
-                val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
-                if (appointmentResult.isFailure) {
-                    _appointmentUiState.value = AppointmentUiState.Error(
-                        appointmentResult.exceptionOrNull()?.message ?: "Không tìm thấy cuộc hẹn"
+                    // lấy appointment hiện tại
+                    val appointmentResult = appointmentRepository.getAppointmentById(appointmentId)
+                    if (appointmentResult.isFailure) {
+                        _appointmentUiState.value = AppointmentUiState.Error(
+                            appointmentResult.exceptionOrNull()?.message ?: context.getString(R.string.appointment_not_found)
+                        )
+                        return@launch
+                    }
+
+                    val appointment = appointmentResult.getOrThrow()
+
+                    if (!appointment.status.canTransitionTo(AppointmentStatus.CANCELLED)) {
+                        _appointmentUiState.value = AppointmentUiState.Error(
+                            context.getString(R.string.appointment_cannot_cancel,appointment.status.displayName)
+                        )
+                        return@launch
+                    }
+
+                    // hủy tất cả notifications liên quan
+                    cancelAppointmentNotification(appointmentId)
+
+                    // Nếu đang navigation thì dừng navigation trước
+                    if (appointment.navigationStarted) {
+                        val navResult =
+                            appointmentRepository.updateNavigationStatus(appointmentId, false)
+                        if (navResult.isFailure) {
+                            Log.w(
+                                "AppointmentViewModel",
+                                "Failed to stop navigation for cancelled appointment"
+                            )
+                        }
+                        resetNavigationSession()
+                    }
+
+                    // Cập nhật status thành CANCELLED
+                    val result = appointmentRepository.updateAppointmentStatus(
+                        appointmentId,
+                        AppointmentStatus.CANCELLED
                     )
-                    return@launch
-                }
 
-                val appointment = appointmentResult.getOrThrow()
+                    if (result.isSuccess) {
+                        // Update local cache
+                        updateLocalCache(appointmentId) { appt ->
+                            appt.copy(
+                                status = AppointmentStatus.CANCELLED,
+                                navigationStarted = false,
+                                updateAt = System.currentTimeMillis()
+                            )
+                        }
 
-                if (!appointment.status.canTransitionTo(AppointmentStatus.CANCELLED)) {
-                    _appointmentUiState.value = AppointmentUiState.Error(
-                        "Không thể hủy cuộc hẹn ở trạng thái ${appointment.status.displayName}"
-                    )
-                    return@launch
-                }
+                        // Gửi notification thông báo hủy nếu cần
+                        sendCancellationNotification(appointment)
 
-                // hủy tất cả notifications liên quan
-                cancelAppointmentNotification(appointmentId)
+                        _appointmentUiState.value = AppointmentUiState.AppointmentCancelled(
+                            context.getString(R.string.appointment_cancel_success, appointment.title)
+                        )
 
-                // Nếu đang navigation thì dừng navigation trước
-                if (appointment.navigationStarted) {
-                    val navResult =
-                        appointmentRepository.updateNavigationStatus(appointmentId, false)
-                    if (navResult.isFailure) {
-                        Log.w(
+                        Log.d(
                             "AppointmentViewModel",
-                            "Failed to stop navigation for cancelled appointment"
+                            "Cancelled appointment $appointmentId: ${appointment.status} -> CANCELLED"
+                        )
+
+                    } else {
+                        _appointmentUiState.value = AppointmentUiState.Error(
+                            result.exceptionOrNull()?.message ?: context.getString(R.string.appointment_cancelled_title)
                         )
                     }
-                    resetNavigationSession()
-                }
-
-                // Cập nhật status thành CANCELLED
-                val result = appointmentRepository.updateAppointmentStatus(
-                    appointmentId,
-                    AppointmentStatus.CANCELLED
-                )
-
-                if (result.isSuccess) {
-                    // Update local cache
-                    updateLocalCache(appointmentId) { appt ->
-                        appt.copy(
-                            status = AppointmentStatus.CANCELLED,
-                            navigationStarted = false,
-                            updateAt = System.currentTimeMillis()
-                        )
-                    }
-
-                    // Gửi notification thông báo hủy nếu cần
-                    sendCancellationNotification(appointment)
-
-                    _appointmentUiState.value = AppointmentUiState.AppointmentCancelled(
-                        "Cuộc hẹn '${appointment.title}' đã được hủy thành công"
-                    )
-
-                    Log.d(
-                        "AppointmentViewModel",
-                        "Cancelled appointment $appointmentId: ${appointment.status} -> CANCELLED"
-                    )
-
-                } else {
+                } catch (e: Exception) {
+                    Log.e("AppointmentViewModel", "Error cancelling appointment", e)
                     _appointmentUiState.value = AppointmentUiState.Error(
-                        result.exceptionOrNull()?.message ?: "Lỗi khi hủy cuộc hẹn"
+                        e.message ?: context.getString(R.string.appointment_cancel_error)
                     )
                 }
-            } catch (e: Exception) {
-                Log.e("AppointmentViewModel", "Error cancelling appointment", e)
-                _appointmentUiState.value = AppointmentUiState.Error(
-                    e.message ?: "Lỗi khi hủy cuộc hẹn"
+            }
+        }
+        /**
+         * Gửi notification thông báo hủy cuộc hẹn
+         */
+        private suspend fun sendCancellationNotification(
+            appointment: AppointmentPlus
+        ) {
+            try {
+                val message = buildString {
+                    append(
+                        context.getString(
+                            R.string.appointment_canncelled_message,
+                            appointment.title
+                        ))
+                    append(
+                        context.getString(
+                            R.string.cancel_appointment_description,
+                            appointment.description ?: context.getString(R.string.no_description)
+                        ))
+                }
+
+                notificationManagerService.sendSimpleNotification(
+                    appointmentId = appointment.id,
+                    title = context.getString(R.string.appointment_cancelled_title),
+                    message = message
                 )
+
+                Log.d("AppointmentViewModel", "Sent cancellation notification")
+            } catch (e: Exception) {
+                Log.e("AppointmentViewModel", "Error sending cancellation notification", e)
             }
         }
-    }
-    /**
-     * Gửi notification thông báo hủy cuộc hẹn
-     */
-    private suspend fun sendCancellationNotification(
-        appointment: AppointmentPlus
-    ) {
-        try {
-            val message = buildString {
-                append("Cuộc hẹn '${appointment.title}' đã được hủy/n")
-                append("Nội dung: ${appointment.description ?: "Không có mô tả"}")
-            }
 
-            notificationManagerService.sendSimpleNotification(
-                appointmentId = appointment.id,
-                title = "🚫 Cuộc hẹn đã hủy",
-                message = message
-            )
 
-            Log.d("AppointmentViewModel", "Sent cancellation notification")
-        } catch (e: Exception) {
-            Log.e("AppointmentViewModel", "Error sending cancellation notification", e)
+        override fun onCleared() {
+            super.onCleared()
+            stopStatus()
+            resetNavigationSession()
         }
-    }
-
-
-    override fun onCleared() {
-        super.onCleared()
-        stopStatus()
-        resetNavigationSession()
-    }
 }
