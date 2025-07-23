@@ -257,7 +257,7 @@ class LoginActivity : AppCompatActivity() {
                     is Resource.Error -> {
                         Toast.makeText(
                             this@LoginActivity,
-                            result.message ?: "Registration failed",
+                            result.message ?: getString(R.string.registration_failed),
                             Toast.LENGTH_LONG
                         ).show()
                         Log.d("Register", "${result.message}")

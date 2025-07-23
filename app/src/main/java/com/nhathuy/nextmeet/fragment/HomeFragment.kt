@@ -9,24 +9,12 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.Window
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.TextView
-import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.android.material.textfield.TextInputEditText
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.adapter.TabsPagerAdapter
-import com.nhathuy.nextmeet.databinding.DialogAddGridLayoutBinding
 import com.nhathuy.nextmeet.databinding.FragmentHomeBinding
-import com.nhathuy.nextmeet.model.RegistrationForm
-import com.nhathuy.nextmeet.ui.AddNoteActivity
-import com.nhathuy.nextmeet.ui.GoogleMapActivity
 import com.nhathuy.nextmeet.ui.SearchActivity
-import com.nhathuy.nextmeet.ui.TestActivity
-import dagger.hilt.android.AndroidEntryPoint
 
 
 class HomeFragment : Fragment() {
@@ -56,10 +44,10 @@ class HomeFragment : Fragment() {
     private fun setupTabLayout() {
         TabLayoutMediator(binding.tabLayout, binding.homeViewpager2) { tab, position ->
             tab.text = when (position) {
-                0 -> "Dashboard"
-                1 -> "Notes"
-                2 -> "History"
-                else -> "Tab"
+                0 -> getString(R.string.tab_dashboard)
+                1 -> getString(R.string.tab_notes)
+                2 -> getString(R.string.tab_history)
+                else -> getString(R.string.tab_default)
             }
         }.attach()
 

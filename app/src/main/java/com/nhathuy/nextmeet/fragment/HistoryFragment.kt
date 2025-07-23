@@ -231,7 +231,7 @@ class HistoryFragment : Fragment() {
             recyclerHistory.visibility = View.GONE
             layoutEmptyState.visibility = View.VISIBLE
 
-            tvEmptyTitle.text = "Có lỗi xảy ra"
+            tvEmptyTitle.text = getString(R.string.error_occurred   )
             tvEmptyDescription.text = errorMessage
             ivEmptyIcon.setImageResource(R.drawable.ic_error)
         }
@@ -268,28 +268,28 @@ class HistoryFragment : Fragment() {
         binding.apply {
             when (currentFilter) {
                 HistoryViewModel.HistoryFilter.ALL -> {
-                    tvEmptyTitle.text = "Chưa có lịch sử cuộc hẹn"
+                    tvEmptyTitle.text = getString(R.string.history_empty_all_title)
                     tvEmptyDescription.text =
-                        "Các cuộc hẹn đã hoàn thành, hủy hoặc bỏ lỡ sẽ xuất hiện ở đây"
+                        getString(R.string.history_empty_all_desc)
                     ivEmptyIcon.setImageResource(R.drawable.ic_history) // Add appropriate icon
                 }
 
                 HistoryViewModel.HistoryFilter.COMPLETED -> {
-                    tvEmptyTitle.text = "Chưa có cuộc hẹn hoàn thành"
+                    tvEmptyTitle.text = getString(R.string.history_empty_completed_title)
                     tvEmptyDescription.text =
-                        "Các cuộc hẹn bạn đã tham gia thành công sẽ xuất hiện ở đây"
+                        getString(R.string.history_empty_completed_desc)
                     ivEmptyIcon.setImageResource(R.drawable.ic_check_circle) // Add appropriate icon
                 }
 
                 HistoryViewModel.HistoryFilter.CANCELLED -> {
-                    tvEmptyTitle.text = "Chưa có cuộc hẹn bị hủy"
-                    tvEmptyDescription.text = "Các cuộc hẹn bạn đã hủy sẽ xuất hiện ở đây"
+                    tvEmptyTitle.text = getString(R.string.history_empty_cancelled_title)
+                    tvEmptyDescription.text = getString(R.string.history_empty_cancelled_desc)
                     ivEmptyIcon.setImageResource(R.drawable.ic_cancel) // Add appropriate icon
                 }
 
                 HistoryViewModel.HistoryFilter.MISSED -> {
-                    tvEmptyTitle.text = "Chưa có cuộc hẹn bị bỏ lỡ"
-                    tvEmptyDescription.text = "Các cuộc hẹn bạn đã bỏ lỡ sẽ xuất hiện ở đây"
+                    tvEmptyTitle.text = getString(R.string.history_empty_missed_title)
+                    tvEmptyDescription.text = getString(R.string.history_empty_missed_desc)
                     ivEmptyIcon.setImageResource(R.drawable.ic_schedule) // Add appropriate icon
                 }
             }
@@ -377,7 +377,7 @@ class HistoryFragment : Fragment() {
 
         try {
             Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
-                .setAction("Thử lại") {
+                .setAction(getString(R.string.retry)) {
                     refreshData()
                 }
                 .show()
@@ -430,21 +430,21 @@ class HistoryFragment : Fragment() {
 
         try {
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Xác nhận xóa")
-                .setMessage("Bạn có chắc chắn muốn xóa cuộc hẹn \"${appointment.appointment.title}\"?")
+                .setTitle(getString(R.string.delete_confirm_title))
+                .setMessage(getString(R.string.delete_confirm_message, appointment.appointment.title))
                 .setIcon(R.drawable.ic_remove)
-                .setPositiveButton("Xóa") { dialog, _ ->
+                .setPositiveButton(getString(R.string.btn_delete)) { dialog, _ ->
                     handleDeleteAppointment(appointment)
                     dialog.dismiss()
                 }
-                .setNegativeButton("Hủy") { dialog, _ ->
+                .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                     dialog.dismiss()
                 }
                 .setCancelable(true)
                 .show()
         } catch (e: Exception) {
             Log.e("HistoryFragment", "Error showing delete confirmation dialog: ${e.message}")
-            showSnackbar("Có lỗi xảy ra", Snackbar.LENGTH_SHORT)
+            showSnackbar(getString(R.string.error_occurred), Snackbar.LENGTH_SHORT)
         }
     }
 
@@ -454,34 +454,34 @@ class HistoryFragment : Fragment() {
         val currentAppointments = historyViewModel.filteredAppointments.value
 
         if (currentAppointments.isEmpty()) {
-            showSnackbar("Không có cuộc hẹn nào để xóa", Snackbar.LENGTH_SHORT)
+            showSnackbar(getString(R.string.snack_no_appointments_to_delete), Snackbar.LENGTH_SHORT)
             return
         }
 
         try {
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Xác nhận xóa tất cả")
-                .setMessage("Bạn có chắc chắn muốn xóa ${currentAppointments.size} cuộc hẹn? Hành động này không thể hoàn tác.")
+                .setTitle(getString(R.string.delete_all_confirm_title))
+                .setMessage(getString(R.string.delete_all_confirm_message,currentAppointments.size))
                 .setIcon(R.drawable.ic_remove)
-                .setPositiveButton("Xóa tất cả") { dialog, _ ->
+                .setPositiveButton(getString(R.string.delete_all)) { dialog, _ ->
                     handleDeleteAllAppointments(currentAppointments)
                     dialog.dismiss()
                 }
-                .setNegativeButton("Hủy") { dialog, _ ->
+                .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                     dialog.dismiss()
                 }
                 .setCancelable(true)
                 .show()
         } catch (e: Exception) {
             Log.e("HistoryFragment", "Error showing delete all confirmation dialog: ${e.message}")
-            showSnackbar("Có lỗi xảy ra", Snackbar.LENGTH_SHORT)
+            showSnackbar(getString(R.string.error_occurred), Snackbar.LENGTH_SHORT)
         }
     }
 
     private fun handleDeleteAppointment(appointment: AppointmentWithContact) {
         try {
             // Show loading indication
-            showSnackbar("Đang xóa cuộc hẹn...", Snackbar.LENGTH_SHORT)
+            showSnackbar(getString(R.string.snack_deleting), Snackbar.LENGTH_SHORT)
 
             // Delete appointment via ViewModel
             viewLifecycleOwner.lifecycleScope.launch {
@@ -490,7 +490,7 @@ class HistoryFragment : Fragment() {
 
                     if (isBindingValid()) {
                         showSnackbar(
-                            "Đã xóa cuộc hẹn \"${appointment.appointment.title}\"",
+                            getString(R.string.snack_deleted,appointment.appointment.title),
                             Snackbar.LENGTH_SHORT
                         )
                     }
@@ -506,21 +506,21 @@ class HistoryFragment : Fragment() {
                 } catch (e: Exception) {
                     Log.e("HistoryFragment", "Error deleting appointment: ${e.message}")
                     if (isBindingValid()) {
-                        showSnackbar("Có lỗi xảy ra khi xóa cuộc hẹn", Snackbar.LENGTH_LONG)
+                        showSnackbar(getString(R.string.snack_delete_error), Snackbar.LENGTH_LONG)
                     }
                 }
             }
 
         } catch (e: Exception) {
             Log.e("HistoryFragment", "Error in handleDeleteAppointment: ${e.message}")
-            showSnackbar("Có lỗi xảy ra", Snackbar.LENGTH_LONG)
+            showSnackbar(getString(R.string.error_occurred), Snackbar.LENGTH_LONG)
         }
     }
 
     private fun handleDeleteAllAppointments(appointmentsToDelete: List<AppointmentWithContact>) {
         try {
             // Show loading indication
-            showSnackbar("Đang xóa ${appointmentsToDelete.size} cuộc hẹn...", Snackbar.LENGTH_SHORT)
+            showSnackbar(getString(R.string.snack_deleting_many,appointmentsToDelete.size), Snackbar.LENGTH_SHORT)
 
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
@@ -546,21 +546,21 @@ class HistoryFragment : Fragment() {
                         when {
                             errorCount == 0 -> {
                                 showSnackbar(
-                                    "Đã xóa thành công $deletedCount cuộc hẹn",
+                                    getString(R.string.snack_deleted_all_success,deletedCount),
                                     Snackbar.LENGTH_LONG
                                 )
                             }
 
                             deletedCount == 0 -> {
                                 showSnackbar(
-                                    "Có lỗi xảy ra, không thể xóa cuộc hẹn nào",
+                                    getString(R.string.snack_deleted_all_none),
                                     Snackbar.LENGTH_LONG
                                 )
                             }
 
                             else -> {
                                 showSnackbar(
-                                    "Đã xóa $deletedCount cuộc hẹn, $errorCount cuộc hẹn gặp lỗi",
+                                    getString(R.string.snack_deleted_all_partial, deletedCount, errorCount),
                                     Snackbar.LENGTH_LONG
                                 )
                             }
@@ -578,14 +578,14 @@ class HistoryFragment : Fragment() {
                 } catch (e: Exception) {
                     Log.e("HistoryFragment", "Error in delete all operation: ${e.message}")
                     if (isBindingValid()) {
-                        showSnackbar("Có lỗi xảy ra khi xóa cuộc hẹn", Snackbar.LENGTH_LONG)
+                        showSnackbar(getString(R.string.snack_delete_error), Snackbar.LENGTH_LONG)
                     }
                 }
             }
 
         } catch (e: Exception) {
             Log.e("HistoryFragment", "Error in handleDeleteAllAppointments: ${e.message}")
-            showSnackbar("Có lỗi xảy ra", Snackbar.LENGTH_LONG)
+            showSnackbar(getString(R.string.error_occurred), Snackbar.LENGTH_LONG)
         }
     }
 

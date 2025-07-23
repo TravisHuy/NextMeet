@@ -128,9 +128,9 @@
     <!-- API Key (Keep as is) -->
     <string name="google_map_api_key">AIzaSyBKIxrPquNOsh609iBdFLlCxDSOLkI4rKk</string>
     <string name="search_appointments">Search appointments...</string>
-    <string name="search_homes">Search...</string>
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
+    <string name="search_homes">Search...</string>
     <string name="add_appointment">Add appointment</string>
     <string name="add_note">Add note</string>
     <string name="edit_appointment">Edit appointment\n</string>
@@ -409,6 +409,272 @@
     <string name="search_cleared">Search cleared</string>
     <string name="search_reset">Search reset to default</string>
     <string name="contact_names">Contact: %1$s</string>
+    <string name="operation_successful">Operation successful</string>
+
+    <string name="selected_appointment_one">%d selected appointment</string>
+    <string name="selected_appointment_other">%d selected appointments</string>
+
+    <string name="no_appointments_with_contact">No appointments with %1$s</string>
+    <string name="no_appointments_today">No appointments today</string>
+    <string name="no_appointments_upcoming">No upcoming appointments</string>
+    <string name="no_appointments_pinned">No pinned appointments</string>
+    <string name="no_appointments_this_week">No appointments this week</string>
+    <string name="no_appointments_found_for_query">No appointments found for "%1$s"</string>
+
+    <string name="pin_status_updated">Pin status updated for %1$d appointment(s)</string>
+    <string name="appointment_info_header">Appointment Information:\n\n</string>
+    <string name="appointment_info_line_title">Title: %1$s\n</string>
+    <string name="appointment_info_line_description">Description: %1$s\n</string>
+    <string name="appointment_info_line_location">Location: %1$s\n</string>
+    <string name="share_appointment">Share Appointment</string>
+    <string name="appointment_cancelled">%1$d appointment(s) cancelled</string>
+    <string name="undo">Undo</string>
+    <string name="undo_appointment_cancelled">Appointment cancellation undone</string>
+    <string name="contact_name">Contact: %1$s</string>
+
+    <string name="selected_contact_single">%1$d selected contact</string>
+    <string name="selected_contacts_plural">%1$d selected contacts</string>
+    <string name="phone_call_failed">Unable to make a phone call</string>
+    <string name="update">Edit</string>
+
+    <!-- Favorite Action -->
+    <string name="msg_favorite_updated">Updated favorite status for %1$d contact(s)</string>
+
+    <!-- Share Action -->
+    <string name="share_contact_title">Share contact</string>
+    <string name="share_contact_header">Contact information:\n\n</string>
+    <string name="contact_phone">Phone: %1$s\n</string>
+    <string name="contact_email">Email: %1$s\n</string>
+    <string name="contact_role">Role: %1$s\n</string>
+
+    <!-- Delete Action -->
+    <string name="msg_deleted_contacts">Deleted %1$d contact(s)</string>
+    <string name="action_undo">Undo</string>
+    <string name="msg_undo_delete">Undo contact deletion</string>
+
+    <!-- Popup Menu -->
+    <string name="action_select_all">Select all</string>
+    <string name="action_deselect_all">Deselect all</string>
+
+    <!-- Navigation Message -->
+    <string name="msg_add_contact_to_create">Please add a contact to create an appointment</string>
+    <string name="please_select_at_least_one_photo">Please select at least one photo</string>
+    <string name="failed_to_load_photos">Failed to load photos: %1$s</string>
+    <string name="selected_photo">%1$d selected</string>
+    <string name="select_photos">Select photos</string>
+    <string name="updated_reminder">Updated reminder</string>
+    <string name="selected_date_reminder">Select date reminder</string>
+    <string name="selected_hour_reminder">Select hour reminder</string>
+
+    <!-- Reminder -->
+    <string name="msg_select_future_time">Please select a future time</string>
+
+    <!-- Delete Note Dialog -->
+    <string name="title_delete_note">Delete Note</string>
+    <string name="msg_confirm_delete_note">Are you sure you want to delete this note?</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_no">No</string>
+    <string name="msg_delete_failed">Unable to delete this note</string>
+
+
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_notes">Notes</string>
+    <string name="tab_history">History</string>
+    <string name="tab_default">Tab</string>
+    <string name="location_count">%1$d location</string>
+
+    <!-- Error -->
+    <string name="error_occurred">An error occurred</string>
+
+    <!-- History filter -->
+    <string name="history_empty_all_title">No appointment history</string>
+    <string name="history_empty_all_desc">Completed, cancelled, or missed appointments will appear here</string>
+
+    <string name="history_empty_completed_title">No completed appointments</string>
+    <string name="history_empty_completed_desc">Appointments you successfully attended will appear here</string>
+
+    <string name="history_empty_cancelled_title">No cancelled appointments</string>
+    <string name="history_empty_cancelled_desc">Appointments you cancelled will appear here</string>
+
+    <string name="history_empty_missed_title">No missed appointments</string>
+    <string name="history_empty_missed_desc">Appointments you missed will appear here</string>
+    <string name="retry">Retry</string>
+
+
+    <!-- Delete confirmation -->
+    <string name="delete_confirm_title">Delete Confirmation</string>
+    <string name="delete_confirm_message">Are you sure you want to delete the appointment \"%1$s\"?</string>
+    <string name="delete_all_confirm_title">Delete All Confirmation</string>
+    <string name="delete_all_confirm_message">Are you sure you want to delete %1$d appointments? This action cannot be undone.</string>
+
+    <!-- Buttons -->
+    <string name="btn_delete">Delete</string>
+    <string name="btn_delete_all">Delete All</string>
+    <string name="btn_cancel">Cancel</string>
+
+    <!-- Snackbar -->
+    <string name="snack_deleting">Deleting appointment...</string>
+    <string name="snack_deleting_many">Deleting %1$d appointments...</string>
+    <string name="snack_deleted">Deleted appointment \"%1$s\"</string>
+    <string name="snack_deleted_all_success">Successfully deleted %1$d appointments</string>
+    <string name="snack_deleted_all_none">An error occurred, no appointments were deleted</string>
+    <string name="snack_deleted_all_partial">Deleted %1$d appointments, %2$d failed</string>
+    <string name="snack_delete_error">An error occurred while deleting appointment</string>
+    <string name="snack_no_appointments_to_delete">No appointments to delete</string>
+    <string name="error_message">Error: %1$s</string>
+    <string name="search_hint_speaking">Speak or type to search</string>
+    <string name="search_home">Search</string>
+    <string name="voice_search_not_supported">Your device does not support voice search</string>
+    <string name="voice_search_prompt">Speak to search...</string>
+    <string name="voice_search_error">Unable to start voice search</string>
+
+    <string name="location_hint_default">💡 Enter address to auto-detect coordinates, or tap 📍 to choose accurately</string>
+    <string name="location_found_from_map">📍 Location selected from map</string>
+    <string name="no_locations_selected">⚠️ No location selected</string>
+    <string name="location_current">📍 Current location</string>
+    <string name="location_searching">🔄 Searching coordinates...</string>
+    <string name="location_found">📍 Location found</string>
+    <string name="locations_not_found">⚠️ Coordinates not found – consider picking on map</string>
+    <string name="location_enter_more">📝 Enter more to search for coordinates...</string>
+    <string name="map_picker_description">Pick location on map</string>
+    <string name="update_success">Profile updated successfully</string>
+    <string name="update_error">An error occurred while updating: %1$s</string>
+    <string name="appointment_id_not_found">Appointment ID not found</string>
+
+
+    <string name="start_early_navigation_title">Start navigation early?</string>
+    <string name="confirm">Confirm</string>
+    <string name="navigation_blocked_title">Cannot start navigation</string>
+    <string name="understood">Understood</string>
+    <string name="timing_info_title">Timing information</string>
+
+    <string name="appointment_time">📅 Appointment time: %1$s\n</string>
+    <string name="time_remaining">⏰ Time remaining: %1$s\n</string>
+    <string name="travel_time">🚗 Travel time: %1$s\n</string>
+    <string name="ideal_departure_time">🏃 Ideal departure: %1$s\n</string>
+    <string name="time_until_departure">⌛ Time until departure: %1$s</string>
+
+    <string name="route_calculating">Calculating route...</string>
+    <string name="status_in_progress">In progress</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="status_missed">Missed</string>
+    <string name="status_unavailable">Unavailable</string>
+    <string name="resume_navigation">Resume navigation</string>
+
+    <string name="error_no_route">Please wait while the route is being calculated</string>
+
+    <string name="should_depart">Should depart: %1$s</string>
+    <string name="today_timing">Today • %1$s remaining</string>
+    <string name="tomorrow_timing">Tomorrow • %1$s remaining</string>
+    <string name="route_error">Unable to calculate route</string>
+    <string name="route_error_with_reason">Error calculating route: %1$s</string>
+    <string name="travel_time_minute">%1$d minutes</string>
+    <string name="travel_distance_km">%1$.1f km</string>
+
+    <string name="share_location_title">Im heading to: %1$s</string>
+    <string name="share_location_appointment">Appointment: %1$s</string>
+    <string name="share_location_time">Time: %1$s</string>
+    <string name="share_location_map">Location: https://maps.google.com/?q=%1$f,%2$f</string>
+    <string name="share_location_chooser_title">Share location</string>
+    <string name="current_location_cannot_be_determined">Current location cannot be determined</string>
+
+    <string name="navigation_success_message">Completed navigation to appointment</string>
+    <string name="location_permission_required">Location permission required to use navigation</string>
+    <string name="error_find_address">Error while searching for address</string>
+    <string name="error_find_location_current">Unable to get current location</string>
+    <string name="location_permission">Location permission is required to use this feature</string>
+    <string name="select_time">Select time</string>
+    <string name="select_date">Select date</string>
+
+
+    <string name="please_add_image">Please add at least one image</string>
+    <string name="please_add_checklist">Please add at least one checklist item</string>
+    <string name="unsupported_note_type">Unsupported note type</string>
+    <string name="please_enter_a_title">Please enter a title</string>
+    <string name="person_not_found">User not found</string>
+    <string name="count_photo_added">%1$d photos added</string>
+    <string name="photos_selected_from_gallery">%1$d photos selected from gallery</string>
+    <string name="discard">Discard</string>
+    <string name="discard_changes">Discard changes?</string>
+    <string name="discard_note">Discard note?</string>
+    <string name="msg_unsaved_changes_discard">You have unsaved changes. Are you sure you want to discard them?</string>
+    <string name="msg_will_note_saved">Your note will not be saved. Are you sure you want to discard it?</string>
+
+
+    <string name="please_enter_title_before_sharing">Please enter a title before sharing</string>
+    <string name="share_note_with">Share note with</string>
+    <string name="unable_to_share_note">Unable to share note</string>
+    <string name="share_note_titles">📝 Title: %1$s\n\n</string>
+    <string name="share_empty_content">(Empty content)\n\n</string>
+    <string name="share_checklist_header">📋 Checklist:\n</string>
+    <string name="share_no_checklist">(No items)\n\n</string>
+    <string name="share_photo_header">📸 Photo note:\n</string>
+    <string name="share_no_photo_description">(No description)\n</string>
+    <string name="share_photo_count">Number of photos: %1$d\n\n</string>
+    <string name="share_unknown_note_type">(Unknown note type)\n\n</string>
+    <string name="share_reminder">⏰ Reminder: %1$s\n</string>
+    <string name="share_footer">📱 Shared from NextMeet App at: %1$s</string>
+    <string name="shared_note">Shared Note</string>
+    <string name="location_not_exactly">⚠️ Have address but no exact coordinates</string>
+
+
+    <string name="no_contacts_found_edit">⚠️ No contact found - data might have been deleted</string>
+    <string name="no_contacts_found_add">⚠️ No contact found - please add at least one contact to create an appointment.</string>
+    <string name="no_contact_title">No Contacts</string>
+    <string name="no_contact_message">You need to create at least one contact before creating an appointment.</string>
+    <string name="quick_add_contact">Quick Add Contact</string>
+    <string name="go_to_contacts">Go to Contacts</string>
+    <string name="create">Create</string>
+
+    <!-- Validation errors -->
+    <string name="error_name_too_long">Name must be less than 25 characters</string>
+    <string name="error_phone_length">Phone number must be 10 digits</string>
+
+    <!-- Notifications -->
+    <string name="contact_created">Contact created: %1$s</string>
+    <string name="contact_selected">Selected contact: %1$s</string>
+    <string name="contact_creation_error">Error creating contact: %1$s</string>
+    <string name="select_contact_hint">-- Select contact --</string>
+    <string name="error_find_appointment">Original appointment not found</string>
+    <string name="msg_error_updated">Error updating: %1$s</string>
+
+    <string name="error_title_empty">Please enter an appointment title</string>
+    <string name="error_contact_required">Please select a contact</string>
+    <string name="error_reminder_required">Please select a reminder time</string>
+    <string name="error_reminder_in_past">The time has already passed. Please choose a future time</string>
+
+    <string name="mode_walking">walking</string>
+    <string name="mode_driving">driving</string>
+    <string name="mode_transit">public transport</string>
+    <string name="navigation_starting">Starting navigation via %1$s</string>
+    <string name="last">Later: %1$s</string>
+
+
+    <string name="rerouting">Recalculating route</string>
+    <string name="arrived">You have arrived</string>
+    <string name="finish">Finish</string>
+    <string name="arrived_announcement">You have arrived at the appointment</string>
+    <string name="voice_muted">Voice muted</string>
+    <string name="voice_unmuted">Voice unmuted</string>
+    <string name="check_voice">This is a sound check</string>
+
+
+    <string name="stop_navigation_title">Stop navigating by %1$s?</string>
+    <string name="stop">Stop</string>
+    <string name="continue_label">Continue</string>
+
+    <string name="walk_started_stop">You have started walking. Stop walking navigation?</string>
+    <string name="walk_not_started_stop">You havent started walking. Stop navigation setup?</string>
+
+    <string name="drive_started_stop">You have started driving. Stop navigation?</string>
+    <string name="drive_not_started_stop">You havent started driving. Stop navigation setup?</string>
+
+    <string name="transit_started_stop">Youre using public transport. Stop navigation?</string>
+    <string name="transit_not_started_stop">Youre preparing to use public transport. Stop navigation?</string>
+
+    <string name="navigation_ready">Navigation system is ready</string>
+
 
 
     <!-- String Arrays -->

@@ -32,7 +32,6 @@ import com.nhathuy.nextmeet.model.NoteImage
 import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.resource.NoteUiState
 import com.nhathuy.nextmeet.ui.AddNoteActivity
-import com.nhathuy.nextmeet.ui.EditNoteActivity
 import com.nhathuy.nextmeet.utils.Constant
 import com.nhathuy.nextmeet.utils.NavigationCallback
 import com.nhathuy.nextmeet.viewmodel.ContactViewModel
@@ -114,14 +113,14 @@ class NotesFragment : Fragment(), NavigationCallback {
                             Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
                         }
                         is NoteUiState.NotePinToggled -> {
-                            val message = if (state.isPinned) "Đã ghim ghi chú" else "Đã bỏ ghim ghi chú"
+                            val message = if (state.isPinned) getString(R.string.note_pinned) else getString(R.string.note_unpinned)
                             Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
                         }
                         is NoteUiState.NoteDeleted -> {
-                            Snackbar.make(binding.root, "Đã xóa ghi chú thành công", Snackbar.LENGTH_SHORT).show()
+                            Snackbar.make(binding.root, getString(R.string.note_deleted_success), Snackbar.LENGTH_SHORT).show()
                         }
                         is NoteUiState.NoteDuplicated -> {
-                            Snackbar.make(binding.root, "Đã tạo bản sao ghi chú", Snackbar.LENGTH_SHORT).show()
+                            Snackbar.make(binding.root, getString(R.string.note_duplicated), Snackbar.LENGTH_SHORT).show()
                         }
                         is NoteUiState.NoteShared -> {
                             val shareContent = state.shareResult.shareContent
@@ -137,7 +136,7 @@ class NotesFragment : Fragment(), NavigationCallback {
                             }
                         }
                         is NoteUiState.ReminderUpdated -> {
-                            val message = state.message ?: "Đã cập nhật lời nhắc"
+                            val message = state.message ?: getString(R.string.updated_reminder)
                             Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
                         }
                         else -> {
@@ -294,7 +293,7 @@ class NotesFragment : Fragment(), NavigationCallback {
             .setValidator(DateValidatorPointForward.now())
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Chọn ngày nhắc nhở")
+            .setTitleText(getString(R.string.selected_date_reminder))
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
             .setCalendarConstraints(constraintBuilder.build())
             .build()
@@ -307,47 +306,47 @@ class NotesFragment : Fragment(), NavigationCallback {
                 .setTimeFormat(TimeFormat.CLOCK_24H)
                 .setHour(calendar.get(Calendar.HOUR_OF_DAY))
                 .setMinute(calendar.get(Calendar.MINUTE))
-                .setTitleText("Chọn giờ nhắc nhở")
+                .setTitleText(getString(R.string.selected_hour_reminder))
                 .build()
 
             timePicker.addOnPositiveButtonClickListener {
                 calendar.set(Calendar.HOUR_OF_DAY, timePicker.hour)
                 calendar.set(Calendar.MINUTE, timePicker.minute)
                 calendar.set(Calendar.SECOND, 0)
-                val reminderTime = calendar.timeInMillis
+                    val reminderTime = calendar.timeInMillis
 
-                if (reminderTime <= System.currentTimeMillis()) {
-                    Snackbar.make(binding.root, "Vui lòng chọn thời gian trong tương lai", Snackbar.LENGTH_SHORT).show()
-                } else {
-                    noteViewModel.updateReminder(note.id, reminderTime)
+                    if (reminderTime <= System.currentTimeMillis()) {
+                        Snackbar.make(binding.root, getString(R.string.msg_select_future_time), Snackbar.LENGTH_SHORT).show()
+                    } else {
+                        noteViewModel.updateReminder(note.id, reminderTime)
+                    }
                 }
+                timePicker.show(parentFragmentManager, "time_picker")
             }
-            timePicker.show(parentFragmentManager, "time_picker")
+            datePicker.show(parentFragmentManager, "date_picker")
         }
-        datePicker.show(parentFragmentManager, "date_picker")
-    }
 
-    private fun showDeleteConfirmation(note: Note) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Delete Note")
-            .setMessage("Are you sure you want to delete this note?")
-            .setPositiveButton("Delete") { _, _ ->
-                deleteNote(note)
-            }
-            .setNegativeButton("No", null)
-            .show()
-    }
-
-    private fun deleteNote(note: Note) {
-        if (note.id != 0) {
-            if (note.noteType == NoteType.PHOTO) {
-                noteViewModel.deleteImagesByNoteId(note.id)
-            }
-            noteViewModel.deleteNote(note.id)
-        } else {
-            Snackbar.make(binding.root, "Không thể xóa ghi chú này", Snackbar.LENGTH_SHORT).show()
+        private fun showDeleteConfirmation(note: Note) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(getString(R.string.title_delete_note))
+                .setMessage(getString(R.string.msg_confirm_delete_note))
+                .setPositiveButton(getString(R.string.delete)) { _, _ ->
+                    deleteNote(note)
+                }
+                .setNegativeButton(getString(R.string.no), null)
+                .show()
         }
-    }
+
+        private fun deleteNote(note: Note) {
+            if (note.id != 0) {
+                if (note.noteType == NoteType.PHOTO) {
+                    noteViewModel.deleteImagesByNoteId(note.id)
+                }
+                noteViewModel.deleteNote(note.id)
+            } else {
+                Snackbar.make(binding.root, getString(R.string.msg_delete_failed), Snackbar.LENGTH_SHORT).show()
+            }
+        }
 
     private fun duplicateNote(note: Note) {
         noteViewModel.duplicateNote(note.id)

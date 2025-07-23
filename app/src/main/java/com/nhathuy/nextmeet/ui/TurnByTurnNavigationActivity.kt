@@ -298,7 +298,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                         if (routeResult.steps.isNotEmpty()) {
                             startTurnByTurnNavigation(routeResult.steps)
                             updateNavigationInfo(routeResult)
-                            announceInstruction("Bắt đầu điều hướng ${getTransportModeDisplayName()}")
+                            announceInstruction(getString(R.string.navigation_starting, getTransportModeDisplayName()))
                         } else {
                             Log.e("Navigation", "No navigation steps found")
                         }
@@ -314,9 +314,9 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
 
     private fun getTransportModeDisplayName(): String {
         return when (transportMode) {
-            TransportMode.WALKING -> "đi bộ"
-            TransportMode.DRIVING -> "lái xe"
-            TransportMode.TRANSIT -> "phương tiện công cộng"
+            TransportMode.WALKING -> getString(R.string.mode_walking)
+            TransportMode.DRIVING -> getString(R.string.mode_driving)
+            TransportMode.TRANSIT -> getString(R.string.mode_transit)
         }
     }
 
@@ -772,7 +772,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
             val nextStepIndex = currentStepIndex + 1
             if (nextStepIndex < navigationSteps.size) {
                 val nextStep = navigationSteps[nextStepIndex]
-                tvNextInstruction.text = "Sau đó: ${nextStep.instruction}"
+                tvNextInstruction.text = getString(R.string.last, nextStep.instruction)
                 tvNextInstruction.visibility = View.VISIBLE
             } else {
                 tvNextInstruction.visibility = View.GONE
@@ -844,7 +844,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
                         displayRoute(routeResult)
                         startTurnByTurnNavigation(routeResult.steps)
                         updateNavigationInfo(routeResult)
-                        announceInstruction("Đang tính toán lại lộ trình")
+                        announceInstruction(getString(R.string.rerouting))
                         isRerouting = false
                     }
                 }
@@ -860,13 +860,13 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         hasArrivedAtDestination = true
 
         binding.apply {
-            tvCurrentInstruction.text = "Bạn đã đến nơi"
+            tvCurrentInstruction.text = getString(R.string.arrived)
             tvStepDistance.text = ""
             tvNextInstruction.visibility = View.GONE
-            btnStopNavigation.text = "Hoàn thành"
+            btnStopNavigation.text = getString(R.string.finish)
         }
 
-        announceInstruction("Bạn đã đến điểm hẹn")
+        announceInstruction(getString(R.string.arrived_announcement))
 
         lifecycleScope.launch {
             appointment?.let { appt ->
@@ -891,10 +891,10 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         if (isMuted) {
             // Phát thông báo cuối cùng trước khi tắt
             if (::textToSpeech.isInitialized) {
-                textToSpeech.speak("Đã tắt tiếng", TextToSpeech.QUEUE_FLUSH, null, null)
+                textToSpeech.speak(getString(R.string.voice_muted), TextToSpeech.QUEUE_FLUSH, null, null)
             }
         } else {
-            announceInstruction("Đã bật tiếng")
+            announceInstruction(getString(R.string.voice_unmuted))
         }
 
         Log.d("Navigation", "Voice ${if (isMuted) "muted" else "unmuted"}")
@@ -940,7 +940,7 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         if (ensureTTSReady()) {
             val wasTemporarilyMuted = isMuted
             isMuted = false // Temporarily unmute for test
-            announceInstruction("Đây là kiểm tra âm thanh")
+            announceInstruction(getString(R.string.check_voice))
             isMuted = wasTemporarilyMuted // Restore original state
         }
     }
@@ -999,13 +999,14 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
 
     // Override back button với confirm dialog transport mode aware
     override fun onBackPressed() {
+        super.onBackPressed()
         val transportName = getTransportModeDisplayName()
 
         MaterialAlertDialogBuilder(this)
-            .setTitle("Dừng điều hướng $transportName?")
+            .setTitle(getString(R.string.stop_navigation_title, transportName))
             .setMessage(getStopNavigationMessage())
-            .setPositiveButton("Dừng") { _, _ -> stopNavigation() }
-            .setNegativeButton("Tiếp tục", null)
+            .setPositiveButton(getString(R.string.stop)) { _, _ -> stopNavigation() }
+            .setNegativeButton(getString(R.string.continue_label), null)
             .show()
     }
 
@@ -1013,23 +1014,23 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         return when (transportMode) {
             TransportMode.WALKING -> {
                 if (hasMovedFromStart) {
-                    "Bạn đã bắt đầu đi bộ. Dừng điều hướng đi bộ?"
+                    getString(R.string.walk_started_stop)
                 } else {
-                    "Bạn chưa bắt đầu đi bộ. Dừng chuẩn bị điều hướng?"
+                    getString(R.string.walk_not_started_stop)
                 }
             }
             TransportMode.DRIVING -> {
                 if (hasMovedFromStart) {
-                    "Bạn đã bắt đầu lái xe. Dừng điều hướng?"
+                    getString(R.string.drive_started_stop)
                 } else {
-                    "Bạn chưa bắt đầu lái xe. Dừng chuẩn bị điều hướng?"
+                    getString(R.string.drive_not_started_stop)
                 }
             }
             TransportMode.TRANSIT -> {
                 if (hasMovedFromStart) {
-                    "Bạn đang sử dụng phương tiện công cộng. Dừng điều hướng?"
+                    getString(R.string.transit_started_stop)
                 } else {
-                    "Bạn đang chuẩn bị sử dụng phương tiện công cộng. Dừng điều hướng?"
+                    getString(R.string.transit_not_started_stop)
                 }
             }
         }

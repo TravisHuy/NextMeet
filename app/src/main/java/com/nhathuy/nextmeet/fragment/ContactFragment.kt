@@ -715,9 +715,9 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
     //cập nhật lại số lượng đã chọn
     private fun updateSelectedCount(count: Int) {
         binding.tvSelectionCount.text = if (count > 1) {
-            "$count selected contacts"
+            getString(R.string.selected_contacts_plural,count)
         } else {
-            "$count selected contact"
+            getString(R.string.selected_contact_single,count)
         }
         if (count == 0 && isSelectionMode) {
             closeSelectionMode()
@@ -734,7 +734,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
             }
             startActivity(intent)
         } catch (e: Exception) {
-            showError("Không thể gọi điện")
+            showError(getString(R.string.phone_call_failed))
         }
     }
 
@@ -965,7 +965,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
             }
 
             // Thay đổi text button
-            btnSave.text = "Cập nhật"
+            btnSave.text = getString(R.string.edit)
         }
     }
 
@@ -986,7 +986,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
             longitude = null
 
             // Set text button
-            btnSave.text = "Thêm"
+            btnSave.text = getString(R.string.add)
         }
     }
 
@@ -1157,7 +1157,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         selectedContacts.forEach { contact ->
             contactViewModel.toggleFavorite(contact.id)
         }
-        showMessage("Đã cập nhật trạng thái yêu thích cho ${selectedContacts.size} liên hệ")
+        showMessage(getString(R.string.msg_favorite_updated,selectedContacts.size))
         closeSelectionMode()
     }
 
@@ -1166,15 +1166,15 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         val selectedContacts = contactsAdapter.getSelectedContacts()
         if (selectedContacts.isNotEmpty()) {
             val shareText = buildString {
-                append("Thông tin liên hệ:\n\n")
+                append(getString(R.string.share_contact_title))
                 selectedContacts.forEach { contact ->
-                    append("Tên: ${contact.name}\n")
-                    append("Điện thoại: ${contact.phone}\n")
+                    append(getString(R.string.contact_name),contact.name)
+                    append(getString(R.string.contact_phone),contact.phone)
                     if (contact.email.isNotBlank()) {
-                        append("Email: ${contact.email}\n")
+                        append(getString(R.string.contact_email),contact.email)
                     }
                     if (contact.role.isNotBlank()) {
-                        append("Vai trò: ${contact.role}\n")
+                        append(getString(R.string.contact_role),contact.role)
                     }
                     append("\n")
                 }
@@ -1186,7 +1186,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
                 putExtra(Intent.EXTRA_TEXT, shareText)
             }
 
-            startActivity(Intent.createChooser(shareIntent, "Chia sẻ liên hệ"))
+            startActivity(Intent.createChooser(shareIntent,getString(R.string.share_contact_header)))
         }
         closeSelectionMode()
     }
@@ -1205,15 +1205,15 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
 
         val snackbar = Snackbar.make(
             binding.root,
-            "Đã xóa ${selectedContacts.size} liên hệ",
+            getString(R.string.msg_deleted_contacts,selectedContacts.size),
             Snackbar.LENGTH_LONG
         )
         var isUndoClicked = false
 
-        snackbar.setAction("Hoàn tác") {
+        snackbar.setAction(getString(R.string.undo)) {
             isUndoClicked = true
             contactsAdapter.restoreContacts(backupContacts)
-            showMessage("Đã hoàn tác xóa liên hệ")
+            showMessage(getString(R.string.msg_undo_delete))
         }
 
         snackbar.addCallback(
@@ -1274,7 +1274,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
 
     override fun onNavigateToContact() {
         showContactDialog()
-        showMessage("Vui lòng thêm liên hệ để tạo cuộc hẹn")
+        showMessage(getString(R.string.msg_add_contact_to_create))
     }
 
     override fun onNavigateToEditContact(contact: Contact) {
