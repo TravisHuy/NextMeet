@@ -310,7 +310,7 @@
             android:id="@+id/tvEmptyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chưa có lịch sử cuộc hẹn"
+            android:text="@string/empty_appointment_history_title"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/light_text_secondary"
@@ -320,7 +320,7 @@
             android:id="@+id/tvEmptyDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Các cuộc hẹn đã hoàn thành, hủy hoặc bỏ lỡ sẽ hiển thị ở đây"
+            android:text="@string/empty_appointment_history_description"
             android:textSize="14sp"
             android:textColor="@color/text_tertiary"
             android:textAlignment="center"
@@ -347,7 +347,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Đang tải lịch sử..."
+            android:text="@string/loading_appointment_history"
             android:textSize="14sp"
             android:textColor="@color/light_text_secondary" />
 

@@ -477,6 +477,8 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
 
     private fun exitSearchMode() {
         binding.fabAddContact.show()
+        contactsAdapter.setMultiSelectMode(false)
+        contactsAdapter.clearSelection()
         showBottomNavigation()
         updateUIState()
     }
@@ -772,7 +774,8 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
 
     // Hiển thị message
     private fun showMessage(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+//        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(),message, Toast.LENGTH_SHORT).show()
     }
 
     // Hiển thị error
@@ -1075,17 +1078,17 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         }
 
         // Validate fields
-        val nameResult = ValidationUtils.validateName(name)
-        val phoneResult = ValidationUtils.validatePhone(phone)
-        val emailResult = ValidationUtils.validateEmail(email)
+        val nameResult = ValidationUtils.validateName(requireContext(),name)
+        val phoneResult = ValidationUtils.validatePhone(requireContext(),phone)
+        val emailResult = ValidationUtils.validateEmail(requireContext(),email)
 
         val locationText = dialogBinding.tvLocation.text.toString()
         val addressResult = if (locationText.isNotBlank() &&
             locationText != getString(R.string.no_location_selected)
         ) {
-            ValidationUtils.validateAddress(locationText)
+            ValidationUtils.validateAddress(requireContext(),locationText)
         } else {
-            ValidationUtils.validateAddress("")
+            ValidationUtils.validateAddress(requireContext(),"")
         }
 
         var hasError = false
@@ -1168,13 +1171,13 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
             val shareText = buildString {
                 append(getString(R.string.share_contact_title))
                 selectedContacts.forEach { contact ->
-                    append(getString(R.string.contact_name),contact.name)
-                    append(getString(R.string.contact_phone),contact.phone)
+                    append(getString(R.string.contact_name,contact.name))
+                    append(getString(R.string.contact_phone,contact.phone))
                     if (contact.email.isNotBlank()) {
-                        append(getString(R.string.contact_email),contact.email)
+                        append(getString(R.string.contact_email,contact.email))
                     }
                     if (contact.role.isNotBlank()) {
-                        append(getString(R.string.contact_role),contact.role)
+                        append(getString(R.string.contact_role,contact.role))
                     }
                     append("\n")
                 }
@@ -1203,6 +1206,12 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         val backupContacts = selectedContacts.toList()
         contactsAdapter.removeContacts(selectedContacts)
 
+        isSelectionMode = false
+        binding.selectionToolbar.visibility = View.GONE
+        binding.appBarLayout.visibility = View.VISIBLE
+        contactsAdapter.setMultiSelectMode(false)
+        contactsAdapter.clearSelection()
+
         val snackbar = Snackbar.make(
             binding.root,
             getString(R.string.msg_deleted_contacts,selectedContacts.size),
@@ -1219,6 +1228,9 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         snackbar.addCallback(
             object : Snackbar.Callback(){
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+
+                    binding.fabAddContact.show()
+
                     if(!isUndoClicked && event != DISMISS_EVENT_ACTION){
                         backupContacts.forEach {
                             contact ->
@@ -1230,7 +1242,6 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         )
 
         snackbar.show()
-        closeSelectionMode()
     }
 
 

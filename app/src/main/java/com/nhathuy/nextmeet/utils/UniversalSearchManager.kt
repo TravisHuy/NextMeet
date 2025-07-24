@@ -3,6 +3,7 @@ package com.nhathuy.nextmeet.utils
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.SearchSuggestion
 import com.nhathuy.nextmeet.model.SearchType
@@ -121,7 +122,7 @@ class UniversalSearchManager @Inject constructor(
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onError(e.message ?: "An error occurred during search")
+                    onError(e.message ?: context.getString(R.string.error_search_failed))
                 }
             }
         }
@@ -170,7 +171,7 @@ class UniversalSearchManager @Inject constructor(
                                     totalCount = appointments.size
                                 )
                             } else {
-                                throw IllegalArgumentException("Filter không hợp lệ")
+                                throw IllegalArgumentException(context.getString(R.string.error_invalid_filter))
                             }
                         }
 
@@ -185,17 +186,6 @@ class UniversalSearchManager @Inject constructor(
                     }
                 }
 
-//                // Lưu vào search history
-//                if (filterText.isNotBlank()) {
-//                    withContext(Dispatchers.IO) {
-//                        searchRepository.saveSearchHistory(
-//                            userId = userId,
-//                            query = filterText,
-//                            searchType = searchType,
-//                            resultCount = result.totalCount
-//                        )
-//                    }
-//                }
 
                 withContext(Dispatchers.Main) {
                     onResult(result)
@@ -203,7 +193,7 @@ class UniversalSearchManager @Inject constructor(
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onError(e.message ?: "Error performing quick filter search")
+                    onError(e.message ?: context.getString(R.string.error_quick_filter))
                 }
             }
         }
@@ -278,63 +268,19 @@ class UniversalSearchManager @Inject constructor(
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onError("Error loading ${searchType.name.lowercase()} items: ${e.message}")
+                    onError(
+                        context.getString(
+                            R.string.error_loading_items,
+                            searchType.name.lowercase(),
+                            e.message ?: "unknown"
+                        )
+                    )
+
                 }
             }
         }
     }
 
-
-    /**
-     * Tạo quick filter suggestions với counts
-     */
-//    fun generateQuickFilterSuggestions(
-//        userId: Int,
-//        query: String,
-//        searchType: SearchType,
-//        onResult: (List<SearchSuggestion>) -> Unit,
-//        onError: (String) -> Unit = {}
-//    ) {
-//        searchScope.launch {
-//            try {
-//                val suggestions = withContext(Dispatchers.IO) {
-//                    val allSuggestions = mutableListOf<SearchSuggestion>()
-//
-//                    // Thêm quick filter suggestions với counts
-//                    if (userId != 0) {
-//                        val quickFilterSuggestions = searchRepository.getQuickFilterSuggestionsWithCounts(
-//                            searchType,
-//                            userId
-//                        )
-//                        allSuggestions.addAll(quickFilterSuggestions)
-//                    } else {
-//                        allSuggestions.addAll(searchRepository.getQuickFilterSuggestions(searchType))
-//                    }
-//
-//                    // Thêm history suggestions nếu có query
-//                    if (query.isNotBlank()) {
-//                        val historySuggestions = searchRepository.getSearchHistorySuggestions(
-//                            userId,
-//                            query,
-//                            searchType
-//                        )
-//                        allSuggestions.addAll(historySuggestions)
-//                    }
-//
-//                    allSuggestions
-//                }
-//
-//                withContext(Dispatchers.Main) {
-//                    onResult(suggestions)
-//                }
-//
-//            } catch (e: Exception) {
-//                withContext(Dispatchers.Main) {
-//                    onError(e.message ?: "Error generating quick filter suggestions")
-//                }
-//            }
-//        }
-//    }
 
     /**
      * tạo tìm kiếm với gợi ý with
@@ -356,7 +302,7 @@ class UniversalSearchManager @Inject constructor(
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onError(e.message ?: "Error generating suggestions")
+                    onError(e.message ?: context.getString(R.string.error_generate_suggestion))
                 }
             }
         }
@@ -403,7 +349,12 @@ class UniversalSearchManager @Inject constructor(
                 )
 
             } catch (e: Exception) {
-                onError("Lỗi khi lọc cuộc hẹn theo liên hệ: ${e.message}")
+                onError(
+                    context.getString(
+                        R.string.error_filter_by_contact_detail,
+                        e.message ?: "unknown"
+                    )
+                )
             }
         }
     }
@@ -430,7 +381,7 @@ class UniversalSearchManager @Inject constructor(
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onError(e.message ?: "Error deleting search history")
+                    onError(e.message ?: context.getString(R.string.error_delete_history))
                 }
             }
         }
@@ -457,7 +408,7 @@ class UniversalSearchManager @Inject constructor(
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onError(e.message ?: "Error clearing search history")
+                    onError(e.message ?: context.getString(R.string.error_clear_history))
                 }
             }
         }
@@ -479,7 +430,7 @@ class UniversalSearchManager @Inject constructor(
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onError(e.message ?: "Error clearing all search history")
+                    onError(e.message ?: context.getString(R.string.error_clear_all_history))
                 }
             }
         }

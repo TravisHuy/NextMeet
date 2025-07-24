@@ -146,7 +146,7 @@
             android:id="@+id/tv_empty_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No appointments found"
+            android:text="@string/no_appointments_found"
             android:textAlignment="center"
             android:textColor="?attr/colorOnSurface"
             android:textSize="18sp"
@@ -156,7 +156,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Try different search terms"
+            android:text="@string/try_different_search_terms"
             android:textAlignment="center"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="16sp" />
@@ -186,7 +186,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No appointments yet"
+            android:text="@string/no_appointments_yet"
             android:textAlignment="center"
             android:textColor="?attr/colorOnSurface"
             android:textSize="18sp"
@@ -196,7 +196,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Tap + to add a new appointment"
+            android:text="@string/tap_to_add_a_new_appointment"
             android:textAlignment="center"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="16sp" />

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App Info -->
-    <string name="app_name">TravisHuy</string>
+    <string name="app_name">Next Meet</string>
 
     <!-- Common -->
     <string name="error">Error</string>
@@ -180,11 +180,11 @@
     <!-- Profile -->
     <string name="edit_profile">Edit Profile</string>
     <string name="full_name">Full Name</string>
-    <string name="input_full_name">Input full name...</string>
+    <string name="input_full_name">Enter name</string>
     <string name="phone">Phone</string>
     <string name="email">Email</string>
     <string name="edit">Edit</string>
-    <string name="hint_enter_address_or_select_from_map">Nhập địa chỉ hoặc chọn từ bản đồ...</string>
+    <string name="hint_enter_address_or_select_from_map">Enter address or select from map...</string>
     <string name="back">Back</string>
     <string name="history">History</string>
     <string name="all">All</string>
@@ -196,8 +196,8 @@
     <string name="delete_all">Delete all</string>
     <string name="contact_deleted">Contact has been deleted</string>
     <string name="successful_comletion">Successful completion</string>
-    <string name="appointment_count_format">%1$d cuộc hẹn</string>
-    <string name="upcoming_count_format">%1$d sắp tới</string>
+    <string name="appointment_count_format">%1$d appointment</string>
+    <string name="upcoming_count_format">%1$d upcoming</string>
     <string name="just_now">Just now</string>
     <string name="yesterday">Yesterday</string>
     <string name="m_ago">%1$dm ago</string>
@@ -305,7 +305,7 @@
     <string name="notification_delayed_message">Your appointment \'%1$s\' is about to start. You should leave now!</string>
 
     <string name="notification_missed_title">❌ Missed Appointment</string>
-    <string name="notification_missed_message">Your appointment \'%1$s\' has started and you haven't arrived.</string>
+    <string name="notification_missed_message">Your appointment \'%1$s\' has started and you havent arrived.</string>
 
     <string name="appointment_cannot_cancel">Cannot cancel appointment in status %1$s</string>
     <string name="appointment_cancel_error">Error while cancelling appointment</string>
@@ -313,7 +313,7 @@
     <string name="appointment_cancelled_title">🚫 Appointment Cancelled</string>
     <string name="appointment_cancelled_message">Appointment \'%1$s\' was cancelled\nDetails: %2$s</string>
     <string name="no_description">No description</string>
-    <string name="appointment_canncelled_message">Appointment \'%1$s\' has been cancelled/n</string>
+    <string name="appointment_canncelled_message">Appointment \'%1$s\' has been cancelled\n</string>
     <string name="cancel_appointment_description">Content: %1$s</string>
 
 
@@ -430,7 +430,7 @@
     <string name="appointment_cancelled">%1$d appointment(s) cancelled</string>
     <string name="undo">Undo</string>
     <string name="undo_appointment_cancelled">Appointment cancellation undone</string>
-    <string name="contact_name">Contact: %1$s</string>
+    <string name="contact_name">Contact: %1$s\n</string>
 
     <string name="selected_contact_single">%1$d selected contact</string>
     <string name="selected_contacts_plural">%1$d selected contacts</string>
@@ -441,7 +441,7 @@
     <string name="msg_favorite_updated">Updated favorite status for %1$d contact(s)</string>
 
     <!-- Share Action -->
-    <string name="share_contact_title">Share contact</string>
+    <string name="share_contact_title">Share contact\n</string>
     <string name="share_contact_header">Contact information:\n\n</string>
     <string name="contact_phone">Phone: %1$s\n</string>
     <string name="contact_email">Email: %1$s\n</string>
@@ -644,9 +644,9 @@
     <string name="error_reminder_required">Please select a reminder time</string>
     <string name="error_reminder_in_past">The time has already passed. Please choose a future time</string>
 
-    <string name="mode_walking">walking</string>
-    <string name="mode_driving">driving</string>
-    <string name="mode_transit">public transport</string>
+    <string name="mode_walking">Walking</string>
+    <string name="mode_driving">Driving</string>
+    <string name="mode_transit">Public transport</string>
     <string name="navigation_starting">Starting navigation via %1$s</string>
     <string name="last">Later: %1$s</string>
 
@@ -675,6 +675,164 @@
 
     <string name="navigation_ready">Navigation system is ready</string>
 
+    <string name="add_appointment_first">Add your first appointment</string>
+    <string name="no_note_yet">No notes yet</string>
+    <string name="create_note_first">Create your first note</string>
+
+    <string name="no_location_yet">No location yet</string>
+    <string name="add_location_to_appointment">Add an appointment with a location to view the map</string>
+
+    <!-- Welcome Section -->
+    <string name="tips_title">💡 Tips</string>
+    <string name="tips_content">• Add location to appointments to view on map\n• Use notes to save important information\n• Check dashboard daily to not miss appointments</string>
+
+    <!-- Welcome section -->
+    <string name="welcome_title">Welcome to the app! 👋</string>
+    <string name="welcome_subtitle">Manage your appointments and notes easily</string>
+    <string name="required_field">Required</string>
+    <string name="input_appointment_title">Enter title</string>
+    <string name="description">Description</string>
+    <string name="input_description">Input description</string>
+    <string name="select_or_enter_a_contact_name">Select or enter a contact name...</string>
+
+    <string name="set_reminder">Set reminder</string>
+    <string name="reminder_not_set">Reminder not set</string>
+    <string name="pin">Pin</string>
+    <string name="background_color">Background Color</string>
+    <string name="video">Video</string>
+    <string name="enter_title">Enter title</string>
+    <string name="write_your_note_here">Write your note here...</string>
+    <string name="add_item">Add item</string>
+    <string name="add_image">Add image</string>
+    <string name="pin_note">Pin note</string>
+    <string name="share_note">Share note</string>
+
+
+    <string name="notification_type">🔔 Reminder</string>
+    <string name="notification_title">Reminder Title</string>
+    <string name="notification_message">Detailed reminder message will be shown here</string>
+    <string name="notification_location">📍 Appointment Location</string>
+    <string name="alarm_label">Alarm</string>
+    <string name="snooze_label">Snooze</string>
+    <string name="dismiss_label">Dismiss</string>
+    <string name="swipe_instruction">⬅️ Swipe left to snooze • Swipe right to dismiss ➡️</string>
+
+    <string name="selected_address">Selected Address</string>
+    <string name="confirm_location">Confirm Location</string>
+    <string name="no_address_selected">No Address Selected</string>
+
+    <string name="solgan">Manage your customers \nwith ease, grow your business</string>
+    <string name="password">Password</string>
+    <string name="remember_me">Remember me</string>
+    <string name="forgotten_password">Forgotten password?</string>
+    <string name="login_now">Login now</string>
+    <string name="or">Or</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign up</string>
+    <string name="start_directions">Start directions</string>
+    <string name="transpot_mode">Transportation</string>
+    <string name="time">Time</string>
+    <string name="distance">Distance</string>
+    <string name="arrive">Arrive</string>
+    <string name="detail_instruction">Detailed instructions</string>
+    <string name="category">Category</string>
+
+    <string name="no_results_found">No results found</string>
+    <string name="try_other_keywords">Try searching with different keywords</string>
+    <string name="settings">Settings</string>
+    <string name="stop_direction">Stop directions</string>
+    <string name="title_registration">TravisHuy Registration</string>
+    <string name="name">Name</string>
+    <string name="submit">Submit</string>
+    <string name="no_found_photos">No Found Photos</string>
+    <string name="sale_student">Sale,Student...</string>
+    <string name="enter_description">Enter description</string>
+    <string name="select_location">Select location</string>
+    <string name="save">Save</string>
+
+    <string name="forgot_password">Forgot password</string>
+    <string name="new_password">New-Password</string>
+    <string name="re_password">Re-Password</string>
+    <string name="no_appointments_found">No appointments found</string>
+    <string name="try_different_search_terms">Try different search terms</string>
+    <string name="no_appointments_yet">No appointments yet</string>
+    <string name="tap_to_add_a_new_appointment">Tap + to add a new appointment</string>
+
+    <string name="no_contacts_yet">No contacts yet</string>
+    <string name="tap_to_add_a_new_contact">Tap + to add a new contact</string>
+    <string name="no_contacts_found">No contacts found</string>
+
+
+    <string name="empty_appointment_history_title">No appointment history</string>
+    <string name="empty_appointment_history_description">Completed, cancelled, or missed appointments will be shown here</string>
+    <string name="loading_appointment_history">Loading history...</string>
+    <string name="msg_note_suggestion">Notes you add will appear here</string>
+
+    <!-- Appointment status transition -->
+    <string name="status_preparing">Time to prepare for the appointment</string>
+    <string name="status_travelling">Time to head to the appointment</string>
+    <string name="status_in_progresss">The appointment has started</string>
+    <string name="status_completeds">The appointment is completed</string>
+    <string name="status_delayed">The appointment might be delayed</string>
+    <string name="status_misseds">The appointment was missed</string>
+    <string name="status_updated">Appointment status has been updated</string>
+
+    <!-- Navigation cancel messages -->
+    <string name="cancel_immediate">Navigation cancelled. Status restored.</string>
+    <string name="cancel_grace">Early navigation cancellation. Status restored.</string>
+    <string name="cancel_after_movement">Navigation stopped. Status kept unchanged.</string>
+    <string name="reason_cancel_not_moved">You can cancel navigation now because you haven\'t moved.</string>
+
+
+    <string name="nav_too_late_reason">The appointment has passed (%1$s)</string>
+    <string name="nav_too_late_button">Missed</string>
+
+    <string name="nav_too_early_reason">Too early to start navigation. Try again in %1$d hour(s).</string>
+    <string name="nav_too_early_button">Too early</string>
+
+    <string name="nav_depart_now_reason">It\'s time to leave!</string>
+    <string name="nav_depart_now_button">Start navigation</string>
+
+    <string name="nav_early_but_ok_reason">You will arrive about %1$d minutes early. You can still start navigation.</string>
+    <string name="nav_early_but_ok_button">Start navigation (early)</string>
+
+    <string name="nav_unknown_reason">Unable to determine a suitable time</string>
+    <string name="nav_unknown_button">Unavailable</string>
+
+    <string name="nav_stopped_with_status">Navigation stopped. %1$s</string>
+    <string name="nav_stopped">Navigation stopped.</string>
+
+    <string name="travel_duration_past">Passed</string>
+    <string name="travel_duration_days_hours">%1$d day(s) %2$d hour(s)</string>
+    <string name="travel_duration_hours_minutes">%1$d hour(s) %2$d minute(s)</string>
+    <string name="travel_duration_minutes">%1$d minute(s)</string>
+
+    <string name="error_phone_required">Phone number is required</string>
+    <string name="error_phone_digits">Phone number must contain only digits</string>
+
+    <string name="error_name_required">Name is required</string>
+    <string name="error_name_length">Name must be less than 25 characters</string>
+
+    <string name="error_address_required">Address is required</string>
+
+    <string name="error_password_required">Password is required</string>
+    <string name="error_password_length">Password must be at least 6 characters</string>
+
+    <string name="error_email_required">Email is required</string>
+    <string name="error_email_invalid">Invalid email format</string>
+
+    <string name="error_password_mismatch">Passwords do not match</string>
+
+    <string name="error_search_failed">An error occurred during search</string>
+    <string name="error_quick_filter">Error performing quick filter search</string>
+    <string name="error_invalid_filter">Invalid filter</string>
+    <string name="error_generate_suggestion">Error generating suggestions</string>
+    <string name="error_filter_by_contact">Failed to filter appointments by contact</string>
+    <string name="error_delete_history">Error deleting search history</string>
+    <string name="error_clear_history">Error clearing search history</string>
+    <string name="error_clear_all_history">Error clearing all search history</string>
+    <string name="error_loading_items">Error loading %1$s items: %2$s</string>
+    <string name="error_filter_by_contact_detail">Error filtering appointments by contact: %1$s</string>
 
 
     <!-- String Arrays -->

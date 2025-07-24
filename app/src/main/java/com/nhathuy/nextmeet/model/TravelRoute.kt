@@ -31,7 +31,7 @@ import androidx.room.Index
 @Entity(
     tableName = "travel_routes",
     foreignKeys = [ForeignKey(
-        entity = Appointment::class,
+        entity = AppointmentPlus::class,
         parentColumns = ["id"],
         childColumns = ["appointment_id"],
         onDelete = ForeignKey.CASCADE

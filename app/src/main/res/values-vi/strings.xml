@@ -310,7 +310,7 @@
     <string name="appointment_cancelled_title">🚫 Cuộc hẹn đã hủy</string>
     <string name="appointment_cancelled_message">Cuộc hẹn \'%1$s\' đã được hủy\nNội dung: %2$s</string>
     <string name="no_description">Không có mô tả</string>
-    <string name="appointment_canncelled_message">Cuộc hẹn \'%1$s\' đã được hủy/n</string>
+    <string name="appointment_canncelled_message">Cuộc hẹn \'%1$s\' đã được hủy\n</string>
     <string name="cancel_appointment_description">Nội dung: %1$s</string>
 
 
@@ -644,9 +644,9 @@
     <string name="error_reminder_required">Vui lòng chọn thời gian nhắc nhở</string>
     <string name="error_reminder_in_past">Thời gian đã qua. Vui lòng chọn thời gian trong tương lai</string>
 
-    <string name="mode_walking">đi bộ</string>
-    <string name="mode_driving">lái xe</string>
-    <string name="mode_transit">phương tiện công cộng</string>
+    <string name="mode_walking">Đi bộ</string>
+    <string name="mode_driving">Lái xe</string>
+    <string name="mode_transit">Phương tiện công cộng</string>
     <string name="navigation_starting">Bắt đầu điều hướng bằng %1$s</string>
     <string name="last">Sau đó: %1$s</string>
 
@@ -675,6 +675,178 @@
     <string name="navigation_ready">Hệ thống điều hướng đã sẵn sàng</string>
 
 
+    <string name="add_appointment_first">Thêm cuộc hẹn đầu tiên của bạn</string>
+
+    <string name="no_note_yet">Chưa có ghi chú nào</string>
+    <string name="create_note_first">Tạo ghi chú đầu tiên của bạn</string>
+
+    <string name="no_location_yet">Chưa có địa điểm nào</string>
+    <string name="add_location_to_appointment">Thêm cuộc hẹn có địa điểm để xem bản đồ</string>
+
+
+    <!-- Welcome Section -->
+    <string name="tips_title">💡 Mẹo nhỏ</string>
+    <string name="tips_content">• Thêm địa điểm cho cuộc hẹn để xem trên bản đồ\n• Sử dụng ghi chú để lưu thông tin quan trọng\n• Kiểm tra dashboard hàng ngày để không bỏ lỡ cuộc hẹn</string>
+
+    <!-- Welcome section -->
+    <string name="welcome_title">Chào mừng bạn đến với ứng dụng! 👋</string>
+    <string name="welcome_subtitle">Quản lý cuộc hẹn và ghi chú của bạn một cách dễ dàng</string>
+
+    <string name="required_field">Bắt buộc</string>
+    <string name="input_appointment_title">Nhập tiêu đề...</string>
+
+    <string name="description">Mô tả</string>
+    <string name="input_description">Nhập mô tả...</string>
+    <string name="select_or_enter_a_contact_name">Chọn hoặc nhập tên liên hệ...</string>
+
+    <string name="set_reminder">Đặt nhắc nhở</string>
+    <string name="reminder_not_set">Chưa đặt nhắc nhở</string>
+
+    <string name="pin">Ghim</string>
+
+    <string name="background_color">Màu nền</string>
+    <string name="video">Video</string>
+
+    <string name="enter_title">Nhập tiêu đề...</string>
+    <string name="write_your_note_here">Viết ghi chú của bạn ở đây...</string>
+    <string name="add_item">Thêm mục</string>
+    <string name="add_image">Thêm ảnh</string>
+    <string name="pin_note">Ghim ghi chú</string>
+    <string name="share_note">Chia sẽ ghi chú</string>
+
+    <string name="notification_type">🔔 Nhắc nhở</string>
+    <string name="notification_title">Tiêu đề nhắc nhở</string>
+    <string name="notification_message">Nội dung chi tiết của nhắc nhở sẽ hiển thị ở đây</string>
+    <string name="notification_location">📍 Địa điểm cuộc hẹn</string>
+    <string name="alarm_label">Báo thức</string>
+    <string name="snooze_label">Báo lại</string>
+    <string name="dismiss_label">Tắt</string>
+    <string name="swipe_instruction">⬅️ Vuốt trái để báo lại • Vuốt phải để tắt ➡️</string>
+
+    <string name="selected_address">Địa chỉ đã chọn</string>
+    <string name="confirm_location">Xác nhận vị trí</string>
+    <string name="no_address_selected">Không có địa chỉ nào được chọn</string>
+
+    <string name="solgan">Quản lý khách hàng dễ dàng, phát triển doanh nghiệp</string>
+    <string name="password">Mật khẩu</string>
+    <string name="remember_me">Ghi nhớ tôi</string>
+    <string name="forgotten_password">Quên mật khẩu?</string>
+    <string name="login_now">Đăng nhập ngay</string>
+    <string name="or">Hoặc</string>
+    <string name="don_t_have_an_account">Bạn chưa có tài khoản?</string>
+    <string name="sign_up">Đăng ký</string>
+
+    <string name="start_directions">Bắt đầu chỉ đường</string>
+    <string name="transpot_mode">Phương tiện di chuyển</string>
+
+    <string name="time">Thời gian</string>
+    <string name="distance">Khoảng cách</string>
+    <string name="arrive">Đến nơi</string>
+    <string name="detail_instruction">Hướng dẫn chi tiết</string>
+
+    <string name="category">Danh mục</string>
+
+    <string name="no_results_found">Không tìm thấy kết quả</string>
+    <string name="try_other_keywords">Hãy thử tìm kiếm với từ khóa khác</string>
+    <string name="settings">Cài đặt</string>
+
+    <string name="stop_direction">Dừng chỉ đường</string>
+    <string name="title_registration">NextMeet Đăng ký tài khoản</string>
+    <string name="name">Họ tên</string>
+    <string name="submit">Đăng ký</string>
+
+    <string name="no_found_photos">Không tìm thấy hình ảnh</string>
+    <string name="sale_student">Nhân viên, Bạn...</string>
+    <string name="enter_description">Nhập mô tả....</string>
+    <string name="select_location">Chọn vị trí</string>
+    <string name="save">Lưu</string>
+
+    <string name="forgot_password">Quên mật khẩu</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="re_password">Đổi mật khẩu</string>
+
+
+    <string name="no_appointments_found">Không tìm thấy cuộc hẹn nào</string>
+    <string name="try_different_search_terms">Thử các thuật ngữ tìm kiếm khác</string>
+    <string name="no_appointments_yet">Chưa có cuộc hẹn nào</string>
+    <string name="tap_to_add_a_new_appointment">Nhấn + để thêm cuộc hẹn mới</string>
+
+    <string name="no_contacts_yet">Chưa có liên hệ nào</string>
+    <string name="tap_to_add_a_new_contact">Nhấn + để thêm liên hệ mới</string>
+    <string name="no_contacts_found">Không tìm thấy liên hệ nào</string>
+
+    <string name="empty_appointment_history_title">Chưa có lịch sử cuộc hẹn</string>
+    <string name="empty_appointment_history_description">Các cuộc hẹn đã hoàn thành, hủy hoặc bỏ lỡ sẽ hiển thị ở đây</string>
+    <string name="loading_appointment_history">Đang tải lịch sử...</string>
+    <string name="msg_note_suggestion">Ghi chú bạn thêm sẽ xuất hiện ở đây</string>
+
+
+    <!-- Appointment status transition -->
+    <string name="status_preparing">Đã đến lúc chuẩn bị cho cuộc hẹn</string>
+    <string name="status_travelling">Đã đến lúc khởi hành đến cuộc hẹn</string>
+    <string name="status_in_progresss">Cuộc hẹn đã bắt đầu</string>
+    <string name="status_completeds">Cuộc hẹn đã hoàn thành</string>
+    <string name="status_delayed">Cuộc hẹn có thể bị trễ</string>
+    <string name="status_misseds">Đã bỏ lỡ cuộc hẹn</string>
+    <string name="status_updated">Trạng thái cuộc hẹn đã được cập nhật</string>
+
+    <!-- Navigation cancel messages -->
+    <string name="reason_cancel_not_moved">Bạn có thể hủy navigation ngay bây giờ vì chưa di chuyển.</string>
+    <string name="cancel_immediate">Đã hủy điều hướng. Trạng thái được khôi phục.</string>
+    <string name="cancel_grace">Đã hủy điều hướng sớm. Trạng thái được khôi phục.</string>
+    <string name="cancel_after_movement">Đã dừng điều hướng. Trạng thái được giữ nguyên.</string>
+
+
+    <string name="nav_too_late_reason">Cuộc hẹn đã qua (%1$s)</string>
+    <string name="nav_too_late_button">Đã qua giờ hẹn</string>
+
+    <string name="nav_too_early_reason">Quá sớm để bắt đầu điều hướng. Hãy thử lại sau %1$d giờ nữa.</string>
+    <string name="nav_too_early_button">Quá sớm</string>
+
+    <string name="nav_depart_now_reason">Đã đến lúc khởi hành!</string>
+    <string name="nav_depart_now_button">Bắt đầu điều hướng</string>
+
+    <string name="nav_early_but_ok_reason">Bạn sẽ đến sớm khoảng %1$d phút. Vẫn có thể bắt đầu điều hướng.</string>
+    <string name="nav_early_but_ok_button">Bắt đầu điều hướng (sớm)</string>
+
+    <string name="nav_unknown_reason">Không thể xác định thời gian phù hợp</string>
+    <string name="nav_unknown_button">Không khả dụng</string>
+
+    <string name="nav_stopped_with_status">Đã dừng điều hướng. %1$s</string>
+    <string name="nav_stopped">Đã dừng điều hướng.</string>
+
+    <string name="travel_duration_past">Đã qua</string>
+    <string name="travel_duration_days_hours">%1$d ngày %2$d giờ</string>
+    <string name="travel_duration_hours_minutes">%1$d giờ %2$d phút</string>
+    <string name="travel_duration_minutes">%1$d phút</string>
+
+    <string name="error_phone_required">Vui lòng nhập số điện thoại</string>
+    <string name="error_phone_digits">Số điện thoại chỉ chứa chữ số</string>
+
+    <string name="error_name_required">Vui lòng nhập tên</string>
+    <string name="error_name_length">Tên không được quá 25 ký tự</string>
+
+    <string name="error_address_required">Vui lòng nhập địa chỉ</string>
+
+    <string name="error_password_required">Vui lòng nhập mật khẩu</string>
+    <string name="error_password_length">Mật khẩu phải có ít nhất 6 ký tự</string>
+
+    <string name="error_email_required">Vui lòng nhập email</string>
+    <string name="error_email_invalid">Email không hợp lệ</string>
+
+    <string name="error_password_mismatch">Mật khẩu không khớp</string>
+
+
+    <string name="error_search_failed">Đã xảy ra lỗi khi tìm kiếm</string>
+    <string name="error_quick_filter">Lỗi khi tìm kiếm bằng bộ lọc nhanh</string>
+    <string name="error_invalid_filter">Bộ lọc không hợp lệ</string>
+    <string name="error_generate_suggestion">Lỗi khi tạo gợi ý tìm kiếm</string>
+    <string name="error_filter_by_contact">Lỗi khi lọc cuộc hẹn theo liên hệ</string>
+    <string name="error_delete_history">Lỗi khi xóa lịch sử tìm kiếm</string>
+    <string name="error_clear_history">Lỗi khi xóa lịch sử tìm kiếm</string>
+    <string name="error_clear_all_history">Lỗi khi xóa toàn bộ lịch sử tìm kiếm</string>
+    <string name="error_loading_items">Lỗi tải mục %1$s: %2$s</string>
+    <string name="error_filter_by_contact_detail">Lỗi khi lọc cuộc hẹn theo liên hệ: %1$s</string>
 
 
     <!-- String Arrays -->

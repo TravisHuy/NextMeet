@@ -19,7 +19,7 @@
         android:layout_marginTop="15dp"
         android:fontFamily="@font/aldrich"
         android:gravity="center"
-        android:text="TravisHuy Registration"
+        android:text="@string/title_registration"
         android:textColor="#1198D5"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,7 +44,7 @@
             android:id="@+id/ed_register_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Name"
+            android:hint="@string/name"
             android:imeOptions="actionNext"
             android:inputType="textPersonName"
             android:singleLine="true" />
@@ -68,7 +68,7 @@
             android:id="@+id/ed_register_phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Phone"
+            android:hint="@string/phone"
             android:imeOptions="actionNext"
             android:inputType="number"
             android:singleLine="true" />
@@ -90,7 +90,7 @@
             android:id="@+id/ed_register_email"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
+            android:hint="@string/email"
             android:imeOptions="actionNext"
             android:inputType="textEmailAddress"
             android:singleLine="true" />
@@ -113,7 +113,7 @@
             android:id="@+id/ed_register_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password"
+            android:hint="@string/password"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:singleLine="true" />
@@ -191,7 +191,7 @@
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
         android:padding="10dp"
-        android:text="Submit"
+        android:text="@string/submit"
         android:textColor="@color/white"
         app:backgroundTint="#1DCD24"
         app:cornerRadius="4dp"

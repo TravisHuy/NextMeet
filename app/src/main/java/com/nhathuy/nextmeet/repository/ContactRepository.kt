@@ -163,10 +163,10 @@ class ContactRepository @Inject constructor(private val contactDao: ContactDao,p
         email: String
     ): Result<Unit> {
         val validators = listOf(
-            ValidationUtils.validateName(name),
-            ValidationUtils.validateAddress(address),
-            ValidationUtils.validatePhone(phone),
-            ValidationUtils.validateEmail(email)
+            ValidationUtils.validateName(context,name),
+            ValidationUtils.validateAddress(context,address),
+            ValidationUtils.validatePhone(context,phone),
+            ValidationUtils.validateEmail(context,email)
         )
 
         val error = validators.firstOrNull { !it.isValid }

@@ -1,8 +1,10 @@
 package com.nhathuy.nextmeet.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.LoginForm
 import com.nhathuy.nextmeet.model.PasswordResetForm
 import com.nhathuy.nextmeet.model.RegistrationForm
@@ -12,6 +14,7 @@ import com.nhathuy.nextmeet.repository.UserRepository
 import com.nhathuy.nextmeet.resource.Resource
 import com.nhathuy.nextmeet.utils.ValidationUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -20,7 +23,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class UserViewModel @Inject constructor(private val repository: UserRepository) : ViewModel() {
+class UserViewModel @Inject constructor(@ApplicationContext private val context: Context,
+                                        private val repository: UserRepository) : ViewModel() {
 
     private val _registrationState = MutableStateFlow<Resource<Boolean>>(Resource.Loading())
     val registrationState: StateFlow<Resource<Boolean>> = _registrationState
@@ -109,8 +113,8 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
 
 
     fun validateAndLogin(loginForm: LoginForm,rememberMe: Boolean):Boolean {
-        val phoneValidation = ValidationUtils.validatePhone(loginForm.phone)
-        val passwordValidation = ValidationUtils.validatePassword(loginForm.password)
+        val phoneValidation = ValidationUtils.validatePhone(context,loginForm.phone)
+        val passwordValidation = ValidationUtils.validatePassword(context,loginForm.password)
 
         val validationResults = mapOf(
             "phone" to phoneValidation,
@@ -128,12 +132,21 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
         return isValid
     }
 
+    /**
+     * Kiểm tra số điện thoại đã tồn tại trong hệ thống chưa
+     * @param phone Số điện thoại cần kiểm tra
+     * @return true nếu số điện thoại đã tồn tại
+     */
+    suspend fun isPhoneExists(phone: String): Boolean {
+        return repository.isPhoneExists(phone)
+    }
+
     fun validateAndRegister(registerForm: RegistrationForm):Boolean {
-        val phoneValidation = ValidationUtils.validatePhone(registerForm.phone)
-        val emailValidation = ValidationUtils.validateEmail(registerForm.email)
-        val nameValidation = ValidationUtils.validateName(registerForm.name)
-        val passwordValidation = ValidationUtils.validatePassword(registerForm.password)
-        val addressValidation = ValidationUtils.validateAddress(registerForm.address)
+        val phoneValidation = ValidationUtils.validatePhone(context,registerForm.phone)
+        val emailValidation = ValidationUtils.validateEmail(context, registerForm.email)
+        val nameValidation = ValidationUtils.validateName(context, registerForm.name)
+        val passwordValidation = ValidationUtils.validatePassword(context, registerForm.password)
+        val addressValidation = ValidationUtils.validateAddress(context, registerForm.address)
 //        val coordinatesValidation = ValidationUtils.validateCoordinate(registerForm.latitude!!, registerForm.longitude!!)
 
         val validationResults = mapOf(
@@ -144,25 +157,39 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
             "address" to addressValidation,
 //            "coordinates" to coordinatesValidation
         )
-        _registerFormState.value = validationResults
 
-        val isValid = validationResults.all { it.value.isValid }
-
-        if(isValid){
-            register(
-                User(
-                    name = registerForm.name,
-                    phone = registerForm.phone,
-                    email = registerForm.email,
-                    password = registerForm.password,
-                    defaultAddress = registerForm.address,
-                    defaultLatitude = registerForm.latitude,
-                    defaultLongitude = registerForm.longitude
+        viewModelScope.launch {
+            val finalValidationResults = if(phoneValidation.isValid && isPhoneExists(registerForm.phone)){
+                val phoneResults = validationResults.toMutableMap()
+                phoneResults["phone"] = ValidationResult(
+                    false,
+                    context.getString(R.string.error_phone_exists)
                 )
-            )
+                phoneResults.toMap()
+            }else {
+                validationResults
+            }
+
+            _registerFormState.value = finalValidationResults
+
+            val isValid = finalValidationResults.all { it.value.isValid }
+
+            if(isValid){
+                register(
+                    User(
+                        name = registerForm.name,
+                        phone = registerForm.phone,
+                        email = registerForm.email,
+                        password = registerForm.password,
+                        defaultAddress = registerForm.address,
+                        defaultLatitude = registerForm.latitude,
+                        defaultLongitude = registerForm.longitude
+                    )
+                )
+            }
         }
 
-        return isValid
+        return false
     }
     /**
      * Validates password reset form and attempts password update if valid
@@ -170,9 +197,9 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
      * @return Whether validation passed
      */
     fun validateAndUpdatePassword(form: PasswordResetForm): Boolean {
-        val phoneValidation = ValidationUtils.validatePhone(form.phone)
-        val newPasswordValidation = ValidationUtils.validatePassword(form.newPassword)
-        val passwordsMatchValidation = ValidationUtils.validatePasswordMatch(
+        val phoneValidation = ValidationUtils.validatePhone(context, form.phone)
+        val newPasswordValidation = ValidationUtils.validatePassword(context, form.newPassword)
+        val passwordsMatchValidation = ValidationUtils.validatePasswordMatch(context,
             form.newPassword,
             form.confirmPassword
         )
@@ -199,9 +226,9 @@ class UserViewModel @Inject constructor(private val repository: UserRepository) 
      * @return Whether validation passed
      */
     fun validateAndUpdateUser(user: User): Boolean {
-        val nameValidation = ValidationUtils.validateName(user.name)
-        val emailValidation = ValidationUtils.validateEmail(user.email)
-        val phoneValidation = ValidationUtils.validatePhone(user.phone)
+        val nameValidation = ValidationUtils.validateName(context, user.name)
+        val emailValidation = ValidationUtils.validateEmail(context, user.email)
+        val phoneValidation = ValidationUtils.validatePhone(context, user.phone)
 //        val addressValidation = ValidationUtils.validateAddress(user.defaultAddress)
 
         val validationResults = mapOf(

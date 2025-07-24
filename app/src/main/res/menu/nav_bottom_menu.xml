@@ -3,21 +3,21 @@
     <item
         android:id="@+id/nav_home"
         android:icon="@drawable/ic_home_plus"
-        android:title="Home"
+        android:title="@string/home"
         />
     <item
         android:id="@+id/nav_appointment"
         android:icon="@drawable/ic_appointment"
-        android:title="Appointment"
+        android:title="@string/appointment"
         />
     <item
         android:id="@+id/nav_contact"
-        android:title="Contact"
+        android:title="@string/contact"
         android:icon="@drawable/ic_contact"
         />
     <item
         android:id="@+id/nav_settings"
-        android:title="Settings"
+        android:title="@string/settings"
         android:icon="@drawable/ic_setting"
         />
 </menu>

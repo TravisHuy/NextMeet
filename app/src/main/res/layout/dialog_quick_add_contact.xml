@@ -14,10 +14,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:placeholderText="Nhập họ tên..."
+        app:placeholderText="@string/input_full_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Họ và tên">
+        android:hint="@string/full_name">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_contact_name"
@@ -35,11 +35,11 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/til_name"
-        app:placeholderText="Nhập số điện thoại..."
+        app:placeholderText="@string/enter_phone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:hint="Số điện thoại">
+        android:hint="@string/phone">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_contact_phone"
@@ -55,11 +55,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:hint="Vai tro"
+        android:hint="@string/role"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/til_phone"
-        app:placeholderText="Sale,Student...">
+        app:placeholderText="@string/sale_student">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_contact_role"

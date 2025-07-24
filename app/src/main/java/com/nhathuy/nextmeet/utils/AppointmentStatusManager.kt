@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.utils
 
+import android.content.Context
 import android.location.Location
 import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.AppointmentPlus
@@ -16,7 +17,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class AppointmentStatusManager {
+class AppointmentStatusManager(private val context: Context) {
     companion object {
         // 30 phút trước cuộc hẹn -> PREPARING
         private const val PREPARING_TIME_MINUTES = 30
@@ -177,13 +178,13 @@ class AppointmentStatusManager {
         newStatus: AppointmentStatus
     ): String {
         return when (newStatus) {
-            AppointmentStatus.PREPARING -> "Đã đến lúc chuẩn bị cho cuộc hẹn"
-            AppointmentStatus.TRAVELLING -> "Đã đến lúc khởi hành đến cuộc hẹn"
-            AppointmentStatus.IN_PROGRESS -> "Cuộc hẹn đã bắt đầu"
-            AppointmentStatus.COMPLETED -> "Cuộc hẹn đã hoàn thành"
-            AppointmentStatus.DELAYED -> "Cuộc hẹn có thể bị trễ"
-            AppointmentStatus.MISSED -> "Đã bỏ lỡ cuộc hẹn"
-            else -> "Trạng thái cuộc hẹn đã được cập nhật"
+            AppointmentStatus.PREPARING -> context.getString(R.string.status_preparing)
+            AppointmentStatus.TRAVELLING -> context.getString(R.string.status_travelling)
+            AppointmentStatus.IN_PROGRESS -> context.getString(R.string.status_in_progresss)
+            AppointmentStatus.COMPLETED -> context.getString(R.string.status_completeds)
+            AppointmentStatus.DELAYED -> context.getString(R.string.status_delayed)
+            AppointmentStatus.MISSED -> context.getString(R.string.status_misseds)
+            else -> context.getString(R.string.status_updated)
         }
     }
 
@@ -215,7 +216,7 @@ class AppointmentStatusManager {
                     canRevert = true,
                     shouldRevertStatus = true,
                     newStatus = getPreviousStatus(appointment.status),
-                    reason = "Bạn có thể hủy navigation ngay bây giờ vì chưa di chuyển."
+                    reason = context.getString(R.string.reason_cancel_not_moved)
                 )
             }
 
@@ -224,7 +225,7 @@ class AppointmentStatusManager {
                     canRevert = true,
                     shouldRevertStatus = false,
                     newStatus = appointment.status, // Giữ nguyên
-                    reason = "Đã hủy điều hướng"
+                    reason = context.getString(R.string.navigation_cancelled)
                 )
             }
 
@@ -233,7 +234,7 @@ class AppointmentStatusManager {
                     canRevert = true,
                     shouldRevertStatus = false,
                     newStatus = appointment.status,
-                    reason = "Đã hủy điều hướng"
+                    reason = context.getString(R.string.navigation_cancelled)
                 )
             }
         }
@@ -286,7 +287,7 @@ class AppointmentStatusManager {
                     shouldUpdateNavigationStarted = true,
                     shouldUpdateStatus = true,
                     newStatus = getRevertStatus(appointment),
-                    message = "Đã hủy điều hướng. Trạng thái được khôi phục."
+                    message = context.getString(R.string.cancel_immediate)
                 )
             }
 
@@ -295,7 +296,7 @@ class AppointmentStatusManager {
                     shouldUpdateNavigationStarted = true,
                     shouldUpdateStatus = true,
                     newStatus = getRevertStatus(appointment),
-                    message = "Đã hủy điều hướng sớm. Trạng thái được khôi phục."
+                    message = context.getString(R.string.cancel_grace)
                 )
             }
 
@@ -304,7 +305,7 @@ class AppointmentStatusManager {
                     shouldUpdateNavigationStarted = true,
                     shouldUpdateStatus = false,
                     newStatus = appointment.status,
-                    message = "Đã dừng điều hướng. Trạng thái được giữ nguyên."
+                    message = context.getString(R.string.cancel_after_movement)
                 )
             }
 
@@ -356,9 +357,9 @@ class AppointmentStatusManager {
 
     private fun getLateCancelMessage(oldStatus: AppointmentStatus, newStatus: AppointmentStatus): String {
         return if (oldStatus != newStatus) {
-            "Đã dừng điều hướng. ${getStatusTransitionMessage(oldStatus, newStatus)}"
+            context.getString(R.string.nav_stopped_with_status,getStatusTransitionMessage(oldStatus, newStatus))
         } else {
-            "Đã dừng điều hướng."
+            context.getString(R.string.nav_stopped)
         }
     }
 
@@ -437,8 +438,8 @@ class AppointmentStatusManager {
             currentTime > appointmentStartTime -> {
                 NavigationCheckResult(
                     canStart = false,
-                    reason = "Cuộc hẹn đã qua (${formatTime(appointmentStartTime)})",
-                    buttonText = "Đã qua giờ hẹn",
+                    reason = context.getString(R.string.nav_too_late_reason,formatTime(appointmentStartTime)),
+                    buttonText = context.getString(R.string.nav_too_late_button),
                     showWarning = true
                 )
             }
@@ -448,7 +449,10 @@ class AppointmentStatusManager {
                 val hoursUntilEarliest = (earliestNavigationTime - currentTime) / (1000 * 60 * 60)
                 NavigationCheckResult(
                     canStart = false,
-                    reason = "Quá sớm để bắt đầu điều hướng. Hãy thử lại sau $hoursUntilEarliest giờ nữa.",
+                    reason = context.getString(
+                        R.string.nav_too_early_reason,
+                        hoursUntilEarliest
+                    ),
                     buttonText = "Quá sớm",
                     showInfo = true
                 )
@@ -458,8 +462,8 @@ class AppointmentStatusManager {
             currentTime >= idealDepartureTime -> {
                 NavigationCheckResult(
                     canStart = true,
-                    reason = "Đã đến lúc khởi hành!",
-                    buttonText = "Bắt đầu điều hướng",
+                    reason = context.getString(R.string.nav_depart_now_reason),
+                    buttonText = context.getString(R.string.nav_depart_now_button),
                     showSuccess = true
                 )
             }
@@ -469,8 +473,8 @@ class AppointmentStatusManager {
                 val minutesEarly = (idealDepartureTime - currentTime) / (1000 * 60)
                 NavigationCheckResult(
                     canStart = true,
-                    reason = "Bạn sẽ đến sớm khoảng $minutesEarly phút. Vẫn có thể bắt đầu điều hướng.",
-                    buttonText = "Bắt đầu điều hướng (sớm)",
+                    reason = context.getString(R.string.nav_early_but_ok_reason,minutesEarly ),
+                    buttonText = context.getString(R.string.nav_early_but_ok_button),
                     showWarning = true
                 )
             }
@@ -478,8 +482,8 @@ class AppointmentStatusManager {
             else -> {
                 NavigationCheckResult(
                     canStart = false,
-                    reason = "Không thể xác định thời gian phù hợp",
-                    buttonText = "Không khả dụng"
+                    reason = context.getString(R.string.nav_unknown_reason),
+                    buttonText = context.getString(R.string.nav_unknown_button)
                 )
             }
         }
@@ -503,7 +507,7 @@ class AppointmentStatusManager {
             timeUntilAppointment = formatDuration(timeUntilAppointment),
             idealDepartureTime = formatDateTime(idealDepartureTime),
             timeUntilDeparture = formatDuration(timeUntilDeparture),
-            travelTime = "${appointment.travelTimeMinutes} phút",
+            travelTime = context.getString(R.string.travel_duration_minutes,appointment.travelTimeMinutes),
             isToday = isToday(appointmentStartTime),
             isTomorrow = isTomorrow(appointmentStartTime)
         )
@@ -518,15 +522,15 @@ class AppointmentStatusManager {
     }
 
     private fun formatDuration(durationMs: Long): String {
-        if (durationMs < 0) return "Đã qua"
+        if (durationMs < 0) return context.getString(R.string.travel_duration_past)
 
         val hours = durationMs / (1000 * 60 * 60)
         val minutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60)
 
         return when {
-            hours > 24 -> "${hours / 24} ngày ${hours % 24} giờ"
-            hours > 0 -> "$hours giờ $minutes phút"
-            else -> "$minutes phút"
+            hours > 24 -> context.getString(R.string.travel_duration_days_hours,hours / 24,hours % 24)
+            hours > 0 -> context.getString(R.string.travel_duration_hours_minutes,hours,minutes)
+            else -> context.getString(R.string.travel_duration_minutes, minutes)
         }
     }
 

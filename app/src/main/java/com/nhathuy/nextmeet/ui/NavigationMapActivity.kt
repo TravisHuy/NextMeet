@@ -108,7 +108,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        statusManager = AppointmentStatusManager()
+        statusManager = AppointmentStatusManager(this)
 
         // Initialize OkHttpClient
         okHttpClient = OkHttpClient.Builder()
@@ -385,12 +385,12 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             appt ->
             val timingInfo = statusManager.getTimingInfo(appt)
             val message = buildString {
-                append(getString(R.string.appointment_time),timingInfo.appointmentTime)
-                append(getString(R.string.time_remaining),timingInfo.timeUntilAppointment)
+                append(getString(R.string.appointment_time,timingInfo.appointmentTime))
+                append(getString(R.string.time_remaining,timingInfo.timeUntilAppointment))
                 if (appt.travelTimeMinutes > 0) {
-                    append(getString(R.string.travel_time),timingInfo.travelTime)
-                    append(getString(R.string.ideal_departure_time),timingInfo.idealDepartureTime)
-                    append(getString(R.string.time_until_departure),timingInfo.timeUntilDeparture)
+                    append(getString(R.string.travel_time,timingInfo.travelTime))
+                    append(getString(R.string.ideal_departure_time,timingInfo.idealDepartureTime))
+                    append(getString(R.string.time_until_departure,timingInfo.timeUntilDeparture))
                 }
             }
 

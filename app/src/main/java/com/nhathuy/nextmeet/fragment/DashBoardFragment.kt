@@ -605,7 +605,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
                         // Post a delayed action to ensure fragment is ready
                         solutionActivity.binding.root.postDelayed({
                             triggerAppointmentWithContactNavigation(searchQuery)
-                        }, 200)
+                        }, 500)
                     }
                 }
             }

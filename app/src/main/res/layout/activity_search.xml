@@ -138,7 +138,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Tìm kiếm gần đây"
+                            android:text="@string/search_recent"
                             android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -149,7 +149,7 @@
                             android:layout_height="wrap_content"
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:padding="8dp"
-                            android:text="Xóa tất cả"
+                            android:text="@string/delete_all"
                             android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -180,7 +180,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Danh mục"
+                        android:text="@string/category"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -355,7 +355,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Không tìm thấy kết quả"
+                    android:text="@string/no_results_found"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp" />
 
@@ -363,10 +363,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Hãy thử tìm kiếm với từ khóa khác"
+                    android:text="@string/try_other_keywords"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
-
             </LinearLayout>
 
         </LinearLayout>
