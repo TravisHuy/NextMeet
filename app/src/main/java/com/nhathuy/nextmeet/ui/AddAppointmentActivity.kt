@@ -117,14 +117,14 @@ class AddAppointmentActivity : AppCompatActivity() {
 
                 if (!selectedAddress.isNullOrEmpty()) {
                     binding.etAppointmentLocation.setText(location)
-                    binding.tilAppointmentLocation.helperText = "📍 Đã chọn vị trí từ bản đồ"
+                    binding.tilAppointmentLocation.helperText = getString(R.string.location_found_from_map)
                     Log.d(
                         "AddAppointmentActivity",
                         "Selected from map: $selectedAddress at ($selectedLat, $selectedLng)"
                     )
                 } else {
                     binding.etAppointmentLocation.setText(getString(R.string.no_location_selected))
-                    binding.tilAppointmentLocation.helperText = "⚠️ Không có vị trí nào được chọn"
+                    binding.tilAppointmentLocation.helperText = getString(R.string.no_locations_selected)
                     location = ""
                     latitude = null
                     longitude = null
@@ -215,7 +215,7 @@ class AddAppointmentActivity : AppCompatActivity() {
         Log.d("AddAppointment", "Edit mode contact ID: $currentContactId")
 
         // Update UI for edit mode
-        supportActionBar?.title = "Chỉnh sửa cuộc hẹn"
+        supportActionBar?.title = getString(R.string.edit_appointment)
 
         // Update reminder display if available
         reminderTime?.let { updateReminderDisplay() }
@@ -225,15 +225,15 @@ class AddAppointmentActivity : AppCompatActivity() {
         when {
             // Có cả location và coordinates
             !location.isNullOrEmpty() && latitude != null && longitude != null -> {
-                binding.tilAppointmentLocation.helperText = "📍 Đã tìm thấy vị trí"
+                binding.tilAppointmentLocation.helperText = getString(R.string.location_found)
             }
             // Có location nhưng không có coordinates
             !location.isNullOrEmpty() && (latitude == null || longitude == null) -> {
-                binding.tilAppointmentLocation.helperText = "⚠️ Có địa chỉ nhưng chưa có tọa độ chính xác"
+                binding.tilAppointmentLocation.helperText = getString(R.string.location_not_exactly)
             }
             // Không có location
             else -> {
-                binding.tilAppointmentLocation.helperText = "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+                binding.tilAppointmentLocation.helperText = getString(R.string.location_hint_default)
             }
         }
     }
@@ -319,13 +319,13 @@ class AddAppointmentActivity : AppCompatActivity() {
 
             isEditMode -> {
                 // Edit mode nhưng không có contacts - báo lỗi nhưng không hiển thị dialog
-                binding.tilContactName.helperText = "⚠️ Không tìm thấy liên hệ - dữ liệu có thể đã bị xóa"
+                binding.tilContactName.helperText = getString(R.string.no_contacts_found_edit)
                 hasShownNoContactDialog = true
             }
 
             else -> {
                 // Add mode và không có contacts - hiển thị dialog
-                binding.tilContactName.helperText = "⚠️ Không tìm thấy liên hệ - vui lòng thêm ít nhất 1 liên hệ để thêm cuộc hẹn."
+                binding.tilContactName.helperText = getString(R.string.no_contacts_found_add)
                 if (!hasShownNoContactDialog) {
                     // Thêm delay để đảm bảo đã load xong
                     lifecycleScope.launch {
@@ -342,7 +342,7 @@ class AddAppointmentActivity : AppCompatActivity() {
     }
 
     private fun setupContactAdapter(contacts: List<ContactNameId>) {
-        val contactNames = mutableListOf("-- Chọn liên hệ --").apply {
+        val contactNames = mutableListOf(getString(R.string.select_contact_hint)).apply {
             addAll(contacts.map { it.name })
         }.toTypedArray()
 
@@ -387,17 +387,17 @@ class AddAppointmentActivity : AppCompatActivity() {
         hasShownNoContactDialog = true
 
         MaterialAlertDialogBuilder(this)
-            .setTitle("Không có liên hệ")
-            .setMessage("Bạn cần tạo ít nhất một liên hệ trước khi có thể tạo cuộc hẹn.")
-            .setPositiveButton("Tạo liên hệ nhanh") { dialog, _ ->
+            .setTitle(getString(R.string.no_contact_title))
+            .setMessage(getString(R.string.no_contact_message))
+            .setPositiveButton(getString(R.string.quick_add_contact)) { dialog, _ ->
                 dialog.dismiss()
                 showQuickAddContactDialog()
             }
-            .setNeutralButton("Đến trang Liên hệ") { dialog, _ ->
+            .setNeutralButton(getString(R.string.go_to_contacts)) { dialog, _ ->
                 dialog.dismiss()
                 navigateToContactFragment()
             }
-            .setNegativeButton("Hủy") { dialog, _ ->
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
                 finish()
             }
@@ -418,10 +418,10 @@ class AddAppointmentActivity : AppCompatActivity() {
         val etContactRole = dialogView.findViewById<TextInputEditText>(R.id.et_contact_role)
 
         val alertDialog = MaterialAlertDialogBuilder(this)
-            .setTitle("Tạo liên hệ nhanh")
+            .setTitle(getString(R.string.quick_add_contact))
             .setView(dialogView)
-            .setPositiveButton("Tạo", null) // Set null để override sau
-            .setNegativeButton("Hủy") { dialog, _ ->
+            .setPositiveButton(getString(R.string.create), null) // Set null để override sau
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }
             .create()
@@ -470,26 +470,26 @@ class AddAppointmentActivity : AppCompatActivity() {
         var isValid = true
 
         if (name.isEmpty()) {
-            tilName.error = "Tên không được để trống"
+            tilName.error = getString(R.string.error_name_empty)
             isValid = false
         } else if (name.length > 25) {
-            tilName.error = "Tên không được quá 25 ký tự"
+            tilName.error = getString(R.string.error_name_too_long)
             isValid = false
         }
 
         if (phone.isEmpty()) {
-            tilPhone.error = "Số điện thoại không được để trống"
+            tilPhone.error = getString(R.string.error_phone_empty)
             isValid = false
         } else if (phone.length != 10) {
-            tilPhone.error = "Số điện thoại phải có 10 chữ số"
+            tilPhone.error = getString(R.string.error_phone_length)
             isValid = false
         } else if (!phone.matches("^[0-9]+$".toRegex())) {
-            tilPhone.error = "Số điện thoại chỉ được chứa chữ số"
+            tilPhone.error = getString(R.string.error_phone_invalid)
             isValid = false
         }
 
         if (role.isEmpty()) {
-            tilRole.error = "Vai trò không được để trống"
+            tilRole.error = getString(R.string.error_role_empty)
             isValid = false
         }
 
@@ -507,7 +507,7 @@ class AddAppointmentActivity : AppCompatActivity() {
                 val contactId = contactViewModel.quickAddContact(currentUserId, name, phone, role)
 
                 if (contactId != null) {
-                    showMessage("Đã tạo liên hệ: $name")
+                    showMessage(getString(R.string.contact_created,name))
 
                     // Wait for contact list to refresh
                     delay(500)
@@ -520,7 +520,7 @@ class AddAppointmentActivity : AppCompatActivity() {
                     onComplete(false)
                 }
             } catch (e: Exception) {
-                showMessage("Lỗi tạo liên hệ: ${e.message}")
+                showMessage(getString(R.string.contact_creation_error, e.message ?: ""))
                 onComplete(false)
             }
         }
@@ -538,7 +538,7 @@ class AddAppointmentActivity : AppCompatActivity() {
             val contact = contactMap[contactName]
             if (contact != null) {
                 binding.autoContactName.setText(contactName, false)
-                showMessage("Đã chọn liên hệ: $contactName")
+                showMessage(getString(R.string.contact_selected,contactName))
 
                 // Clear helper text warning
                 binding.tilContactName.helperText = null
@@ -585,7 +585,7 @@ class AddAppointmentActivity : AppCompatActivity() {
         updateLocationHelperText()
         binding.tilAppointmentLocation.apply {
             setEndIconDrawable(R.drawable.ic_geo)
-            setEndIconContentDescription("Chọn vị trí trên bản đồ")
+            setEndIconContentDescription(getString(R.string.map_picker_description))
 
             setEndIconOnClickListener {
                 val intent = Intent(this@AddAppointmentActivity, GoogleMapActivity::class.java).apply {
@@ -617,20 +617,20 @@ class AddAppointmentActivity : AppCompatActivity() {
 
                         geocodingJob = lifecycleScope.launch {
                             delay(800)
-                            binding.tilAppointmentLocation.helperText = "🔄 Đang tìm tọa độ..."
+                            binding.tilAppointmentLocation.helperText = getString(R.string.location_searching)
 
                             geocodeAddress(manualLocation) { lat, lng ->
                                 if (lat != null && lng != null) {
                                     latitude = lat
                                     longitude = lng
-                                    binding.tilAppointmentLocation.helperText = "📍 Đã tìm thấy vị trí"
+                                    binding.tilAppointmentLocation.helperText = getString(R.string.location_found)
 //                                        "📍 Tọa độ: ${String.format("%.4f", lat)}, ${String.format("%.4f", lng)}"
                                     Log.d("Geocoding", "Found coordinates: $lat, $lng for address: $manualLocation")
                                 } else {
                                     latitude = null
                                     longitude = null
                                     binding.tilAppointmentLocation.helperText =
-                                        "⚠️ Không tìm thấy tọa độ - có thể chọn trên bản đồ để chính xác hơn"
+                                        getString(R.string.locations_not_found)
                                     Log.d("Geocoding", "No coordinates found for address: $manualLocation")
                                 }
                             }
@@ -640,13 +640,13 @@ class AddAppointmentActivity : AppCompatActivity() {
                         latitude = null
                         longitude = null
                         binding.tilAppointmentLocation.helperText =
-                            "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+                            getString(R.string.location_hint_default)
                         geocodingJob?.cancel()
                     } else {
                         location = manualLocation
                         latitude = null
                         longitude = null
-                        binding.tilAppointmentLocation.helperText = "📝 Nhập thêm để tìm tọa độ..."
+                        binding.tilAppointmentLocation.helperText = getString(R.string.location_enter_more)
                     }
                 }
         })
@@ -806,7 +806,7 @@ class AddAppointmentActivity : AppCompatActivity() {
             try {
                 val originalAppointment = getOriginalAppointment()
                 if (originalAppointment == null) {
-                    showMessage("Không tìm thấy cuộc hẹn gốc")
+                    showMessage(getString(R.string.error_find_appointment))
                     binding.btnSave.isEnabled = true
                     return@launch
                 }
@@ -830,7 +830,7 @@ class AddAppointmentActivity : AppCompatActivity() {
                 appointmentViewModel.updateAppointment(updatedAppointment, reminderTime != null)
 
             } catch (e: Exception) {
-                showMessage("Lỗi khi cập nhật: ${e.message}")
+                showMessage(getString(R.string.msg_error_updated, e.message))
                 binding.btnSave.isEnabled = true
             }
         }
@@ -852,34 +852,35 @@ class AddAppointmentActivity : AppCompatActivity() {
         binding.tilAppointmentTitle.error = null
 
         if (title.isEmpty()) {
-            binding.tilAppointmentTitle.error = "Vui lòng nhập tiêu đề cuộc hẹn"
+            binding.tilAppointmentTitle.error = getString(R.string.error_title_empty)
             return false
         }
 
         if (currentContactId == 0) {
-            Toast.makeText(this, "Vui lòng chọn liên hệ", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.error_contact_required), Toast.LENGTH_SHORT).show()
             return false
         }
 
         if (reminderTime == null) {
-            Toast.makeText(this, "Vui lòng chọn thời gian nhắc nhở", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.error_reminder_required), Toast.LENGTH_SHORT).show()
             return false
         }
 
         val currentTime = System.currentTimeMillis()
         if (reminderTime!! < currentTime) {
-            Toast.makeText(this, "Thời gian đã qua. Vui lòng chọn thời gian trong tương lai", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.error_reminder_in_past), Toast.LENGTH_SHORT).show()
             return false
         }
 
         return true
     }
 
+
     private fun showDateTimePicker() {
         val constraintBuilder = CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Select date")
+            .setTitleText(getString(R.string.select_date))
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
             .setCalendarConstraints(constraintBuilder.build())
             .build()
@@ -900,7 +901,7 @@ class AddAppointmentActivity : AppCompatActivity() {
             .setTimeFormat(TimeFormat.CLOCK_24H)
             .setHour(calendar.get(Calendar.HOUR_OF_DAY))
             .setMinute(calendar.get(Calendar.MINUTE))
-            .setTitleText("Select time")
+            .setTitleText(getString(R.string.select_time))
             .build()
 
         timePicker.addOnPositiveButtonClickListener {
@@ -911,7 +912,7 @@ class AddAppointmentActivity : AppCompatActivity() {
                 if (selectedHour < now.get(Calendar.HOUR_OF_DAY) ||
                     (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(Calendar.MINUTE)
                 ) {
-                    Toast.makeText(this, "Please select a future time", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this,getString(R.string.msg_select_future_time), Toast.LENGTH_SHORT).show()
                     return@addOnPositiveButtonClickListener
                 }
             }

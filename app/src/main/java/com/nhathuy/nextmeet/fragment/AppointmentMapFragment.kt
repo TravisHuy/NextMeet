@@ -84,7 +84,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            val message = result.data?.getStringExtra("message") ?: "Thao tác thành công"
+            val message = result.data?.getStringExtra("message") ?: getString(R.string.operation_successful)
             showMessage(message)
             refreshData()
         }
@@ -307,9 +307,9 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
 
     private fun updateSelectedCount(count: Int) {
         binding.tvSelectionCount.text = if (count > 1) {
-            "$count selected appointments"
+            getString(R.string.selected_appointment_other,count)
         } else {
-            "$count selected appointment"
+            getString(R.string.selected_appointment_one,count)
         }
 
         when {
@@ -524,12 +524,22 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
     private fun getSearchEmptyMessage(): String {
         return when {
             isContactFilterMode && selectedContactForFilter != null ->
-                "Không có cuộc hẹn nào với ${selectedContactForFilter!!.name}"
-            currentSearchQuery == "Today" -> "Không có cuộc hẹn nào hôm nay"
-            currentSearchQuery == "Upcoming" -> "Không có cuộc hẹn sắp tới"
-            currentSearchQuery == "Pinned" -> "Không có cuộc hẹn đã ghim"
-            currentSearchQuery == "This Week" -> "Không có cuộc hẹn tuần này"
-            else -> "Không tìm thấy cuộc hẹn nào cho \"$currentSearchQuery\""
+                getString(R.string.no_appointments_with_contact, selectedContactForFilter!!.name)
+
+            currentSearchQuery == "Today" ->
+                getString(R.string.no_appointments_today)
+
+            currentSearchQuery == "Upcoming" ->
+                getString(R.string.no_appointments_upcoming)
+
+            currentSearchQuery == "Pinned" ->
+                getString(R.string.no_appointments_pinned)
+
+            currentSearchQuery == "This Week" ->
+                getString(R.string.no_appointments_this_week)
+
+            else ->
+                getString(R.string.no_appointments_found_for_query, currentSearchQuery)
         }
     }
 
@@ -649,13 +659,12 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         searchViewModel.clearNavigationFilter()
     }
 
-    // MARK: - Selection Actions
     private fun handlePinAction() {
         val selectedAppointments = appointmentAdapter.getSelectedAppointments()
         selectedAppointments.forEach {
             appointmentViewModel.togglePin(it.id)
         }
-        showMessage("Đã cập nhật trạng thái ghim cho ${selectedAppointments.size} cuộc hẹn")
+        showMessage(getString(R.string.pin_status_updated, selectedAppointments.size))
         exitSelectionMode()
     }
 
@@ -663,11 +672,12 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         val selectedAppointments = appointmentAdapter.getSelectedAppointments()
         if (selectedAppointments.isNotEmpty()) {
             val shareText = buildString {
-                append("Thông tin cuộc hẹn:\n\n")
+                append(getString(R.string.appointment_info_header))
                 selectedAppointments.forEach { appointment ->
-                    append("Tiêu đề: ${appointment.title}\n")
-                    append("Nội dung: ${appointment.description}\n")
-                    append("Địa chỉ: ${appointment.location}\n\n")
+                    append(getString(R.string.appointment_info_line_title, appointment.title))
+                    append(getString(R.string.appointment_info_line_description, appointment.description))
+                    append(getString(R.string.appointment_info_line_location, appointment.location))
+                    append("\n")
                 }
             }
 
@@ -677,7 +687,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
                 putExtra(Intent.EXTRA_TEXT, shareText)
             }
 
-            startActivity(Intent.createChooser(shareIntent, "Chia sẻ cuộc hẹn"))
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_appointment)))
         }
         exitSelectionMode()
     }
@@ -705,17 +715,16 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
 
         val snackbar = Snackbar.make(
             binding.root,
-            "Đã hủy ${selectedAppointments.size} cuộc hẹn",
+            getString(R.string.appointment_cancelled, selectedAppointments.size),
             Snackbar.LENGTH_LONG
         )
 
         var isUndoClicked = false
 
-        snackbar.setAction("Hoàn tác") {
+        snackbar.setAction(getString(R.string.undo)) {
             isUndoClicked = true
-            // Restore lại vào UI
             appointmentAdapter.restoreAppointments(backupAppointments)
-            showMessage("Đã hoàn tác hủy cuộc hẹn")
+            showMessage(getString(R.string.undo_appointment_cancelled))
         }
 
         snackbar.addCallback(object : Snackbar.Callback() {
@@ -848,7 +857,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         isContactFilterMode = true
 
         // Update search bar to show contact filter
-        val filterText = "Contact: ${contact.name}"
+        val filterText = getString(R.string.contact_name, contact.name)
         updateSearchBar(filterText)
         currentSearchQuery = filterText
         isSearchMode = true
@@ -872,7 +881,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         searchViewModel.applyContactFilter(contact.id, contact.name)
 
         // Update search bar display
-        binding.searchBar.setText("Contact: ${contact.name}")
+        binding.searchBar.setText(getString(R.string.contact_name, contact.name))
 
         Log.d("AppointmentContactFilter", "Filtering appointments for contact: ${contact.name} (ID: ${contact.id})")
     }

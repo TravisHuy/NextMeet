@@ -19,6 +19,7 @@ import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.utils.AppointmentStatusManager
 import com.nhathuy.nextmeet.utils.NotificationManagerService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,7 @@ class AppointmentPlusViewModel @Inject constructor(
     private val appointmentRepository: AppointmentPlusRepository,
     private val contactRepository: ContactRepository,
     private val notificationManagerService: NotificationManagerService,
-    private val context : Context
+    @ApplicationContext private val context : Context
 ) : ViewModel() {
 
     private val _appointmentUiState = MutableStateFlow<AppointmentUiState>(AppointmentUiState.Idle)
@@ -54,7 +55,7 @@ class AppointmentPlusViewModel @Inject constructor(
     private var navigationStartTime: Long = 0
     private var navigationStartLocation: Location? = null
 
-    private val statusManager = AppointmentStatusManager()
+    private val statusManager = AppointmentStatusManager(context)
     private var statusUpdateJob: Job? = null
     private var isActive = false
 

@@ -92,13 +92,6 @@ class AddNoteActivity : AppCompatActivity() {
     // Thêm biến này để kiểm soát việc chờ lưu ảnh
     private var pendingImageInsert = false
 
-    // Image picker launcher
-//    private val pickMultipleImagesLauncher =
-//        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
-//            if (uris.isNotEmpty()) {
-//                handleMultipleImageSelection(uris)
-//            }
-//        }
 
     companion object {
         val listColor = listOf(
@@ -243,7 +236,7 @@ class AddNoteActivity : AppCompatActivity() {
                         Log.d("AddNoteActivity", "Images inserted successfully")
                         if (pendingImageInsert) {
                             pendingImageInsert = false
-                            showSuccessAndFinish("Đã lưu ghi chú với ảnh")
+                            showSuccessAndFinish(getString(R.string.note_images_saved))
                         }
                     }
 
@@ -259,13 +252,13 @@ class AddNoteActivity : AppCompatActivity() {
                             action = Intent.ACTION_SEND
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, state.shareContent)
-                            putExtra(Intent.EXTRA_SUBJECT, currentNote?.title ?: "Shared Note")
+                            putExtra(Intent.EXTRA_SUBJECT, currentNote?.title ?: getString(R.string.shared_note))
                         }
 
                         try {
                             startActivity(Intent.createChooser(shareIntent, "Share note with"))
                         } catch (e: Exception) {
-                            Toast.makeText(this@AddNoteActivity, "Unable to share note", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@AddNoteActivity, getString(R.string.unable_to_share_note), Toast.LENGTH_SHORT).show()
                             Log.e("AddNoteActivity", "Error sharing note", e)
                         }
                     }
@@ -337,7 +330,7 @@ class AddNoteActivity : AppCompatActivity() {
         val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
 
         if (title.isEmpty()) {
-            Toast.makeText(this, "Please enter a title before sharing", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.please_enter_title_before_sharing), Toast.LENGTH_SHORT).show()
             binding.switchShare.isChecked = false
             isShared = false
             return
@@ -356,7 +349,7 @@ class AddNoteActivity : AppCompatActivity() {
         try {
             startActivity(Intent.createChooser(shareIntent, "Share note with"))
         } catch (e: Exception) {
-            Toast.makeText(this, "Unable to share note", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.unable_to_share_note), Toast.LENGTH_SHORT).show()
             Log.e("AddNoteActivity", "Error sharing note", e)
         }
     }
@@ -365,7 +358,7 @@ class AddNoteActivity : AppCompatActivity() {
         val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
         return buildString {
-            append("📝 Tiêu đề: $title\n\n")
+            append(getString(R.string.share_note_title,title))
 
             when (noteType) {
                 NoteType.TEXT -> {
@@ -373,12 +366,12 @@ class AddNoteActivity : AppCompatActivity() {
                     if (content.isNotEmpty()) {
                         append("$content\n\n")
                     } else {
-                        append("(Nội dung trống)\n\n")
+                        append(getString(R.string.share_empty_content))
                     }
                 }
 
                 NoteType.CHECKLIST -> {
-                    append("📋 Danh sách công việc:\n")
+                    append(getString(R.string.share_checklist_header))
                     val items = checklistAdapter.getItems()
                     if (items.any { it.text.isNotEmpty() }) {
                         items.forEach { item ->
@@ -389,32 +382,32 @@ class AddNoteActivity : AppCompatActivity() {
                         }
                         append("\n")
                     } else {
-                        append("(Chưa có mục nào)\n\n")
+                        append(getString(R.string.share_no_checklist))
                     }
                 }
 
                 NoteType.PHOTO -> {
                     val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
-                    append("📸 Ghi chú ảnh:\n")
+                    append(getString(R.string.share_photo_header))
                     if (content.isNotEmpty()) {
                         append("$content\n")
                     } else {
-                        append("(Không có mô tả)\n")
+                        append(getString(R.string.share_no_photo_description))
                     }
-                    append("Số lượng ảnh: ${imageList.size}\n\n")
+                    append(getString(R.string.share_photo_count,imageList.size))
                 }
 
                 else -> {
-                    append("(Loại ghi chú không xác định)\n\n")
+                    append(getString(R.string.share_unknown_note_type))
                 }
             }
 
             // Thêm thông tin reminder nếu có
             reminderTime?.let { time ->
-                append("⏰ Nhắc nhở: ${formatter.format(Date(time))}\n")
+                append(getString(R.string.share_reminder,formatter.format(Date(time))))
             }
 
-            append("📱 Được chia sẻ từ NextMeet App lúc: ${formatter.format(Date())}")
+            append(getString(R.string.share_footer,formatter.format(Date())))
         }
     }
 
@@ -766,24 +759,24 @@ class AddNoteActivity : AppCompatActivity() {
         }
 
         val title = if (isEditMode) {
-            "Discard changes?"
+            getString(R.string.discard_changes)
         } else {
-            "Discard note?"
+            getString(R.string.discard_note)
         }
 
         val message = if (isEditMode) {
-            "You have unsaved changes. Are you sure you want to discard them?"
+            getString(R.string.msg_unsaved_changes_discard)
         } else {
-            "Your note will not be saved. Are you sure you want to discard it?"
+            getString(R.string.msg_will_note_saved)
         }
 
         MaterialAlertDialogBuilder(this).setTitle(title)
             .setMessage(message)
             .setIcon(R.drawable.ic_cancel)
-            .setNegativeButton("Cancel") { dialog, _ ->
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }
-            .setPositiveButton("Discard") { _, _ ->
+            .setPositiveButton(getString(R.string.discard)) { _, _ ->
                 if (isEditMode && noteType == NoteType.PHOTO) {
                     // Restore image changes if discarding
                     discardImageChanges()
@@ -853,8 +846,8 @@ class AddNoteActivity : AppCompatActivity() {
             binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
 
             val count = noteImages.size
-            Toast.makeText(this, "$count photos added", Toast.LENGTH_SHORT).show()
-            Log.d("AddNoteActivity", "$count photos selected from gallery")
+            Toast.makeText(this, getString(R.string.count_photo_added, count), Toast.LENGTH_SHORT).show()
+            Log.d("AddNoteActivity", getString(R.string.photos_selected_from_gallery, count))
 
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to add photos: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -898,44 +891,7 @@ class AddNoteActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Xử lý chọn nhiều ảnh
-     */
-//    private fun handleMultipleImageSelection(uris: List<Uri>) {
-//        try {
-//            hasUnsavedChanges = true
-//
-//            val noteImages = uris.map { uri ->
-//                NoteImage(
-//                    noteId = if (isEditMode) noteId else 0,
-//                    imagePath = uri.toString()
-//                )
-//            }
-//
-//            // Add to data source
-//            imageList.addAll(noteImages)
-//
-//            // Thêm vào danh sách ảnh cần thêm (chưa save vào database)
-//            imagesToAdd.addAll(noteImages)
-//
-//            // Update span count based on new size
-//            val layoutManager = binding.rvMediaItems.layoutManager as GridLayoutManager
-//            layoutManager.spanCount = calculateSpanCount(imageList.size)
-//
-//            // Update UI with the new images
-//            mediaAdapter.addMultipleImages(noteImages)
-//
-//            // Force layout update
-//            binding.rvMediaItems.post { binding.rvMediaItems.requestLayout() }
-//
-//            val count = noteImages.size
-//            Log.d("AddNoteActivity", "$count images added to pending list")
-//
-//        } catch (e: Exception) {
-//            Toast.makeText(this, "Failed to add images: ${e.message}", Toast.LENGTH_SHORT).show()
-//            Log.e("AddNoteActivity", "Error adding multiple images", e)
-//        }
-//    }
+
 
     /**
      * Lưu note (tạo mới hoặc cập nhật)
@@ -944,12 +900,12 @@ class AddNoteActivity : AppCompatActivity() {
         val title = binding.textEditTitle.text?.toString()?.trim() ?: ""
 
         if (title.isEmpty()) {
-            Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.please_enter_a_title), Toast.LENGTH_SHORT).show()
             return
         }
 
         if (currentUserId == null) {
-            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.person_not_found), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -990,7 +946,7 @@ class AddNoteActivity : AppCompatActivity() {
                 val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
 
                 if (imageList.isEmpty()) {
-                    Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.please_add_image), Toast.LENGTH_SHORT).show()
                     return
                 }
 
@@ -1015,7 +971,7 @@ class AddNoteActivity : AppCompatActivity() {
             NoteType.CHECKLIST -> {
                 val items = checklistAdapter.getItems()
                 if (items.all { it.text.isEmpty() }) {
-                    Toast.makeText(this, "Please add at least one checklist item", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.please_add_checklist), Toast.LENGTH_SHORT).show()
                     return
                 }
 
@@ -1042,7 +998,7 @@ class AddNoteActivity : AppCompatActivity() {
             }
 
             else -> {
-                Toast.makeText(this, "Unsupported note type", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.unsupported_note_type), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -1065,7 +1021,7 @@ class AddNoteActivity : AppCompatActivity() {
             NoteType.CHECKLIST -> {
                 val items = checklistAdapter.getItems()
                 if (items.all { it.text.isEmpty() }) {
-                    Toast.makeText(this, "Please add at least one checklist item", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.please_add_checklist), Toast.LENGTH_SHORT).show()
                     return
                 }
 
@@ -1086,7 +1042,7 @@ class AddNoteActivity : AppCompatActivity() {
                 val content = binding.textEdPhotoContent.text?.toString()?.trim() ?: ""
 
                 if (imageList.isEmpty()) {
-                    Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.please_add_image), Toast.LENGTH_SHORT).show()
                     return
                 }
 
@@ -1101,7 +1057,7 @@ class AddNoteActivity : AppCompatActivity() {
             }
 
             else -> {
-                Toast.makeText(this, "Unsupported note type", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.unsupported_note_type), Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -1143,7 +1099,7 @@ class AddNoteActivity : AppCompatActivity() {
             CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now())
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Select date")
+            .setTitleText(getString(R.string.select_date))
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
             .setCalendarConstraints(constraintBuilder.build())
             .build()
@@ -1167,7 +1123,7 @@ class AddNoteActivity : AppCompatActivity() {
             .setTimeFormat(TimeFormat.CLOCK_24H)
             .setHour(calendar.get(Calendar.HOUR_OF_DAY))
             .setMinute(calendar.get(Calendar.MINUTE))
-            .setTitleText("Select time")
+            .setTitleText(getString(R.string.select_time))
             .build()
 
         timePicker.addOnPositiveButtonClickListener {
@@ -1178,7 +1134,7 @@ class AddNoteActivity : AppCompatActivity() {
                 if (selectedHour < now.get(Calendar.HOUR_OF_DAY) ||
                     (selectedHour == now.get(Calendar.HOUR_OF_DAY)) && selectedMinute <= now.get(Calendar.MINUTE)
                 ) {
-                    Toast.makeText(this, "Please select a future time", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.msg_select_future_time), Toast.LENGTH_SHORT).show()
                     return@addOnPositiveButtonClickListener
                 }
             }

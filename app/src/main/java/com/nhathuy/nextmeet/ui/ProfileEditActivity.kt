@@ -68,14 +68,14 @@ class ProfileEditActivity : AppCompatActivity() {
 
                 if (!selectedAddress.isNullOrEmpty()) {
                     binding.etEditUserLocation.setText(location)
-                    binding.tilEditUserLocation.helperText = "📍 Đã chọn vị trí từ bản đồ"
+                    binding.tilEditUserLocation.helperText = getString(R.string.location_found_from_map)
                     Log.d(
                         "ProfileEditActivity",
                         "Selected from map: $selectedAddress at ($selectedLat, $selectedLng)"
                     )
                 } else {
                     binding.etEditUserLocation.setText(getString(R.string.no_location_selected))
-                    binding.tilEditUserLocation.helperText = "⚠️ Không có vị trí nào được chọn"
+                    binding.tilEditUserLocation.helperText = getString(R.string.no_location_selected)
                     location = ""
                     latitude = null
                     longitude = null
@@ -137,7 +137,7 @@ class ProfileEditActivity : AppCompatActivity() {
                             showLoading(false)
                             Toast.makeText(
                                 this@ProfileEditActivity,
-                                "Cập nhật thông tin thành công",
+                                getString(R.string.update_success),
                                 Toast.LENGTH_SHORT
                             ).show()
                             userViewModel.resetUpdateState()
@@ -151,7 +151,7 @@ class ProfileEditActivity : AppCompatActivity() {
 
                             Toast.makeText(
                                 this@ProfileEditActivity,
-                                "Có lỗi xảy ra khi cập nhật: ${it.message}",
+                                getString(R.string.update_error,it.message),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -187,19 +187,19 @@ class ProfileEditActivity : AppCompatActivity() {
             etEditUserLocation.setText(user.defaultAddress)
 
             if (!user.defaultAddress.isNullOrEmpty()) {
-                tilEditUserLocation.helperText = "📍 Vị trí hiện tại"
+                tilEditUserLocation.helperText = getString(R.string.location_current)
             } else {
                 tilEditUserLocation.helperText =
-                    "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+                    getString(R.string.location_hint_default)
             }
         }
     }
 
     private fun setupLocationInput() {
         binding.tilEditUserLocation.apply {
-            helperText = "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+            helperText = getString(R.string.location_hint_default)
             setEndIconDrawable(R.drawable.ic_geo)
-            setEndIconContentDescription("Chọn vị trí trên bản đồ")
+            setEndIconContentDescription(getString(R.string.map_picker_description))
 
             setEndIconOnClickListener {
                 val intent = Intent(this@ProfileEditActivity, GoogleMapActivity::class.java).apply {
@@ -232,13 +232,13 @@ class ProfileEditActivity : AppCompatActivity() {
 
                     geocodingJob = lifecycleScope.launch {
                         delay(800)
-                        binding.tilEditUserLocation.helperText = "🔄 Đang tìm tọa độ..."
+                        binding.tilEditUserLocation.helperText = getString(R.string.location_searching)
 
                         geocodeAddress(manualLocation) { lat, lng ->
                             if (lat != null && lng != null) {
                                 latitude = lat
                                 longitude = lng
-                                binding.tilEditUserLocation.helperText = "📍 Đã tìm thấy vị trí"
+                                binding.tilEditUserLocation.helperText = getString(R.string.location_found)
                                 Log.d(
                                     "Geocoding",
                                     "Found coordinates: $lat, $lng for address: $manualLocation"
@@ -247,7 +247,7 @@ class ProfileEditActivity : AppCompatActivity() {
                                 latitude = null
                                 longitude = null
                                 binding.tilEditUserLocation.helperText =
-                                    "⚠️ Không tìm thấy tọa độ - có thể chọn trên bản đồ để chính xác hơn"
+                                    getString(R.string.location_not_found)
                                 Log.d(
                                     "Geocoding",
                                     "No coordinates found for address: $manualLocation"
@@ -260,13 +260,13 @@ class ProfileEditActivity : AppCompatActivity() {
                     latitude = null
                     longitude = null
                     binding.tilEditUserLocation.helperText =
-                        "💡 Nhập địa chỉ để tự động tìm tọa độ, hoặc nhấn 📍 để chọn chính xác"
+                        getString(R.string.location_hint_default)
                     geocodingJob?.cancel()
                 } else {
                     location = manualLocation
                     latitude = null
                     longitude = null
-                    binding.tilEditUserLocation.helperText = "📝 Nhập thêm để tìm tọa độ..."
+                    binding.tilEditUserLocation.helperText = getString(R.string.location_enter_more)
                 }
             }
         })

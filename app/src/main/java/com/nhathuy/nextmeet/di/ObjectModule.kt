@@ -38,8 +38,8 @@ object ObjectModule {
 
     @Singleton
     @Provides
-    fun provideUserRepository(userDao: UserDao, sessionManager: SessionManager): UserRepository {
-        return UserRepository(userDao, sessionManager)
+    fun provideUserRepository(userDao: UserDao, sessionManager: SessionManager,@ApplicationContext context: Context): UserRepository {
+        return UserRepository(userDao, sessionManager,context)
     }
 
 
@@ -51,23 +51,24 @@ object ObjectModule {
 
     @Singleton
     @Provides
-    fun providerNoteRepository(noteDao: NoteDao, noteImageDao: NoteImageDao, imageManager: ImageManager): NoteRepository {
-        return NoteRepository(noteDao, noteImageDao, imageManager)
+    fun providerNoteRepository(noteDao: NoteDao, noteImageDao: NoteImageDao, imageManager: ImageManager,@ApplicationContext context: Context): NoteRepository {
+        return NoteRepository(noteDao, noteImageDao, imageManager,context)
     }
 
     @Singleton
     @Provides
-    fun providerContactRepository(contactDao: ContactDao): ContactRepository {
-        return ContactRepository(contactDao)
+    fun providerContactRepository(contactDao: ContactDao,@ApplicationContext context: Context): ContactRepository {
+        return ContactRepository(contactDao,context)
     }
 
     @Singleton
     @Provides
     fun providerAppointmentPlusRepository(
         appointmentDao: AppointmentPlusDao,
-        contactDao: ContactDao
+        contactDao: ContactDao,
+        @ApplicationContext context: Context
     ): AppointmentPlusRepository {
-        return AppointmentPlusRepository(appointmentDao, contactDao)
+        return AppointmentPlusRepository(appointmentDao, contactDao,context)
     }
 
     @Provides

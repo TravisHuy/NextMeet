@@ -338,7 +338,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
                 mapFragmentContainer.visibility = View.VISIBLE
 
                 // Cập nhật số liệu
-                tvLocationCount.text = "$locationCount địa điểm"
+                tvLocationCount.text = getString(R.string.location_count, locationCount)
 
                 // Cập nhật danh sách top locations
                 locationStatisticsAdapter.submitList(topLocations)
@@ -369,7 +369,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
                         MarkerOptions()
                             .position(latLng)
                             .title(location.locationName)
-                            .snippet("${location.appointmentCount} cuộc hẹn")
+                            .snippet(getString(R.string.appointment_count_format, location.appointmentCount))
                     )
                     boundsBuilder.include(latLng)
                 }
@@ -605,7 +605,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
                         // Post a delayed action to ensure fragment is ready
                         solutionActivity.binding.root.postDelayed({
                             triggerAppointmentWithContactNavigation(searchQuery)
-                        }, 200)
+                        }, 500)
                     }
                 }
             }

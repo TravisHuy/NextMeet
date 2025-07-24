@@ -432,7 +432,8 @@ class SearchActivity : AppCompatActivity() {
 
             is SearchUiState.Error -> {
                 binding.progressLoading.visibility = View.GONE
-                Toast.makeText(this, "Error: ${state.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,
+                    getString(R.string.error_message, state.message), Toast.LENGTH_SHORT).show()
                 showSuggestions()
                 updateSearchBarButtons()
             }
@@ -510,7 +511,7 @@ class SearchActivity : AppCompatActivity() {
 
 
             etSearch.hint = if (hasFocus && !hasText) {
-                "Nói để tìm kiếm hoặc nhập từ khóa"
+                getString(R.string.search_hint_speaking)
             } else {
                 getString(R.string.search_homes)
             }
@@ -519,21 +520,21 @@ class SearchActivity : AppCompatActivity() {
 
     private fun startVoiceSearch(){
         if(!isVoiceSearchAvailable()){
-            Toast.makeText(this, "Thiết bị không hỗ trợ tìm kiếm bằng giọng nói", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.voice_search_not_supported), Toast.LENGTH_SHORT).show()
             return
         }
         try {
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói để tìm kiếm...")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_search_prompt))
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
             }
 
             startActivityForResult(intent, VOICE_SEARCH_REQUEST_CODE)
         }
         catch (e: Exception){
-            Toast.makeText(this, "Không thể khởi động tìm kiếm bằng giọng nói", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.voice_search_error), Toast.LENGTH_SHORT).show()
             Log.e(TAG, "Error starting voice search", e)
         }
     }
@@ -644,24 +645,4 @@ class SearchActivity : AppCompatActivity() {
             }
         }
     }
-//    override fun onResume() {
-//        super.onResume()
-//        Log.d(TAG, "onResume called - currentSearch: $currentSearch, currentSearchType: $currentSearchType")
-//
-//        lifecycleScope.launch {
-//            val currentSuggestions = searchViewModel.suggestions.value
-//            if (currentSuggestions.isEmpty() && currentSearch.isEmpty()) {
-//                Log.d(TAG, "No suggestions found, force reload")
-//                userViewModel.getCurrentUser().value?.let { user ->
-//                    searchViewModel.initializeSearch(user.id)
-//                }
-//            }
-//        }
-//
-//    }
-
-//    override fun onPause() {
-//        super.onPause()
-//        Log.d(TAG, "onPause called")
-//    }
 }

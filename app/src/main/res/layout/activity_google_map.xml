@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_margin="16dp"
-        android:hint="Enter address"
+        android:hint="@string/enter_address"
         app:layout_constraintEnd_toStartOf="@+id/btn_filter"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -60,7 +60,7 @@
             android:id="@+id/tv_address_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Selected Address"
+            android:text="@string/selected_address"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -71,7 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginEnd="8dp"
-            android:text="No Address Selected"
+            android:text="@string/no_address_selected"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_address_label" />
@@ -81,7 +81,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Confirm Location"
+            android:text="@string/confirm_location"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

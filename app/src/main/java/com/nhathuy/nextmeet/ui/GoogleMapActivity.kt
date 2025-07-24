@@ -104,7 +104,7 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
                 val addressList = geocoder.getFromLocationName(locationName, 1)
                 handleFoundAddress(addressList, locationName)
             } catch (e: IOException) {
-                Toast.makeText(this, "Lỗi khi tìm kiếm địa chỉ", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.error_find_address), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -226,7 +226,8 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
                     getAddressFromLatLng(currentLatLng)
                 }
             }.addOnFailureListener {
-                Toast.makeText(this, "Không thể lấy vị trí hiện tại", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,
+                    getString(R.string.error_find_location_current), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -307,7 +308,7 @@ class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
             } else {
                 Toast.makeText(
                     this,
-                    "Cần cấp quyền vị trí để sử dụng tính năng này",
+                    getString(R.string.location_permission),
                     Toast.LENGTH_LONG
                 ).show()
             }

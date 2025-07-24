@@ -150,7 +150,8 @@ class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
                 onPhotosSelected?.invoke(selectedPhotos.toList()) // Copy list to avoid reference issues
                 dismiss()
             } else {
-                Toast.makeText(context, "Please select at least one photo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context,
+                    getString(R.string.please_select_at_least_one_photo), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -225,7 +226,7 @@ class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     showLoading(false)
-                    showError("Failed to load photos: ${e.message}")
+                    showError(getString(R.string.failed_to_load_photos, e.message))
                 }
             }
         }
@@ -283,9 +284,9 @@ class PhotoAlbumBottomSheet : BottomSheetDialogFragment() {
 
         // Update count text
         binding.tvSelectedCount.text = if (count > 0) {
-            "$count selected"
+            getString(R.string.selected_photo, count)
         } else {
-            "Select photos"
+            getString(R.string.select_photos)
         }
 
         if(count > 0){

@@ -1,5 +1,7 @@
 package com.nhathuy.nextmeet.utils
 
+import android.content.Context
+import com.nhathuy.nextmeet.R
 import com.nhathuy.nextmeet.model.ValidationResult
 
 /**
@@ -13,13 +15,13 @@ object ValidationUtils {
      * @param phone Phone để xác thực
      * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
      */
-    fun validatePhone(phone: String): ValidationResult {
+    fun validatePhone(context: Context,phone: String): ValidationResult {
         return when {
-            phone.isEmpty() -> ValidationResult(false, "Phone number is required")
-            phone.length != 10 -> ValidationResult(false, "Phone number must be 10 digits")
+            phone.isEmpty() -> ValidationResult(false, context.getString(R.string.error_phone_required))
+            phone.length != 10 -> ValidationResult(false, context.getString(R.string.error_phone_length))
             !phone.all { it.isDigit() } -> ValidationResult(
                 false,
-                "Phone number must contain only digits"
+                context.getString(R.string.error_phone_digits)
             )
 
             else -> ValidationResult(true)
@@ -32,10 +34,10 @@ object ValidationUtils {
      * @param name Name để xác thực
      * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
      */
-    fun validateName(name: String): ValidationResult {
+    fun validateName(context: Context,name: String): ValidationResult {
         return when {
-            name.isEmpty() -> ValidationResult(false, "Name is required")
-            name.length > 25 -> ValidationResult(false, "Name must be less than 25 characters")
+            name.isEmpty() -> ValidationResult(false, context.getString(R.string.error_name_required))
+            name.length > 25 -> ValidationResult(false, context.getString(R.string.error_name_length))
             else -> ValidationResult(true)
         }
     }
@@ -46,49 +48,12 @@ object ValidationUtils {
      * @param address Address để xác thực
      * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
      */
-    fun validateAddress(address:String) :ValidationResult {
+    fun validateAddress(context: Context,address:String) :ValidationResult {
         return when {
-            address.isEmpty() || address == "Add address" -> ValidationResult(false,"Address is required")
+            address.isEmpty() || address == "Add address" -> ValidationResult(false,context.getString(R.string.error_address_required))
             else -> ValidationResult(true)
         }
     }
-
-//    fun validateCoordinate(latitude:Double,longitude:Double) : ValidationResult {
-//        return when {
-//            (latitude == null || longitude == null) -> ValidationResult(false, "Latitude or longitude required")
-//            else -> ValidationResult(true)
-//        }
-//    }
-//    /**
-//     * Xác thực password
-//     *
-//     * @param password Password để xác thực
-//     * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
-//     */
-//    fun validatePassword(password: String): ValidationResult {
-//        val specialCharRegex = Regex("[!@#\$%^&*(),.?\":{}|<>]")
-//        val uppercaseRegex = Regex("[A-Z]")
-//
-//        return when {
-//            password.isEmpty() -> ValidationResult(false, "Password is required")
-//            password.length < 6 -> ValidationResult(
-//                false,
-//                "Password must be less than 6 characters"
-//            )
-//
-//            !specialCharRegex.containsMatchIn(password) -> ValidationResult(
-//                false,
-//                "Password must contain at least one character"
-//            )
-//
-//            !uppercaseRegex.containsMatchIn(password) -> ValidationResult(
-//                false,
-//                "Password must be least one character uppercase letter"
-//            )
-//
-//            else -> ValidationResult(true)
-//        }
-//    }
 
     /**
      * Xác thực password
@@ -96,13 +61,13 @@ object ValidationUtils {
      * @param password Password để xác thực
      * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
      */
-    fun validatePassword(password: String): ValidationResult {
+    fun validatePassword(context: Context,password: String): ValidationResult {
 
         return when {
-            password.isEmpty() -> ValidationResult(false, "Password is required")
+            password.isEmpty() -> ValidationResult(false, context.getString(R.string.error_password_required))
             password.length < 6 -> ValidationResult(
                 false,
-                "Password must be less than 6 characters"
+                context.getString(R.string.error_password_length)
             )
             else -> ValidationResult(true)
         }
@@ -113,13 +78,13 @@ object ValidationUtils {
      * @param email Email để xác thực
      * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
      */
-    fun validateEmail(email: String): ValidationResult {
+    fun validateEmail(context: Context,email: String): ValidationResult {
         val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+"
         return when {
-            email.isEmpty() -> ValidationResult(false, "Email is required")
+            email.isEmpty() -> ValidationResult(false, context.getString(R.string.error_email_required))
             !email.matches(emailPattern.toRegex()) -> ValidationResult(
                 false,
-                "Invalid email format"
+                context.getString(R.string.error_email_invalid)
             )
 
             else -> ValidationResult(true)
@@ -132,9 +97,9 @@ object ValidationUtils {
      * @param confirmPassword Mật khẩu xác thực
      * @return ValidationResult chứa trạng thái xác thực và thông báo lỗi nếu có
      */
-    fun validatePasswordMatch(password: String, confirmPassword: String): ValidationResult {
+    fun validatePasswordMatch(context: Context,password: String, confirmPassword: String): ValidationResult {
         return when {
-            password != confirmPassword -> ValidationResult(false, "Passwords do not match")
+            password != confirmPassword -> ValidationResult(false, context.getString(R.string.error_password_mismatch))
             else -> ValidationResult(true)
         }
     }

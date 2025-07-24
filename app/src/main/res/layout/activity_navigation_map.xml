@@ -156,7 +156,7 @@
             android:layout_marginTop="@dimen/margin_large"
             android:layout_weight="1"
             android:fontFamily="@font/inter_bold"
-            android:text="Bắt đầu chỉ đường"
+            android:text="@string/start_directions"
             android:textColor="@color/gray_dark"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -287,7 +287,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:fontFamily="@font/inter_bold"
-                android:text="Phương tiện di chuyển"
+                android:text="@string/transpot_mode"
                 android:textSize="16sp" />
 
             <!-- Transport Mode Selection -->
@@ -325,7 +325,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Lái xe"
+                            android:text="@string/mode_driving"
                             android:textSize="10sp" />
 
                     </LinearLayout>
@@ -360,7 +360,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Đi bộ"
+                            android:text="@string/mode_walking"
                             android:textSize="10sp" />
 
                     </LinearLayout>
@@ -395,7 +395,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Xe bus"
+                            android:text="@string/mode_transit"
                             android:textSize="10sp" />
 
                     </LinearLayout>
@@ -430,7 +430,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Thời gian"
+                        android:text="@string/time"
                         android:textSize="12sp"
                         android:textColor="@android:color/darker_gray" />
 
@@ -461,7 +461,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Khoảng cách"
+                        android:text="@string/distance"
                         android:textSize="12sp"
                         android:textColor="@android:color/darker_gray" />
 
@@ -492,7 +492,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Đến nơi"
+                        android:text="@string/arrive"
                         android:textSize="12sp"
                         android:textColor="@android:color/darker_gray" />
 
@@ -518,7 +518,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Hướng dẫn chi tiết"
+                        android:text="@string/detail_instruction"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/black"

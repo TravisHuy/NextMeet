@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/aldrich"
-        android:text="TravisHuy"
+        android:text="@string/app_name"
         android:textColor="#1198D5"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,7 +36,7 @@
         android:fontFamily="monospace"
         android:gravity="center"
         android:maxLines="2"
-        android:text="Manage your customers \nwith ease, grow your business"
+        android:text="@string/solgan"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -71,7 +71,7 @@
                 android:id="@+id/ed_login_phone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Phone"
+                android:hint="@string/phone"
                 android:inputType="phone"
                 android:maxLength="10" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -92,7 +92,7 @@
                 android:id="@+id/ed_login_pass"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Password"
+                android:hint="@string/password"
                 android:inputType="textPassword" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -122,7 +122,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="Remember me"
+                android:text="@string/remember_me"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@+id/switch_remember_me"
                 app:layout_constraintStart_toEndOf="@+id/switch_remember_me"
@@ -133,7 +133,7 @@
             android:id="@+id/forgotten_pass"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Forgotten password?"
+            android:text="@string/forgotten_password"
             android:textColor="#2697F1"
             app:layout_constraintBottom_toBottomOf="@+id/ll_remember_layout"
             app:layout_constraintEnd_toEndOf="parent"
@@ -146,7 +146,7 @@
             android:layout_marginTop="32dp"
             android:backgroundTint="#159EDC"
             android:padding="12dp"
-            android:text="Login now"
+            android:text="@string/login_now"
             android:textColor="@color/white"
             android:textSize="16sp"
             app:cornerRadius="8dp"
@@ -178,7 +178,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:text="Or"
+            android:text="@string/or"
             android:textColor="#777777" />
 
         <View
@@ -201,7 +201,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Don't have an account?"
+            android:text="@string/don_t_have_an_account"
             android:textSize="16sp"
             />
 
@@ -210,7 +210,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:text="Sign up"
+            android:text="@string/sign_up"
             android:textColor="#2697F1"
             android:textSize="16sp"
             android:textStyle="bold"
