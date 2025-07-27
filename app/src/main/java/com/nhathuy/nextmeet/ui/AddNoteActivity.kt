@@ -53,7 +53,7 @@ import java.util.Locale
  * Mode: Add (tạo mới) hoặc Edit (chỉnh sửa)
  */
 @AndroidEntryPoint
-class AddNoteActivity : AppCompatActivity() {
+class AddNoteActivity : BaseActivity() {
 
     private lateinit var binding: ActivityAddNoteBinding
     private lateinit var colorAdapter: ColorPickerAdapter

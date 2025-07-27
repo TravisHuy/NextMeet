@@ -49,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.nhathuy.nextmeet.model.AppointmentStatus
 import java.util.Locale
 import kotlin.math.*
 
@@ -859,6 +860,13 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         isNavigationActive = false
         hasArrivedAtDestination = true
 
+
+        lifecycleScope.launch {
+            appointment?.let { appt ->
+                appointmentViewModel.updateAppointmentStatus(appt.id, AppointmentStatus.COMPLETED)
+            }
+        }
+
         binding.apply {
             tvCurrentInstruction.text = getString(R.string.arrived)
             tvStepDistance.text = ""
@@ -867,12 +875,6 @@ class TurnByTurnNavigationActivity : AppCompatActivity(), OnMapReadyCallback,
         }
 
         announceInstruction(getString(R.string.arrived_announcement))
-
-        lifecycleScope.launch {
-            appointment?.let { appt ->
-                appointmentViewModel.checkAppointmentStatus(appt.id)
-            }
-        }
     }
 
     private fun recenterCamera() {

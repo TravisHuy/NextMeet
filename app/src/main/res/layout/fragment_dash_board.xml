@@ -7,6 +7,7 @@
     android:nestedScrollingEnabled="false"
     android:padding="@dimen/padding_medium"
     android:scrollbars="none"
+    android:background="@color/light_surface"
     tools:context=".fragment.DashBoardFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout

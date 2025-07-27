@@ -182,7 +182,8 @@
         android:elevation="8dp"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:behavior_peekHeight="120dp"
-        app:behavior_hideable="false">
+        app:behavior_hideable="false"
+        >
 
         <LinearLayout
             android:id="@+id/peek_content"

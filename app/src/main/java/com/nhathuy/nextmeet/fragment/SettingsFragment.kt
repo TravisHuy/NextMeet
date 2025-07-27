@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.system.exitProcess
 
 
 /**
@@ -240,15 +241,14 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
      * thay đổi ngôn ngữ
      */
     private fun changeLanguage(languageCode: String) {
-        sharedPreferences.edit().putString(PREF_LANGUAGE,languageCode).apply()
+        // Lưu ngôn ngữ vào SharedPreferences
+        sharedPreferences.edit().putString(PREF_LANGUAGE, languageCode).apply()
+
+        // Cập nhật hiển thị ngôn ngữ hiện tại
         updateLanguageDisplay(languageCode)
 
-        val locale = Locale(languageCode)
-        Locale.setDefault(locale)
-        val config = resources.configuration
-        config.setLocale(locale)
-
-        requireActivity().recreate()
+        // Restart toàn bộ app để áp dụng ngôn ngữ mới
+        restartApplication()
     }
 
     // cap nhat hien thị ngôn ngữ
@@ -261,6 +261,20 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         binding.tvCurrentLanguage.text = languageText
     }
 
+    /**
+     * restart ứng dụng để áp dụng ngôn ngữ mới
+     */
+    private fun restartApplication(){
+        val intent = requireActivity().packageManager.getLaunchIntentForPackage(requireActivity().packageName)
+        intent?.let {
+            it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(it)
+            requireActivity().finish()
+
+            // Kill process để đảm bảo restart hoàn toàn
+            exitProcess(0)
+        }
+    }
     // hiển thị theme dialog
     private fun showThemeDialog(){
         val themes = arrayOf(

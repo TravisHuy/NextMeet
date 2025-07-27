@@ -65,7 +65,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 @AndroidEntryPoint
-class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
+class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
 
     private lateinit var binding: ActivityNavigationMapBinding
     private lateinit var routeStepAdapter: RouteStepAdapter
@@ -103,7 +103,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
             enableEdgeToEdge()
             ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
                 val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
                 insets
             }
         }
@@ -961,7 +961,7 @@ class NavigationMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
             val intent = Intent(this, TurnByTurnNavigationActivity::class.java)
             intent.putExtra(Constant.EXTRA_APPOINTMENT_ID, appt.id)
-            intent.putExtra("transport_mode", currentTransportMode.name) // Thêm dòng này
+            intent.putExtra("transport_mode", currentTransportMode.name)
             startActivityForResult(intent, REQUEST_CODE_TURN_BY_TURN)
         }
     }
