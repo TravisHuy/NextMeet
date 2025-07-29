@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 * Lớp này được đánh dấu `@AndroidEntryPoint` để sử dụng Hilt dependency injection.
  */
 @AndroidEntryPoint
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseActivity() {
 
     private lateinit var binding: ActivityLoginBinding
 

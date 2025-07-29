@@ -180,12 +180,11 @@ class AppointmentPlusViewModel @Inject constructor(
                 val result = appointmentRepository.updateAppointmentStatus(appointmentId, status)
                 if (result.isSuccess) {
 
-                    allAppointments = allAppointments.map { appointment ->
-                        if (appointment.id == appointmentId) {
-                            appointment.copy(status = status, updateAt = System.currentTimeMillis())
-                        } else {
-                            appointment
-                        }
+                    updateLocalCache(appointmentId) { appointment ->
+                        appointment.copy(
+                            status = status,
+                            updateAt = System.currentTimeMillis()
+                        )
                     }
 
                     _appointmentUiState.value = AppointmentUiState.StatusUpdated(

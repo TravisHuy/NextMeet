@@ -3,9 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/activity_navigation_layout"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/color_white"
     tools:context=".ui.NavigationMapActivity"
+    android:fitsSystemWindows="true"
     >
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -180,9 +182,14 @@
         android:orientation="vertical"
         android:background="@android:color/white"
         android:elevation="8dp"
+        android:fitsSystemWindows="false"
+        android:clipToPadding="false"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:behavior_peekHeight="120dp"
-        app:behavior_hideable="false">
+        app:behavior_hideable="false"
+        app:behavior_fitToContents="false"
+        app:behavior_halfExpandedRatio="0.4"
+        >
 
         <LinearLayout
             android:id="@+id/peek_content"
@@ -504,14 +511,16 @@
                 android:id="@+id/expandable_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fillViewport="true">
+                android:fillViewport="true"
+                android:clipToPadding="false"
+                >
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:paddingHorizontal="20dp"
-                    android:paddingBottom="20dp">
+                    android:paddingBottom="40dp">
 
 
                     <!-- Route Steps -->

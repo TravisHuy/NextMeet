@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App Info -->
-    <string name="app_name">TravisHuy</string>
+    <string name="app_name">NoteTrack</string>
 
     <!-- Common -->
     <string name="error">Lỗi</string>
@@ -72,7 +72,7 @@
     <string name="remember_me_status">Ghi nhớ đăng nhập: %s</string>
     <string name="location_format">Vị trí: Lat: %1$s, Long: %2$s</string>
     <string name="login_time_format">Thời gian đăng nhập: %s</string>
-    <string name="welcome_message">Chào mừng bạn đến với NextMeet!\nBạn đã đăng nhập thành công.</string>
+    <string name="welcome_message">Chào mừng bạn đến với NoteTrack!\nBạn đã đăng nhập thành công.</string>
 
     <!-- Appointments & Notes -->
     <string name="appointment_for_today">Cuộc hẹn hôm nay</string>
@@ -167,12 +167,12 @@
     <string name="system_theme">Theo hệ thống</string>
     <string name="select_theme">Chọn giao diện</string>
 
-    <string name="feedback_subject">Phản hồi ứng dụng NextMeet</string>
-    <string name="feedback_template">Chào đội ngũ NextMeet,\n\nTôi muốn gửi một số phản hồi về ứng dụng:\n\n</string>
+    <string name="feedback_subject">Phản hồi ứng dụng NoteTrack</string>
+    <string name="feedback_template">Chào đội ngũ NoteTrack,\n\nTôi muốn gửi một số phản hồi về ứng dụng:\n\n</string>
     <string name="send_feedback">Gửi phản hồi</string>
     <string name="no_email_app">Không tìm thấy ứng dụng email</string>
 
-    <string name="about_message">NextMeet\nPhiên bản: %1$s (Build: %2$d)\n\nỨng dụng quản lý cuộc hẹn giúp bạn tổ chức và theo dõi hiệu quả.\n\nPhát triển bởi TravisHuy\n© 2025 NextMeet</string>
+    <string name="about_message">NoteTrack\nPhiên bản: %1$s (Build: %2$d)\n\nỨng dụng quản lý cuộc hẹn giúp bạn tổ chức và theo dõi hiệu quả.\n\nPhát triển bởi TravisHuy\n© 2025 NoteTrack</string>
     <string name="privacy_policy">Chính sách bảo mật</string>
 
     <string name="edit_profile">Chỉnh sửa hồ sơ</string>
@@ -221,7 +221,7 @@
     <string name="error_note_empty">Ghi chú không được để trống</string>
     <string name="cannot_share_blank_notes">Không thể chia sẻ ghi chú trống</string>
     <string name="list">Danh sách:\n</string>
-    <string name="shared_from_nextmeet">Chia sẻ từ NextMeet</string>
+    <string name="shared_from_nextmeet">Chia sẻ từ NoteTrack</string>
     <string name="reminder_time_must_be_in_the_future">Thời gian nhắc nhở phải nằm trong tương lai</string>
 
     <string name="copy_suffix">(Bản sao)</string>
@@ -377,7 +377,7 @@
     <string name="share_note_no_checklist">Không có mục nào.\n\n</string>
     <string name="share_note_description">📝 Mô tả: %1$s\n\n</string>
     <string name="share_note_time">⏰ Được chia sẻ lúc: %1$s\n</string>
-    <string name="share_note_footer">📱 Từ NextMeet App</string>
+    <string name="share_note_footer">📱 Từ NoteTrack App</string>
 
     <!-- Reminder -->
     <string name="note_reminder_set">Đã đặt lời nhắc</string>
@@ -615,7 +615,7 @@
     <string name="share_photo_count">Số lượng ảnh: %1$d\n\n</string>
     <string name="share_unknown_note_type">(Loại ghi chú không xác định)\n\n</string>
     <string name="share_reminder">⏰ Nhắc nhở: %1$s\n</string>
-    <string name="share_footer">📱 Được chia sẻ từ NextMeet App lúc: %1$s</string>
+    <string name="share_footer">📱 Được chia sẻ từ NoteTrack App lúc: %1$s</string>
     <string name="shared_note">Ghi chú được chia sẻ</string>
 
     <string name="location_not_exactly">⚠️ Có địa chỉ nhưng chưa có tọa độ chính xác</string>
@@ -727,7 +727,7 @@
     <string name="confirm_location">Xác nhận vị trí</string>
     <string name="no_address_selected">Không có địa chỉ nào được chọn</string>
 
-    <string name="solgan">Quản lý khách hàng dễ dàng, phát triển doanh nghiệp</string>
+    <string name="solgan">Quản lý cuộc hẹn và ghi chú thật dễ dàng</string>
     <string name="password">Mật khẩu</string>
     <string name="remember_me">Ghi nhớ tôi</string>
     <string name="forgotten_password">Quên mật khẩu?</string>
@@ -751,7 +751,7 @@
     <string name="settings">Cài đặt</string>
 
     <string name="stop_direction">Dừng chỉ đường</string>
-    <string name="title_registration">NextMeet Đăng ký tài khoản</string>
+    <string name="title_registration">NoteTrack Đăng ký tài khoản</string>
     <string name="name">Họ tên</string>
     <string name="submit">Đăng ký</string>
 
@@ -847,7 +847,9 @@
     <string name="error_clear_all_history">Lỗi khi xóa toàn bộ lịch sử tìm kiếm</string>
     <string name="error_loading_items">Lỗi tải mục %1$s: %2$s</string>
     <string name="error_filter_by_contact_detail">Lỗi khi lọc cuộc hẹn theo liên hệ: %1$s</string>
-
+    <string name="wait_loading">Vui lòng chờ</string>
+    <string name="change_language">Đang thay đổi ngôn ngữ...</string>
+    <string name="unable_to_route_map">Không thể mở bản đồ tuyến đường</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

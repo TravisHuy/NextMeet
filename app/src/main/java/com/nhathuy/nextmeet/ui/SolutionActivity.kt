@@ -17,7 +17,7 @@ import com.nhathuy.nextmeet.utils.NavigationCallback
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SolutionActivity : AppCompatActivity() {
+class SolutionActivity : BaseActivity() {
     public final lateinit var binding: ActivitySolutionBinding
     private lateinit var viewPagerAdapter: ViewPagerAdapter
 

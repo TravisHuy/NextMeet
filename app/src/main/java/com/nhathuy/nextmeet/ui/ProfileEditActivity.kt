@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 @AndroidEntryPoint
-class ProfileEditActivity : AppCompatActivity() {
+class ProfileEditActivity : BaseActivity() {
 
     private lateinit var binding: ActivityProfileEditBinding
     private val userViewModel: UserViewModel by viewModels()

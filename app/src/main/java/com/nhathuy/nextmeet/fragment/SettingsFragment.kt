@@ -4,6 +4,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.preference.PreferenceManager
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -30,6 +32,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.system.exitProcess
 
 
 /**
@@ -46,6 +49,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private lateinit var userViewModel: UserViewModel
     private lateinit var sharedPreferences: SharedPreferences
     private var currentUserId: Int = 0
+
+    private var loadingDialog: AlertDialog? = null
     companion object {
         private const val PREF_LANGUAGE = "pref_language"
         private const val PREF_THEME = "pref_theme"
@@ -240,15 +245,48 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
      * thay đổi ngôn ngữ
      */
     private fun changeLanguage(languageCode: String) {
-        sharedPreferences.edit().putString(PREF_LANGUAGE,languageCode).apply()
+        binding.llLanguageSetting.isEnabled = false
+
+        // Hiển thị loading dialog
+        showLoadingDialog()
+
+        // Lưu ngôn ngữ vào SharedPreferences
+        sharedPreferences.edit().putString(PREF_LANGUAGE, languageCode).apply()
+
+        // Cập nhật hiển thị ngôn ngữ hiện tại
         updateLanguageDisplay(languageCode)
 
-        val locale = Locale(languageCode)
-        Locale.setDefault(locale)
-        val config = resources.configuration
-        config.setLocale(locale)
 
-        requireActivity().recreate()
+        // Delay 800ms trước khi restart để đảm bảo:
+        // 1. User thấy được feedback
+        // 2. SharedPreferences được lưu hoàn toàn
+        // 3. Tránh crash do restart quá nhanh
+        Handler(Looper.getMainLooper()).postDelayed({
+            dismissLoadingDialog()
+            restartApplication()
+        }, 800)
+    }
+
+    /**
+     * Hiển thị dialog loading
+     */
+    private fun showLoadingDialog() {
+        if (loadingDialog?.isShowing == true) return
+
+        loadingDialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(R.layout.dialog_loading_simple) // Layout đơn giản chỉ có ProgressBar + Text
+            .setCancelable(false)
+            .create()
+
+        loadingDialog?.show()
+    }
+
+    /**
+     * Ẩn dialog loading
+     */
+    private fun dismissLoadingDialog() {
+        loadingDialog?.dismiss()
+        loadingDialog = null
     }
 
     // cap nhat hien thị ngôn ngữ
@@ -261,6 +299,20 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         binding.tvCurrentLanguage.text = languageText
     }
 
+    /**
+     * restart ứng dụng để áp dụng ngôn ngữ mới
+     */
+    private fun restartApplication(){
+        val intent = requireActivity().packageManager.getLaunchIntentForPackage(requireActivity().packageName)
+        intent?.let {
+            it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(it)
+            requireActivity().finish()
+
+            // Kill process để đảm bảo restart hoàn toàn
+            exitProcess(0)
+        }
+    }
     // hiển thị theme dialog
     private fun showThemeDialog(){
         val themes = arrayOf(

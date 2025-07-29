@@ -58,7 +58,7 @@ import java.util.Date
 import java.util.Locale
 
 @AndroidEntryPoint
-class AddAppointmentActivity : AppCompatActivity() {
+class AddAppointmentActivity : BaseActivity() {
 
     private lateinit var binding: ActivityAddAppointmentBinding
     private lateinit var userViewModel: UserViewModel

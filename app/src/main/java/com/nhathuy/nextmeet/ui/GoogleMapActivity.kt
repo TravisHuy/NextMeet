@@ -29,7 +29,7 @@ import com.nhathuy.nextmeet.databinding.ActivityGoogleMapBinding
 import java.io.IOException
 import java.util.Locale
 
-class GoogleMapActivity : AppCompatActivity(), OnMapReadyCallback {
+class GoogleMapActivity : BaseActivity(), OnMapReadyCallback {
 
     private lateinit var binding: ActivityGoogleMapBinding
     private lateinit var mMap: GoogleMap

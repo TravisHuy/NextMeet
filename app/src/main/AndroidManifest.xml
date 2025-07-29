@@ -41,9 +41,6 @@
             android:name=".ui.NavigationMapActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.EditNoteActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.AddNoteActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize">
@@ -97,10 +94,6 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <activity
-            android:name=".ui.CustomerDetailActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:exported="false" />
         <activity
             android:name=".ui.GoogleMapActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"

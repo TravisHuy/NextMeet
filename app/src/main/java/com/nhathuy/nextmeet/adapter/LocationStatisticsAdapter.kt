@@ -16,7 +16,8 @@ import com.nhathuy.nextmeet.model.LocationStatistics
  * @param onLocationClick Hàm callback khi người dùng nhấn vào một địa điểm.
  */
 class LocationStatisticsAdapter(
-    private val onLocationClick: (LocationStatistics) -> Unit
+    private val onLocationClick: (LocationStatistics) -> Unit,
+    private val onNavigationMap: (LocationStatistics) -> Unit
 ) : ListAdapter<LocationStatistics, LocationStatisticsAdapter.LocationViewHolder>(
     LocationDiffCallback()
 ) {
@@ -46,6 +47,7 @@ class LocationStatisticsAdapter(
                     tvUpcomingCount.visibility = android.view.View.GONE
                 }
                 root.setOnClickListener { onLocationClick(locationStatistics) }
+                btnStartNavigation.setOnClickListener { onNavigationMap(locationStatistics) }
             }
         }
     }

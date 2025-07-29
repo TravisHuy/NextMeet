@@ -21,7 +21,7 @@ import com.nhathuy.nextmeet.model.Notification
 import com.nhathuy.nextmeet.model.SearchHistory
 import com.nhathuy.nextmeet.utils.AppointmentStatusConverter
 
-@Database(entities = [User::class,AlarmHistory::class, Note::class, NoteImage::class, Contact::class, AppointmentPlus::class,SearchHistory::class, Notification::class], version = 3, exportSchema = false)
+@Database(entities = [User::class,AlarmHistory::class, Note::class, NoteImage::class, Contact::class, AppointmentPlus::class,SearchHistory::class, Notification::class], version = 1, exportSchema = false)
 @TypeConverters(AppointmentStatusConverter::class)
 abstract class AppDatabase:RoomDatabase(){
     abstract fun userDao():UserDao

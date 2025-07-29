@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 @AndroidEntryPoint
-class SearchActivity : AppCompatActivity() {
+class SearchActivity : BaseActivity() {
     private lateinit var binding: ActivitySearchBinding
 
     //view model

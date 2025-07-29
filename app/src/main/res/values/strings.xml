@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App Info -->
-    <string name="app_name">Next Meet</string>
+    <string name="app_name">NoteTrack</string>
 
     <!-- Common -->
     <string name="error">Error</string>
@@ -73,7 +73,7 @@
     <string name="remember_me_status">Remember Me: %s</string>
     <string name="location_format">Location: Lat: %1$s, Long: %2$s</string>
     <string name="login_time_format">Login time: %s</string>
-    <string name="welcome_message">Welcome to NextMeet!\nYou have successfully logged in.</string>
+    <string name="welcome_message">Welcome to NoteTrack!\nYou have successfully logged in.</string>
 
     <!-- Appointments & Notes -->
     <string name="appointment_for_today">Appointments for Today</string>
@@ -159,7 +159,7 @@
     <string name="theme">Theme</string>
     <string name="language">Language</string>
     <string name="app_settings">App settings</string>
-    <string name="viet_namese">Tiếng Việt</string>
+    <string name="viet_namese">Vietnamese</string>
     <string name="english">English</string>
     <string name="select_language">Select language</string>
     <string name="light_theme">Light theme</string>
@@ -168,13 +168,13 @@
     <string name="select_theme">Select theme</string>
 
     <!-- Feedback -->
-    <string name="feedback_subject">NextMeet App Feedback</string>
-    <string name="feedback_template">Hello NextMeet team,\n\nI would like to provide feedback about the app:\n\n</string>
+    <string name="feedback_subject">NoteTrack App Feedback</string>
+    <string name="feedback_template">Hello NoteTrack team,\n\nI would like to provide feedback about the app:\n\n</string>
     <string name="send_feedback">Send Feedback</string>
     <string name="no_email_app">No email app found</string>
 
     <!-- About -->
-    <string name="about_message">NextMeet\nVersion: %1$s (Build: %2$d)\n\nA meeting management application that helps you organize and track your appointments efficiently.\n\nDeveloped by TravisHuy\n© 2025 NextMeet</string>
+    <string name="about_message">NoteTrack\nVersion: %1$s (Build: %2$d)\n\nA meeting management application that helps you organize and track your appointments efficiently.\n\nDeveloped by TravisHuy\n© 2025 NoteTrack</string>
     <string name="privacy_policy">Privacy Policy</string>
 
     <!-- Profile -->
@@ -225,7 +225,7 @@
     <string name="error_note_empty">Note must not be empty</string>
     <string name="cannot_share_blank_notes">Cannot share blank notes</string>
     <string name="list">List:\n</string>
-    <string name="shared_from_nextmeet">Shared from NextMeet</string>
+    <string name="shared_from_nextmeet">Shared from NoteTrack</string>
     <string name="reminder_time_must_be_in_the_future">Reminder time must be in the future</string>
 
     <string name="copy_suffix">(Copy)</string>
@@ -379,7 +379,7 @@
     <string name="share_note_no_checklist">No items.\n\n</string>
     <string name="share_note_description">📝 Description: %1$s\n\n</string>
     <string name="share_note_time">⏰ Shared at: %1$s\n</string>
-    <string name="share_note_footer">📱 From NextMeet App</string>
+    <string name="share_note_footer">📱 From NoteTrack App</string>
 
     <!-- Reminder -->
     <string name="note_reminder_set">Reminder set</string>
@@ -614,7 +614,7 @@
     <string name="share_photo_count">Number of photos: %1$d\n\n</string>
     <string name="share_unknown_note_type">(Unknown note type)\n\n</string>
     <string name="share_reminder">⏰ Reminder: %1$s\n</string>
-    <string name="share_footer">📱 Shared from NextMeet App at: %1$s</string>
+    <string name="share_footer">📱 Shared from NoteTrack App at: %1$s</string>
     <string name="shared_note">Shared Note</string>
     <string name="location_not_exactly">⚠️ Have address but no exact coordinates</string>
 
@@ -721,7 +721,7 @@
     <string name="confirm_location">Confirm Location</string>
     <string name="no_address_selected">No Address Selected</string>
 
-    <string name="solgan">Manage your customers \nwith ease, grow your business</string>
+    <string name="solgan">Manage your appointments \nand notes with ease.</string>
     <string name="password">Password</string>
     <string name="remember_me">Remember me</string>
     <string name="forgotten_password">Forgotten password?</string>
@@ -833,7 +833,9 @@
     <string name="error_clear_all_history">Error clearing all search history</string>
     <string name="error_loading_items">Error loading %1$s items: %2$s</string>
     <string name="error_filter_by_contact_detail">Error filtering appointments by contact: %1$s</string>
-
+    <string name="wait_loading">Please wait</string>
+    <string name="change_language">Changing language...</string>
+    <string name="unable_to_route_map">Unable to open route map</string>
 
     <!-- String Arrays -->
     <string-array name="day_options">

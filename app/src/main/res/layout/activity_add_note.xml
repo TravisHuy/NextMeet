@@ -146,7 +146,6 @@
                 android:id="@+id/text_input_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 app:boxCornerRadiusTopStart="@dimen/margin_medium"
                 app:boxCornerRadiusTopEnd="@dimen/margin_medium"
