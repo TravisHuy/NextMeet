@@ -19,4 +19,5 @@ data class LocationStatistics(
     val latitude: Double,
     val longitude: Double,
     val upcomingCount: Int = 0,
+    val representativeAppointment: AppointmentPlus
 )

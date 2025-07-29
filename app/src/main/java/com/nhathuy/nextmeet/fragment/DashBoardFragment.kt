@@ -1,5 +1,6 @@
 package com.nhathuy.nextmeet.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -33,6 +34,7 @@ import com.nhathuy.nextmeet.model.NoteType
 import com.nhathuy.nextmeet.resource.AppointmentUiState
 import com.nhathuy.nextmeet.resource.ContactUiState
 import com.nhathuy.nextmeet.resource.NoteUiState
+import com.nhathuy.nextmeet.ui.NavigationMapActivity
 import com.nhathuy.nextmeet.ui.SolutionActivity
 import com.nhathuy.nextmeet.ui.TestActivity
 import com.nhathuy.nextmeet.utils.AppointmentNavigationCallback
@@ -190,11 +192,35 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
 
     private fun setupLocationStatisticsAdapter() {
         binding.rvLocationStatistics.layoutManager = LinearLayoutManager(requireContext())
-        locationStatisticsAdapter = LocationStatisticsAdapter { location ->
-            onLocationClick(location)
-        }
+        locationStatisticsAdapter = LocationStatisticsAdapter(
+            onLocationClick = { location ->
+                onLocationClick(location)
+            },
+            onNavigationMap = { location ->
+                navigateToNavigationMap(location.representativeAppointment)
+            })
         binding.rvLocationStatistics.adapter = locationStatisticsAdapter
     }
+
+    private fun navigateToNavigationMap(appointment: AppointmentPlus) {
+        try {
+            val intent = Intent(requireContext(), NavigationMapActivity::class.java).apply {
+                putExtra(Constant.EXTRA_APPOINTMENT_ID, appointment.id)
+            }
+            startActivity(intent)
+
+            Log.d(
+                "AppointmentMapFragment",
+                "Navigated to NavigationMap for appointment: ${appointment.id}"
+            )
+        } catch (e: Exception) {
+            Log.e("AppointmentMapFragment", "Failed to navigate to NavigationMap", e)
+            Toast.makeText(requireContext(),
+                getString(R.string.unable_to_route_map), Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
 
     private fun setupGoogleMaps() {
         mapFragment =
@@ -317,12 +343,21 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
         // Tính top locations
         topLocations = locationGroups.map { (location, appointments) ->
             val upcomingCount = appointments.count { it.startDateTime > now }
+
+            val representativeAppointment = appointments.filter {
+                it.startDateTime > now
+            }
+                .minByOrNull { it.startDateTime }
+                ?: appointments.maxByOrNull { it.startDateTime }
+                ?: appointments.first()
+
             LocationStatistics(
                 locationName = location,
                 appointmentCount = appointments.size,
                 latitude = appointments.first().latitude,
                 longitude = appointments.first().longitude,
-                upcomingCount = upcomingCount
+                upcomingCount = upcomingCount,
+                representativeAppointment = representativeAppointment
             )
         }.sortedByDescending { it.appointmentCount }
             .take(3) // Lấy top 3
@@ -369,7 +404,12 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
                         MarkerOptions()
                             .position(latLng)
                             .title(location.locationName)
-                            .snippet(getString(R.string.appointment_count_format, location.appointmentCount))
+                            .snippet(
+                                getString(
+                                    R.string.appointment_count_format,
+                                    location.appointmentCount
+                                )
+                            )
                     )
                     boundsBuilder.include(latLng)
                 }
@@ -614,7 +654,7 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun triggerAppointmentWithContactNavigation(searchFilter:String) {
+    private fun triggerAppointmentWithContactNavigation(searchFilter: String) {
         val fragments = requireActivity().supportFragmentManager.fragments
         for (fragment in fragments) {
             if (fragment is AppointmentNavigationCallback && fragment.isVisible) {

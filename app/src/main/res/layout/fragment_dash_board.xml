@@ -64,7 +64,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_bold"
-                        android:text="5"
+                        android:text="0"
                         android:textColor="#1976D2"
                         android:textSize="24sp" />
 
@@ -114,12 +114,12 @@
 
                     <TextView
                         android:id="@+id/tv_dash_board_notes"
-                        android:layout_width="wrap_content"
+                        android:layout_width="17dp"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_bold"
-                        android:text="12"
                         android:textColor="#7B1FA2"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"
+                        android:text="0" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -170,7 +170,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_bold"
-                        android:text="28"
+                        android:text="0"
                         android:textColor="#388E3C"
                         android:textSize="24sp" />
 
@@ -223,7 +223,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_bold"
-                        android:text="3"
+                        android:text="0"
                         android:textColor="#F57C00"
                         android:textSize="24sp" />
 

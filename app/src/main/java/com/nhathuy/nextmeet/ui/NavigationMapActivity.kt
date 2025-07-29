@@ -23,12 +23,14 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.MarkerOptions
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.nhathuy.nextmeet.R
@@ -93,19 +95,25 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
     private var currentTransportMode: TransportMode = TransportMode.DRIVING
     private var hasUserStartedMoving = false
 
+    fun View.updatePadding(
+        left: Int = paddingLeft,
+        top: Int = paddingTop,
+        right: Int = paddingRight,
+        bottom: Int = paddingBottom
+    ) {
+        setPadding(left, top, right, bottom)
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigationMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupEdgeToEdge()
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             enableEdgeToEdge()
-            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
-                insets
-            }
         }
 
         statusManager = AppointmentStatusManager(this)
@@ -125,6 +133,7 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
 
         // Initialize bottom sheet behavior
         setupBottomSheet()
+        adjustBottomSheetForSystemBars()
 
         lifecycleScope.launch {
             appointmentViewModel.appointmentUiState.collect { state ->
@@ -147,6 +156,31 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
         setupMap()
         setupRecyclerView()
         setupClickListener()
+    }
+
+    private fun setupEdgeToEdge() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Cho phép content extend xuống navigation bar
+            window.setDecorFitsSystemWindows(false)
+
+            // Set background cho navigation bar trong suốt
+            window.navigationBarColor = Color.TRANSPARENT
+            window.statusBarColor = Color.TRANSPARENT
+
+            // Đảm bảo navigation bar không che content
+            ViewCompat.setOnApplyWindowInsetsListener(binding.bottomSheet) { view, insets ->
+                val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
+                // Thêm padding bottom cho expandable content
+                binding.expandableContent.updatePadding(bottom = navigationBars.bottom)
+
+                // Đảm bảo peek content không bị che
+                val peekHeight = resources.getDimensionPixelSize(R.dimen.bottom_sheet_peek_height)
+                bottomSheetBehavior.peekHeight = peekHeight
+
+                insets
+            }
+        }
     }
 
     private fun setupUI() {
@@ -196,6 +230,9 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
                 isFitToContents = false
                 halfExpandedRatio = 0.4f
                 state = BottomSheetBehavior.STATE_COLLAPSED
+
+                skipCollapsed = false
+                maxHeight = -1
             }
 
             // Ban đầu ẩn expandable content
@@ -238,22 +275,23 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
 //                    }
                     if (hasRouteData) {
                         when {
-                            slideOffset >= 0.75f -> {
-                                // Từ 75% trở lên -> hiển thị full content và auto expand
+                            slideOffset >= 0.8f -> {
+                                // Từ 80% trở lên -> hiển thị full và auto expand
                                 binding.expandableContent.visibility = View.VISIBLE
                                 binding.expandableContent.alpha = 1f
-                                // Auto expand to full khi vượt 75%
-                                if (bottomSheetBehavior.state != BottomSheetBehavior.STATE_EXPANDED) {
+
+                                // Auto expand khi gần full
+                                if (slideOffset >= 0.9f &&
+                                    bottomSheetBehavior.state != BottomSheetBehavior.STATE_EXPANDED) {
                                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                                 }
                             }
 
-                            slideOffset >= 0.30f -> {
-                                // Từ 30% đến 75% -> hiển thị content với alpha theo tỷ lệ
+                            slideOffset >= 0.3f -> {
+                                // Từ 30% đến 80% -> hiển thị với alpha transition
                                 binding.expandableContent.visibility = View.VISIBLE
-                                // Alpha từ 0.3 đến 1.0 tương ứng với slideOffset từ 0.3 đến 0.75
-                                val normalizedOffset = (slideOffset - 0.30f) / (0.75f - 0.30f)
-                                binding.expandableContent.alpha = 0.3f + (normalizedOffset * 0.7f)
+                                val normalizedOffset = (slideOffset - 0.3f) / (0.8f - 0.3f)
+                                binding.expandableContent.alpha = 0.2f + (normalizedOffset * 0.8f)
                             }
 
                             else -> {
@@ -271,6 +309,36 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun adjustBottomSheetForSystemBars() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ViewCompat.setOnApplyWindowInsetsListener(binding.bottomSheet) { view, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
+                // Đặt margin bottom thay vì padding để tránh khoảng trắng
+                val layoutParams = view.layoutParams as CoordinatorLayout.LayoutParams
+                layoutParams.bottomMargin = 0 // Reset margin
+
+                // Chỉ thêm padding cho content bên trong, không phải container
+                val expandableContent = binding.expandableContent
+                expandableContent.setPadding(
+                    expandableContent.paddingLeft,
+                    expandableContent.paddingTop,
+                    expandableContent.paddingRight,
+                    navigationBars.bottom
+                )
+
+                insets
+            }
+
+            // Đảm bảo BottomSheet extend xuống bottom
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                view.setPadding(0, systemBars.top, 0, 0) // Chỉ set padding top
+                insets
+            }
+        }
+    }
     private fun setupClickListener() {
         binding.apply {
             // Click vào peek content để expand/collapse bottom sheet - chỉ khi có route data

@@ -2,6 +2,7 @@ package com.nhathuy.nextmeet.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.nhathuy.nextmeet.dao.AlarmHistoryDao
 import com.nhathuy.nextmeet.dao.AppointmentPlusDao
 import com.nhathuy.nextmeet.dao.ContactDao
@@ -28,9 +29,9 @@ object RepositoryModule {
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context, AppDatabase::class.java,
-            "2.1_database"
+            "note_track_database"
         )
-            .fallbackToDestructiveMigration()
+            .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
             .build()
     }
 
@@ -46,11 +47,12 @@ object RepositoryModule {
     }
 
     @Provides
-    fun providerNoteDao(database: AppDatabase):NoteDao{
+    fun providerNoteDao(database: AppDatabase): NoteDao {
         return database.noteDao()
     }
+
     @Provides
-    fun providerNoteImageDao(database: AppDatabase): NoteImageDao{
+    fun providerNoteImageDao(database: AppDatabase): NoteImageDao {
         return database.noteImageDao()
     }
 
@@ -63,12 +65,14 @@ object RepositoryModule {
     fun providerAppointmentPlusDao(database: AppDatabase): AppointmentPlusDao {
         return database.appointmentPlusDao()
     }
+
     @Provides
     fun providerSearchHistoryDao(database: AppDatabase): SearchHistoryDao {
         return database.searchHistoryDao()
     }
+
     @Provides
-    fun providerNotificationDao(database: AppDatabase) : NotificationDao {
+    fun providerNotificationDao(database: AppDatabase): NotificationDao {
         return database.notificationDao()
     }
 }
