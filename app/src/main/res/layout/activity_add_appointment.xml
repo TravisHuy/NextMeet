@@ -5,6 +5,7 @@
     android:id="@+id/layout_add_appointment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     tools:context=".ui.AddAppointmentActivity">
 
 
@@ -13,14 +14,14 @@
         android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/gray_light"
+        android:background="?attr/colorSurface"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/gray_light"
+            android:background="?attr/colorSurface"
             app:contentInsetStart="0dp"
             app:contentInsetStartWithNavigation="0dp">
 
@@ -37,6 +38,7 @@
                     android:layout_centerVertical="true"
                     android:src="@drawable/ic_arrow_back"
                     android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="?attr/colorOnSurface"
                     />
 
                 <TextView
@@ -50,7 +52,7 @@
                     android:text="@string/add_appointment"
                     android:textAlignment="textStart"
                     android:textSize="18sp"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/colorOnSurface"
                     android:fontFamily="@font/montserrat_bold"
                     android:ellipsize="end"
                     android:maxLines="1" />
@@ -63,6 +65,7 @@
                     android:layout_centerVertical="true"
                     android:src="@drawable/ic_check"
                     android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="?attr/colorOnSurface"
                     />
 
             </RelativeLayout>
@@ -78,13 +81,14 @@
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:scrollbars="none"
+        android:background="?android:attr/colorBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutAddAppointment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="?android:attr/colorBackground"
             android:padding="@dimen/padding_large">
 
             <com.google.android.material.textfield.TextInputLayout
@@ -216,7 +220,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/quicksand_medium"
                             android:text="@string/set_reminder"
-                            android:textColor="@color/text_primary"
+                            android:textColor="?attr/colorOnSurface"
                             android:textSize="16sp" />
 
                         <TextView
@@ -275,7 +279,7 @@
                         android:layout_marginBottom="12dp"
                         android:fontFamily="@font/quicksand_medium"
                         android:text="@string/background_color"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 

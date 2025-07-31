@@ -28,7 +28,7 @@
         android:imeOptions="actionNext"
         android:maxLines="1"
         android:singleLine="true"
-        android:textColor="@color/text_primary"/>
+        android:textColor="?attr/colorOnSurface"/>
 
     <ImageView
         android:id="@+id/iv_delete"

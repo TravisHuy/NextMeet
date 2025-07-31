@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/profile_edit_activity"
+    android:background="?android:attr/colorBackground"
     tools:context=".ui.ProfileEditActivity">
 
     <!-- App Bar Layout -->
@@ -12,7 +13,7 @@
         android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/color_gray"
+        android:background="?attr/colorSurface"
         android:padding="@dimen/padding_large">
 
         <!--Header section-->
@@ -22,6 +23,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
+            android:background="?attr/colorSurface"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -31,7 +33,9 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_arrow_back" />
+                android:src="@drawable/ic_arrow_back"
+                app:tint="?attr/colorOnSurface"
+                />
 
             <TextView
                 android:id="@+id/title_add_appointment"
@@ -42,8 +46,9 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/montserrat_bold"
                 android:text="@string/edit_profile"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp" />
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                />
         </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -60,7 +65,7 @@
             android:id="@+id/layoutEditProfile"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/white"
+            android:background="?android:attr/colorBackground"
             android:padding="@dimen/padding_large">
 
             <com.google.android.material.textfield.TextInputLayout

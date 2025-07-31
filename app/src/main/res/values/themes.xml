@@ -14,6 +14,7 @@
         <item name="colorSurface">@color/light_surface</item>
         <item name="android:textColor">@color/light_text_primary</item>
         <item name="android:textColorSecondary">@color/light_text_secondary</item>
+        <item name="colorSurfaceVariant">@color/gray_light</item>
         <item name="android:textColorHint">@color/black</item>
         <!-- Các thuộc tính khác -->
         <item name="android:statusBarColor">@color/light_primary</item>
@@ -42,5 +43,14 @@
     <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
     </style>
+
+    <style name="Theme.App.SplashScreen" parent="Theme.CustomerManagementApp">
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="android:statusBarColor">@color/light_background</item>
+        <item name="android:navigationBarColor">@color/light_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+    </style>
+
 
 </resources>

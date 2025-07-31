@@ -629,8 +629,8 @@ class DashBoardFragment : Fragment(), OnMapReadyCallback {
             // set filter vào searchViewModel truoc khi navigate
             if (filter.isNotEmpty()) {
                 val searchQuery = when (filter) {
-                    Constant.FILTER_TODAY -> getString(R.string.today)
-                    Constant.FILTER_UPCOMING -> getString(R.string.upcoming)
+                    Constant.FILTER_TODAY -> "Today"
+                    Constant.FILTER_UPCOMING -> "Upcoming"
                     else -> ""
                 }
                 if (searchQuery.isNotEmpty()) {

@@ -45,7 +45,7 @@
                     android:text="Cuộc họp với khách hàng"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="@color/light_text_primary"
+                    android:textColor="?attr/colorOnSurface"
                     android:maxLines="2"
                     android:ellipsize="end"
                     tools:text="Cuộc họp với khách hàng ABC" />

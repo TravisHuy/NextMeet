@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:id="@+id/activity_navigation_layout"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/color_white"
+    android:background="?android:attr/colorBackground"
     tools:context=".ui.NavigationMapActivity"
     android:fitsSystemWindows="true"
     >
@@ -211,6 +211,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_bold"
                     android:textSize="18sp"
+                    android:textColor="@android:color/black"
                     tools:text="Cuộc hẹn với Hồ Nhat Huy" />
 
                 <!-- Appointment Time -->
@@ -294,6 +295,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:fontFamily="@font/inter_bold"
+                android:textColor="@android:color/black"
                 android:text="@string/transpot_mode"
                 android:textSize="16sp" />
 
@@ -333,6 +335,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:text="@string/mode_driving"
+                            android:textColor="@android:color/black"
                             android:textSize="10sp" />
 
                     </LinearLayout>
@@ -368,6 +371,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:text="@string/mode_walking"
+                            android:textColor="@android:color/black"
                             android:textSize="10sp" />
 
                     </LinearLayout>
@@ -403,6 +407,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:text="@string/mode_transit"
+                            android:textColor="@android:color/black"
                             android:textSize="10sp" />
 
                     </LinearLayout>
@@ -520,7 +525,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:paddingHorizontal="20dp"
-                    android:paddingBottom="40dp">
+                    >
 
 
                     <!-- Route Steps -->

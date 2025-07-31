@@ -1,18 +1,138 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.CustomerManagementApp.Dark" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Base Dark Theme -->
+    <style name="Base.Theme.CustomerManagementApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary Colors -->
         <item name="colorPrimary">@color/dark_primary</item>
-        <item name="colorPrimaryVariant">@color/dark_secondary</item>
+        <item name="colorPrimaryVariant">@color/dark_primary_variant</item>
         <item name="colorOnPrimary">@color/dark_on_primary</item>
+
+        <!-- Secondary Colors -->
         <item name="colorSecondary">@color/dark_secondary</item>
+        <item name="colorSecondaryVariant">@color/dark_secondary_variant</item>
         <item name="colorOnSecondary">@color/dark_on_secondary</item>
+
+        <!-- Background Colors -->
         <item name="android:colorBackground">@color/dark_background</item>
+        <item name="colorOnBackground">@color/dark_on_background</item>
+
+        <!-- Surface Colors -->
         <item name="colorSurface">@color/dark_surface</item>
+        <item name="colorOnSurface">@color/dark_on_surface</item>
+        <item name="colorSurfaceVariant">@color/dark_surface_variant</item>
+
+        <!-- Text Colors -->
         <item name="android:textColor">@color/dark_text_primary</item>
         <item name="android:textColorSecondary">@color/dark_text_secondary</item>
+        <item name="android:textColorTertiary">@color/dark_text_tertiary</item>
+        <item name="android:textColorHint">@color/dark_text_hint</item>
 
-        <!-- Các thuộc tính khác -->
-        <item name="android:statusBarColor">@color/dark_primary</item>
+        <!-- System UI -->
+        <item name="android:statusBarColor">@color/dark_background</item>
+        <item name="android:navigationBarColor">@color/nav_background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+
+        <!-- Custom Attributes -->
+        <item name="dividerColor">@color/dark_divider</item>
+        <item name="borderColor">@color/dark_border</item>
+        <item name="cardBackgroundColor">@color/dark_card_background</item>
+        <item name="rippleColor">@color/dark_ripple</item>
+        <item name="successBackgroundColor">@color/success_background_dark</item>
+        <item name="warningBackgroundColor">@color/warning_background_dark</item>
+        <item name="errorBackgroundColor">@color/error_background_dark</item>
+
+        <!-- Text Appearances -->
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.App.TitleSmall</item>
+
+        <!-- Dialog Theme -->
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
+        <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
+
+        <!-- Material3 Color Tokens for better theming -->
+        <item name="colorPrimaryContainer">@color/dark_primary_variant</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+        <item name="colorSurfaceContainer">@color/dark_surface_variant</item>
+        <item name="colorOutline">@color/dark_border</item>
+        <item name="colorOutlineVariant">@color/dark_divider</item>
+
+        <!-- Button Colors -->
+        <item name="colorButtonNormal">@color/dark_primary</item>
+        <item name="android:colorButtonNormal">@color/dark_primary</item>
+
+        <!-- Switch/Toggle Colors -->
+        <item name="colorSwitchThumbNormal">@color/switch_thumb_dark</item>
+        <item name="android:colorControlActivated">@color/dark_primary</item>
+        <item name="android:colorControlHighlight">@color/dark_ripple</item>
+
+        <!-- FAB Colors -->
+        <item name="colorFloatingActionButton">@color/fab_background_dark</item>
+        <item name="colorOnFloatingActionButton">@color/fab_icon_color</item>
+    </style>
+
+    <!-- Text Appearance Styles -->
+    <style name="TextAppearance.App.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:textColor">@color/dark_text_primary</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Bottom Sheet Dialog Theme -->
+    <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="colorSurface">@color/dark_surface</item>
+        <item name="colorOnSurface">@color/dark_on_surface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/dark_surface</item>
     </style>
+
+    <!-- Dialog Animation -->
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@android:anim/slide_in_left</item>
+        <item name="android:windowExitAnimation">@android:anim/slide_out_right</item>
+    </style>
+
+    <!-- Card Style -->
+    <style name="AppCardView" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">@color/dark_card_background</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="android:layout_margin">8dp</item>
+    </style>
+
+    <!-- Button Style -->
+    <style name="AppButton" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/dark_primary</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <!-- Switch Style -->
+    <style name="AppSwitch" parent="Widget.Material3.CompoundButton.Switch">
+        <item name="thumbTint">@color/switch_thumb_dark</item>
+        <item name="trackTint">@color/switch_track_dark</item>
+        <item name="trackTintMode">src_over</item>
+    </style>
+
+    <!-- EditText Style -->
+    <style name="AppEditText" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/dark_border</item>
+        <item name="boxBackgroundColor">@color/dark_surface_variant</item>
+        <item name="android:textColor">@color/dark_text_primary</item>
+        <item name="android:textColorHint">@color/dark_text_hint</item>
+        <item name="hintTextColor">@color/dark_text_secondary</item>
+    </style>
+
+    <!-- Main Dark Theme -->
+    <style name="Theme.CustomerManagementApp" parent="Base.Theme.CustomerManagementApp" />
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.App.SplashScreen" parent="Theme.CustomerManagementApp">
+        <item name="android:windowBackground">@color/dark_background</item>
+        <item name="android:statusBarColor">@color/dark_background</item>
+        <item name="android:navigationBarColor">@color/dark_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    </style>
+
+
 </resources>

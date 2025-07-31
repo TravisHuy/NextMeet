@@ -52,7 +52,6 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import com.nhathuy.nextmeet.model.AppointmentStatus
 import com.nhathuy.nextmeet.model.RouteStep
 import com.nhathuy.nextmeet.utils.AppointmentStatusManager
@@ -228,7 +227,7 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
                 peekHeight = resources.getDimensionPixelSize(R.dimen.bottom_sheet_peek_height)
                 isHideable = false
                 isFitToContents = false
-                halfExpandedRatio = 0.4f
+                halfExpandedRatio = 0.34f
                 state = BottomSheetBehavior.STATE_COLLAPSED
 
                 skipCollapsed = false
@@ -1106,7 +1105,7 @@ class NavigationMapActivity : BaseActivity(), OnMapReadyCallback {
     }
 
     private fun showError(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+        Toast.makeText(this,message,Toast.LENGTH_SHORT).show()
         Log.e("NavigationMapActivity", message)
     }
 

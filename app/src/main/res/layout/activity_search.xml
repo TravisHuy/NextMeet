@@ -5,13 +5,14 @@
     android:id="@+id/search_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     tools:context=".ui.SearchActivity">
 
     <LinearLayout
         android:id="@+id/searchTopBar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@android:color/white"
+        android:background="?attr/colorSurface"
         android:elevation="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -27,7 +28,8 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/back"
             android:padding="4dp"
-            android:src="@drawable/ic_arrow_back" />
+            android:src="@drawable/ic_arrow_back"
+            app:tint="?attr/colorOnSurface"/>
 
         <androidx.cardview.widget.CardView
             android:layout_width="0dp"
@@ -35,7 +37,7 @@
             android:layout_marginStart="12dp"
             android:layout_marginEnd="12dp"
             android:layout_weight="1"
-            app:cardBackgroundColor="@color/color_gray"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp">
 
@@ -50,7 +52,9 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:contentDescription="@string/search"
-                    android:src="@drawable/ic_search" />
+                    android:src="@drawable/ic_search"
+                    app:tint="?android:attr/textColorSecondary"
+                    />
 
                 <EditText
                     android:id="@+id/et_search"
@@ -63,7 +67,7 @@
                     android:imeOptions="actionSearch"
                     android:inputType="text"
                     android:maxLines="1"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?android:attr/textColor"
                     android:textColorHint="@color/text_secondary"
                     android:textSize="16sp" />
 
@@ -74,7 +78,8 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Voice Search"
                     android:padding="4dp"
-                    android:src="@drawable/ic_voice" />
+                    android:src="@drawable/ic_voice"
+                    app:tint="?android:attr/textColorSecondary"/>
 
                 <ImageView
                     android:id="@+id/btn_clear"
@@ -84,7 +89,7 @@
                     android:padding="2dp"
                     android:src="@drawable/ic_cancel"
                     android:visibility="gone"
-                    app:tint="@color/text_secondary" />
+                    app:tint="?android:attr/textColorSecondary"/>
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -139,7 +144,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/search_recent"
-                            android:textColor="@color/text_primary"
+                            android:textColor="?attr/colorOnSurface"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -169,7 +174,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="8dp"
-                    android:background="@color/gray_light" />
+                    android:background="?attr/colorSurfaceVariant" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -181,7 +186,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/category"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 

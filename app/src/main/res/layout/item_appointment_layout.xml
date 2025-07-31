@@ -9,7 +9,9 @@
     app:cardCornerRadius="24dp"
     app:cardElevation="4dp"
     app:strokeColor="?colorOutlineVariant"
-    app:strokeWidth="1dp">
+    app:strokeWidth="1dp"
+    android:foreground="?attr/selectableItemBackground"
+    >
 
     <!-- Row: Avatar + Info -->
     <LinearLayout
@@ -32,8 +34,8 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/inter_bold"
                 android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                android:textColor="?colorOnSurface"
                 android:textStyle="bold"
+                android:textColor="@android:color/black"
                 tools:text="Gặp khách hàng ABC" />
 
             <TextView
@@ -43,8 +45,8 @@
                 android:fontFamily="@font/inter_bold"
                 android:paddingTop="2dp"
                 android:layout_marginTop="@dimen/margin_small"
+                android:textColor="@android:color/black"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                android:textColor="?colorOnSurfaceVariant"
                 tools:text="6/11/2025 - 9:00 AM" />
 
             <LinearLayout
@@ -67,8 +69,8 @@
                     android:layout_marginStart="4dp"
                     android:ellipsize="end"
                     android:maxLines="1"
+                    android:textColor="@color/dark_background"
                     android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    android:textColor="?colorOnSurface"
                     tools:text="0123-456-789" />
 
             </LinearLayout>
@@ -82,8 +84,8 @@
                 android:paddingTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="2"
+                android:textColor="@color/dark_background"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                android:textColor="?colorOnSurfaceVariant"
                 tools:text="Tôi sẽ giúp bạn hoàn thiện chức năng thêm cuộc hẹn trong AppointmentMapFragment. Dựa trên code bạn đã có, tôi sẽ implement phần saveAppointment và một số cải tiến khác." />
 
             <TextView

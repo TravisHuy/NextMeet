@@ -23,12 +23,25 @@
     <!-- Màu sắc cho chế độ tối -->
     <color name="dark_background">#1A1A1A</color>
     <color name="dark_surface">#2C3E50</color>
+    <color name="dark_surface_variant">#2C2C2C</color>
     <color name="dark_primary">#3498DB</color>
+    <color name="dark_primary_variant">#42A5F5</color>
     <color name="dark_secondary">#ECF0F1</color>
+    <color name="dark_secondary_variant">#66BB6A</color>
     <color name="dark_on_primary">#FFFFFF</color>
     <color name="dark_on_secondary">#2C3E50</color>
+    <color name="dark_on_background">#FFFFFF</color>
+    <color name="dark_on_surface">#FFFFFF</color>
     <color name="dark_text_primary">#ECF0F1</color>
     <color name="dark_text_secondary">#BDC3C7</color>
+    <color name="dark_text_tertiary">#80FFFFFF</color>
+    <color name="dark_text_hint">#66FFFFFF</color>
+    <color name="dark_divider">#33FFFFFF</color>
+    <color name="dark_border">#42FFFFFF</color>
+    <color name="dark_card_background">#1E1E1E</color>
+    <color name="dark_ripple">#33FFFFFF</color>
+
+
 
     <!-- Border Colors -->
     <color name="border_light">#E5E7EB</color>
@@ -58,6 +71,9 @@
     <!-- Status colors cho History -->
     <color name="success_color">#23B329</color>
     <color name="success_background">#E8F5E8</color>
+    <color name="success_background_dark">#1B3A1B</color>
+    <color name="warning_background_dark">#4A3100</color>
+    <color name="error_background_dark">#4A0E0E</color>
 
     <color name="warning_color">#FF9800</color>
     <color name="warning_background">#FFF3E0</color>
@@ -74,5 +90,20 @@
     <!-- Card và surface colors -->
     <color name="card_background">#FFFFFF</color>
     <color name="surface_color">#F5F7FA</color>
+
+    <!-- Floating Action Button Colors -->
+    <color name="fab_background_dark">#007AFF</color>
+    <color name="fab_icon_color">#FFFFFF</color>
+
+    <!-- Toggle/Switch Colors -->
+    <color name="switch_track_dark">#39393D</color>
+    <color name="switch_thumb_dark">#FFFFFF</color>
+    <color name="switch_track_enabled_dark">#007AFF</color>
+
+    <!-- Navigation Colors -->
+    <color name="nav_background_dark">#1C1C1E</color>
+    <color name="nav_item_selected_dark">#007AFF</color>
+    <color name="nav_item_unselected_dark">#8E8E93</color>
+
 
 </resources>

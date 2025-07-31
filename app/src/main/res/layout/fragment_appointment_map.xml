@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     tools:context=".fragment.AppointmentMapFragment">
 
     <!-- Selection toolbar for multi-select mode -->
@@ -11,7 +12,7 @@
         android:id="@+id/selectionToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/gray"
+        android:background="?attr/colorSurface"
         android:elevation="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -25,7 +26,9 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close selection"
-            android:src="@drawable/ic_cancel" />
+            android:src="@drawable/ic_cancel"
+            app:tint="?attr/colorOnSurface"
+            />
 
         <TextView
             android:id="@+id/tvSelectionCount"
@@ -33,7 +36,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:textColor="@android:color/black"
             android:textSize="18sp"
             android:textStyle="bold"
             tools:text="1 selected appointment" />
@@ -49,7 +51,9 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Pin appointments"
-                android:src="@drawable/ic_pin" />
+                android:src="@drawable/ic_pin"
+                app:tint="?attr/colorOnSurface"
+                />
 
             <ImageButton
                 android:id="@+id/btnShare"
@@ -58,7 +62,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Share appointments"
                 android:src="@drawable/ic_share"
-                app:tint="@android:color/black" />
+                app:tint="?attr/colorOnSurface" />
 
             <ImageButton
                 android:id="@+id/btnDelete"
@@ -67,7 +71,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Delete appointments"
                 android:src="@drawable/ic_remove"
-                app:tint="@android:color/black" />
+                app:tint="?attr/colorOnSurface" />
 
             <ImageButton
                 android:id="@+id/btnMore"
@@ -76,7 +80,8 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="More options"
                 android:src="@drawable/three_dots_vertical"
-                app:tint="@android:color/black" />
+                app:tint="?attr/colorOnSurface" />
+
         </LinearLayout>
     </LinearLayout>
 
@@ -85,14 +90,16 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/white">
+        android:background="?android:attr/colorBackground"
+        android:elevation="0dp"
+        >
 
         <com.google.android.material.search.SearchBar
             android:id="@+id/searchBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="12dp"
-            android:backgroundTint="@color/color_gray"
+            android:backgroundTint="?attr/colorSurface"
             android:hint="@string/search_appointments"
             android:contentDescription="Search appointments"
             app:navigationIconTint="?attr/colorOnSurfaceVariant"
@@ -118,6 +125,7 @@
             android:padding="8dp"
             android:scrollbars="vertical"
             android:fadeScrollbars="false"
+            android:background="?android:attr/colorBackground"
             android:scrollbarStyle="outsideOverlay" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -130,7 +138,7 @@
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone"
-        android:background="@color/white"
+        android:background="?android:attr/colorBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:visibility="gone">
 
@@ -171,7 +179,7 @@
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone"
-        android:background="@color/white"
+        android:background="?android:attr/colorBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:visibility="visible">
 
@@ -207,7 +215,7 @@
         android:id="@+id/searchView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:hint="Search appointments..."
+        android:hint="@string/search_appointments"
         app:layout_anchor="@id/searchBar"
         app:layout_anchorGravity="top"
         android:contentDescription="Search appointments interface">

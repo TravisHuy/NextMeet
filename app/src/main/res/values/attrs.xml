@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom theme attributes -->
+    <attr name="dividerColor" format="color" />
+    <attr name="borderColor" format="color" />
+    <attr name="cardBackgroundColor" format="color" />
+    <attr name="rippleColor" format="color" />
+    <attr name="successBackgroundColor" format="color" />
+    <attr name="warningBackgroundColor" format="color" />
+    <attr name="errorBackgroundColor" format="color" />
+
+    <!-- Status colors -->
+    <attr name="statusSuccessColor" format="color" />
+    <attr name="statusWarningColor" format="color" />
+    <attr name="statusErrorColor" format="color" />
+    <attr name="colorFloatingActionButton" format="color"/>
+    <attr name="colorOnFloatingActionButton" format="color"/>
+</resources>
