@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/quicksand_medium"
                 android:text="1906 Plymouth St, Mountain View, CA 94043, USA"
-                android:textColor="#1A1A1A"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:maxLines="2"
                 android:ellipsize="end" />

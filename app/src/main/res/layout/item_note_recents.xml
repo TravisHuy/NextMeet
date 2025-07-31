@@ -1,81 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cardCornerRadius="@dimen/corner_radius_medium"
-    android:elevation="@dimen/cardview_default_elevation"
-    android:padding="@dimen/padding_medium"
     android:layout_margin="@dimen/margin_extra_small"
-    >
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/corner_radius_medium"
+    app:cardElevation="2dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp"
-        android:background="#FFFFFF"
-        >
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/tv_note_recent_title"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/poppins_bold"
-            tools:text="Ý tường dự án moi"
-            android:maxLines="1"
             android:ellipsize="end"
+            android:fontFamily="@font/poppins_bold"
+            android:maxLines="1"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="@dimen/text_size_body"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/iv_notes"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Ý tường dự án mới" />
 
         <LinearLayout
             android:id="@+id/ll_notes_recent_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_small"
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_note_recent_title"
-            >
+            app:layout_constraintTop_toBottomOf="@id/tv_note_recent_title">
+
             <TextView
                 android:id="@+id/tv_note_recent_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_small"
                 android:ellipsize="end"
                 android:fontFamily="@font/open_sans"
-                tools:text="Ý tường dự án moi Tôi đã tạo một giao diện chuẩn cho ứng dụng NextMeet với các tính năng chính"
                 android:maxLines="2"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="@dimen/text_size_medium"
                 android:visibility="visible"
-                tools:visibility="gone"
-                />
+                tools:text="Ý tường dự án mới Tôi đã tạo một giao diện chuẩn cho ứng dụng NextMeet với các tính năng chính"
+                tools:visibility="visible" />
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/iv_note_recent"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginTop="@dimen/margin_small"
-                android:scaleType="centerCrop"
                 android:adjustViewBounds="true"
-                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedImage"
-                app:strokeWidth="1dp"
-                app:strokeColor="@color/gray_light"
+                android:scaleType="centerCrop"
                 android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundedImage"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 tools:src="@drawable/test_image"
-                tools:visibility="gone"
-                />
+                tools:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_checklist_note_recent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
                 android:nestedScrollingEnabled="false"
+                android:visibility="gone"
                 tools:listitem="@layout/item_checklist"
-                tools:visibility="gone"
-                />
+                tools:visibility="gone" />
 
         </LinearLayout>
 
@@ -85,20 +87,35 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_small"
             android:fontFamily="@font/manrope_light"
-            tools:text="2 hours"
-            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ll_notes_recent_content" />
+            app:layout_constraintTop_toBottomOf="@id/ll_notes_recent_content"
+            tools:text="2 hours ago" />
 
         <ImageView
             android:id="@+id/iv_notes"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="@dimen/margin_small"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
             android:src="@drawable/ic_recent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ll_notes_recent_content"
-            />
+            app:layout_constraintTop_toTopOf="@id/tv_note_recent_title"
+            app:layout_constraintBottom_toBottomOf="@id/tv_note_recent_title"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <!-- Optional: Add a subtle indicator for note type -->
+        <View
+            android:id="@+id/note_type_indicator"
+            android:layout_width="3dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="13dp"
+            android:background="?attr/colorSecondary"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

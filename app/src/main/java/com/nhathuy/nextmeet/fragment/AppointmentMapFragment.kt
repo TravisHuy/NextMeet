@@ -411,7 +411,7 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
     private fun handleSuggestionClick(suggestion: SearchSuggestion) {
         when (suggestion.type) {
             SearchSuggestionType.QUICK_FILTER -> {
-                performQuickFilter(suggestion.text)
+                performQuickFilterWithLocalizedText(suggestion.text, suggestion.text)
                 hideSearchView()
             }
             else -> {
@@ -526,16 +526,16 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
             isContactFilterMode && selectedContactForFilter != null ->
                 getString(R.string.no_appointments_with_contact, selectedContactForFilter!!.name)
 
-            currentSearchQuery == "Today" ->
+            currentSearchQuery == getString(R.string.today) ->
                 getString(R.string.no_appointments_today)
 
-            currentSearchQuery == "Upcoming" ->
+            currentSearchQuery == getString(R.string.upcoming) ->
                 getString(R.string.no_appointments_upcoming)
 
-            currentSearchQuery == "Pinned" ->
+            currentSearchQuery == getString(R.string.pinned) ->
                 getString(R.string.no_appointments_pinned)
 
-            currentSearchQuery == "This Week" ->
+            currentSearchQuery == getString(R.string.weekend) ->
                 getString(R.string.no_appointments_this_week)
 
             else ->
@@ -644,6 +644,8 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
     private fun handleNavigationFilter(filter: String) {
         Log.d("AppointmentNavFilter", "Handling navigation filter: $filter")
 
+        val localizedFilterText = Constant.getLocalizedTextFromFilterKey(filter, requireContext())
+
         // Set search mode
         currentSearchQuery = filter
         isSearchMode = true
@@ -653,11 +655,45 @@ class AppointmentMapFragment : Fragment(), NavigationCallback, AppointmentNaviga
         updateSearchBarMenu()
 
         // Apply quick filter
-        performQuickFilter(filter)
+//        performQuickFilter(filter)
+
+        performQuickFilterWithEnglishKey(filter, localizedFilterText)
 
         // Clear navigation filter after handling
         searchViewModel.clearNavigationFilter()
     }
+
+    private fun performQuickFilterWithEnglishKey(englishFilter: String, localizedDisplay: String) {
+        currentSearchQuery = localizedDisplay
+        isSearchMode = true
+
+        // Use English filter for search logic
+        searchViewModel.applyQuickFilter(englishFilter, SearchType.APPOINTMENT)
+        updateSearchBar(localizedDisplay)
+        updateSearchBarMenu()
+        hideKeyboard()
+        showLoading()
+
+        Log.d("AppointmentQuickFilter", "Applying filter: $englishFilter (Display: $localizedDisplay)")
+    }
+
+    private fun performQuickFilterWithLocalizedText(localizedText: String, displayText: String) {
+        currentSearchQuery = displayText // Use localized text for display
+        isSearchMode = true
+
+        // Convert localized text to English constant for search logic
+        val filterKey = Constant.getFilterKeyFromText(localizedText, requireContext())
+
+        // Use the English constant for actual search logic
+        searchViewModel.applyQuickFilter(filterKey!!, SearchType.APPOINTMENT)
+        updateSearchBar(displayText) // Display localized text in search bar
+        updateSearchBarMenu()
+        hideKeyboard()
+        showLoading()
+
+        Log.d("AppointmentQuickFilter", "Applying quick filter: $filterKey (Display: $displayText)")
+    }
+
 
     private fun handlePinAction() {
         val selectedAppointments = appointmentAdapter.getSelectedAppointments()

@@ -230,7 +230,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.select_language))
             .setSingleChoiceItems(languages,selectedIndex) {
-                dialog, which ->
+                    dialog, which ->
                 val selectedLanguage = languageCodes[which]
                 if(selectedLanguage != currentLanguage){
                     changeLanguage(selectedLanguage)
@@ -328,7 +328,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.select_theme))
             .setSingleChoiceItems(themes,selectedIndex) {
-                dialog, which ->
+                    dialog, which ->
                 val selectedTheme = themeCodes[which]
                 if(selectedTheme != currentTheme){
                     changeTheme(selectedTheme)
@@ -434,7 +434,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
 
     private fun openPrivacyPolicy() {
-        val uri = Uri.parse("https://nextmeet.com/privacy-policy")
+        val uri = Uri.parse("https://notetrackprivacypolicy.pages.dev/")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         startActivity(intent)
     }

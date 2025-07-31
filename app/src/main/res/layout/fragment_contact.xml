@@ -4,34 +4,39 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/fragment_contact_layout"
+    android:background="?android:attr/colorBackground"
     tools:context=".fragment.ContactFragment">
 
     <LinearLayout
         android:id="@+id/selectionToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/gray"
+        android:background="?attr/colorSurface"
         android:elevation="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:visibility="gone"
-        tools:visibility="gone">          <!-- Close button -->
+        tools:visibility="gone">
+        <!-- Close button -->
         <ImageView
             android:id="@+id/btnClose"
             android:layout_width="32dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close selection"
-            android:src="@drawable/ic_cancel" />          <!-- Selection count -->
+            android:src="@drawable/ic_cancel"
+            app:tint="?attr/colorOnSurface"
+            />
+        <!-- Selection count -->
         <TextView
             android:id="@+id/tvSelectionCount"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:textColor="@android:color/black"
             android:textSize="18sp"
             android:textStyle="bold"
             tools:text="1 liên hệ được chọn" />          <!-- Action buttons -->
@@ -54,7 +59,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Share contacts"
                 android:src="@drawable/ic_share"
-                app:tint="@android:color/black" />
+                app:tint="?attr/colorOnSurface" />
 
             <ImageButton
                 android:id="@+id/btnDelete"
@@ -63,7 +68,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Delete contacts"
                 android:src="@drawable/ic_remove"
-                app:tint="@android:color/black" />
+                app:tint="?attr/colorOnSurface" />
 
             <ImageButton
                 android:id="@+id/btnMore"
@@ -72,7 +77,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="More options"
                 android:src="@drawable/three_dots_vertical"
-                app:tint="@android:color/black" />
+                app:tint="?attr/colorOnSurface" />
         </LinearLayout>
     </LinearLayout>
 
@@ -80,7 +85,7 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/white"
+        android:background="?android:attr/colorBackground"
         >
 
         <com.google.android.material.search.SearchBar
@@ -88,7 +93,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="12dp"
-            android:backgroundTint="@color/color_gray"
+            android:backgroundTint="?attr/colorSurface"
             android:hint="@string/search_contacts"
             app:navigationIconTint="?attr/colorOnSurfaceVariant"
             app:endIconDrawable="@drawable/ic_cancel"
@@ -115,6 +120,7 @@
             android:scrollbars="vertical"
             android:fadeScrollbars="false"
             android:scrollbarStyle="outsideOverlay"
+            android:background="?android:attr/colorBackground"
             />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -127,7 +133,7 @@
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone"
-        android:background="@color/white"
+        android:background="?android:attr/colorBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:visibility="gone"
         >
@@ -169,7 +175,7 @@
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone"
-        android:background="@color/white"
+        android:background="?android:attr/colorBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:visibility="visible">
 

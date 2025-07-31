@@ -645,7 +645,10 @@ class SearchRepository @Inject constructor(
         status: AppointmentStatus = AppointmentStatus.SCHEDULED
     ): Flow<List<AppointmentPlus>> {
         val statusString = status.name
-        return when (filterType) {
+
+        val filterKey = Constant.getFilterKeyFromText(filterType, context)
+
+        return when (filterKey) {
             Constant.FILTER_TODAY -> {
                 appointmentDao.getTodayAppointments(userId, status)
             }

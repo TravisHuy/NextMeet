@@ -5,20 +5,21 @@
     android:id="@+id/layout_add_note"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.AddNoteActivity"
-    >
+    android:background="?android:attr/colorBackground"
+    tools:context=".ui.AddNoteActivity">
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/gray_light"
+        android:background="?android:attr/colorBackground"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/gray_light"
+            android:background="?android:attr/colorBackground"
             app:contentInsetStart="0dp"
             app:contentInsetStartWithNavigation="0dp">
 
@@ -35,7 +36,7 @@
                     android:layout_centerVertical="true"
                     android:src="@drawable/ic_arrow_back"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    />
+                    app:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/note_title"
@@ -48,7 +49,7 @@
                     android:text="@string/add_note"
                     android:textAlignment="textStart"
                     android:textSize="18sp"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/colorOnSurface"
                     android:fontFamily="@font/montserrat_bold"
                     android:ellipsize="end"
                     android:maxLines="1" />
@@ -61,7 +62,7 @@
                     android:layout_centerVertical="true"
                     android:src="@drawable/ic_check"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    />
+                    app:tint="?attr/colorOnSurface" />
 
             </RelativeLayout>
 
@@ -74,12 +75,13 @@
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:scrollbars="none"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        >
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="@dimen/padding_large">
+            android:padding="@dimen/padding_large"
+            android:background="?android:attr/colorBackground">
 
             <!-- Note Type Selector -->
             <com.google.android.material.card.MaterialCardView
@@ -89,7 +91,8 @@
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="@color/border_light"
+                app:strokeColor="?attr/colorOutline"
+                app:cardBackgroundColor="?attr/colorSurface"
                 android:visibility="gone"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -109,7 +112,9 @@
                         android:layout_marginEnd="8dp"
                         style="@style/Widget.Material3.Chip.Filter"
                         android:checked="true"
-                        app:chipIcon="@drawable/ic_text_fields" />
+                        app:chipIcon="@drawable/ic_text_fields"
+                        app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_checklist"
@@ -118,7 +123,9 @@
                         android:text="@string/checklist"
                         android:layout_marginEnd="8dp"
                         style="@style/Widget.Material3.Chip.Filter"
-                        app:chipIcon="@drawable/ic_checklist" />
+                        app:chipIcon="@drawable/ic_checklist"
+                        app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_photo"
@@ -127,7 +134,9 @@
                         android:text="@string/image"
                         android:layout_marginEnd="8dp"
                         style="@style/Widget.Material3.Chip.Filter"
-                        app:chipIcon="@drawable/ic_photo" />
+                        app:chipIcon="@drawable/ic_photo"
+                        app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_video"
@@ -135,7 +144,9 @@
                         android:layout_height="wrap_content"
                         android:text="@string/video"
                         style="@style/Widget.Material3.Chip.Filter"
-                        app:chipIcon="@drawable/ic_video" />
+                        app:chipIcon="@drawable/ic_video"
+                        app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                        android:textColor="?attr/colorOnSurface" />
 
                 </LinearLayout>
 
@@ -151,11 +162,14 @@
                 app:boxCornerRadiusTopEnd="@dimen/margin_medium"
                 app:boxCornerRadiusBottomStart="@dimen/margin_medium"
                 app:boxCornerRadiusBottomEnd="@dimen/margin_medium"
+                app:boxStrokeColor="?attr/colorOutline"
+                app:boxBackgroundColor="?attr/colorSurface"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:layout_constraintTop_toBottomOf="@id/card_note_type"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:hintEnabled="false"
-                >
+                app:hintEnabled="false">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/text_edit_title"
                     android:layout_width="match_parent"
@@ -163,10 +177,10 @@
                     android:hint="@string/enter_title"
                     android:textSize="18sp"
                     android:fontFamily="@font/open_sans"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:maxLines="2"
-                    android:inputType="textCapSentences|textMultiLine"
-                    />
+                    android:inputType="textCapSentences|textMultiLine" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!--Content Section-->
@@ -177,10 +191,9 @@
                 android:layout_marginTop="@dimen/margin_medium"
                 app:layout_constraintTop_toBottomOf="@id/text_input_title"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                >
+                app:layout_constraintEnd_toEndOf="parent">
+
                 <!--Text Content-->
-                <!-- Text Content -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/text_input_content"
                     android:layout_width="match_parent"
@@ -190,8 +203,10 @@
                     app:boxCornerRadiusTopEnd="12dp"
                     app:boxCornerRadiusBottomStart="12dp"
                     app:boxCornerRadiusBottomEnd="12dp"
-                    app:hintEnabled="false"
-                    >
+                    app:boxStrokeColor="?attr/colorOutline"
+                    app:boxBackgroundColor="?attr/colorSurface"
+                    app:hintTextColor="?attr/colorOnSurfaceVariant"
+                    app:hintEnabled="false">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/text_ed_content"
@@ -200,7 +215,8 @@
                         android:hint="@string/write_your_note_here"
                         android:textSize="16sp"
                         android:fontFamily="@font/open_sans"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurfaceVariant"
                         android:minLines="8"
                         android:gravity="top"
                         android:inputType="textCapSentences|textMultiLine" />
@@ -215,8 +231,7 @@
                     android:orientation="vertical"
                     android:layout_marginTop="@dimen/margin_large"
                     android:visibility="gone"
-                    tools:visibility="gone"
-                    >
+                    tools:visibility="gone">
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_checklist_items"
@@ -233,7 +248,9 @@
                         android:layout_marginTop="8dp"
                         style="@style/Widget.Material3.Button.TextButton"
                         app:icon="@drawable/ic_add"
-                        app:iconGravity="start" />
+                        app:iconGravity="start"
+                        android:textColor="?attr/colorPrimary"
+                        app:iconTint="?attr/colorPrimary" />
 
                 </LinearLayout>
 
@@ -256,8 +273,10 @@
                         app:boxCornerRadiusTopEnd="12dp"
                         app:boxCornerRadiusBottomStart="12dp"
                         app:boxCornerRadiusBottomEnd="12dp"
-                        app:hintEnabled="false"
-                        >
+                        app:boxStrokeColor="?attr/colorOutline"
+                        app:boxBackgroundColor="?attr/colorSurface"
+                        app:hintTextColor="?attr/colorOnSurfaceVariant"
+                        app:hintEnabled="false">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/text_ed_photo_content"
@@ -266,13 +285,13 @@
                             android:hint="@string/write_your_note_here"
                             android:textSize="16sp"
                             android:fontFamily="@font/open_sans"
-                            android:textColor="@color/text_primary"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant"
                             android:minLines="2"
                             android:gravity="top"
                             android:inputType="textCapSentences|textMultiLine" />
 
                     </com.google.android.material.textfield.TextInputLayout>
-
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_media_items"
@@ -287,7 +306,6 @@
                         android:paddingBottom="4dp"
                         tools:listitem="@layout/item_media" />
 
-
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_add_image"
                         android:layout_width="wrap_content"
@@ -298,7 +316,8 @@
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_gravity="start"
                         android:layout_marginTop="4dp"
-                        />
+                        android:textColor="?attr/colorPrimary"
+                        app:iconTint="?attr/colorPrimary" />
                 </LinearLayout>
 
             </FrameLayout>
@@ -310,12 +329,13 @@
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/corner_radius_medium"
                 app:strokeWidth="1dp"
-                app:strokeColor="@color/border_light"
+                app:strokeColor="?attr/colorOutline"
+                app:cardBackgroundColor="?attr/colorSurface"
                 android:layout_marginTop="@dimen/margin_large"
                 app:layout_constraintTop_toBottomOf="@id/content_container"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                >
+                app:layout_constraintEnd_toEndOf="parent">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -328,7 +348,7 @@
                         android:text="@string/background_color"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:layout_marginBottom="12dp"
                         android:fontFamily="@font/quicksand_medium" />
 
@@ -350,12 +370,12 @@
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/corner_radius_medium"
                 app:strokeWidth="1dp"
-                app:strokeColor="@color/border_light"
+                app:strokeColor="?attr/colorOutline"
+                app:cardBackgroundColor="?attr/colorSurface"
                 android:layout_marginTop="@dimen/margin_large"
                 app:layout_constraintTop_toBottomOf="@id/card_color_picker"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                >
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -377,7 +397,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_pin"
-                            />
+                            app:tint="?attr/colorOnSurface" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -385,14 +405,16 @@
                             android:layout_weight="1"
                             android:text="@string/pin_note"
                             android:textSize="16sp"
-                            android:textColor="@color/text_primary"
+                            android:textColor="?attr/colorOnSurface"
                             android:layout_marginStart="16dp"
                             android:fontFamily="@font/quicksand_medium" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switch_pin"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            app:thumbTint="?attr/colorPrimary"
+                            app:trackTint="?attr/colorOutline" />
 
                     </LinearLayout>
 
@@ -410,7 +432,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_share"
-                            />
+                            app:tint="?attr/colorOnSurface" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -418,17 +440,18 @@
                             android:layout_weight="1"
                             android:text="@string/share_note"
                             android:textSize="16sp"
-                            android:textColor="@color/text_primary"
+                            android:textColor="?attr/colorOnSurface"
                             android:layout_marginStart="16dp"
                             android:fontFamily="@font/quicksand_medium" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switch_share"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            app:thumbTint="?attr/colorPrimary"
+                            app:trackTint="?attr/colorOutline" />
 
                     </LinearLayout>
-
 
                     <!-- Reminder Setting -->
                     <LinearLayout
@@ -443,7 +466,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_notification"
-                            />
+                            app:tint="?attr/colorOnSurface" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -457,7 +480,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/set_reminder"
                                 android:textSize="16sp"
-                                android:textColor="@color/text_primary"
+                                android:textColor="?attr/colorOnSurface"
                                 android:fontFamily="@font/quicksand_medium" />
 
                             <TextView
@@ -466,6 +489,8 @@
                                 android:layout_height="wrap_content"
                                 android:hint="@string/note_reminder_set"
                                 android:textSize="12sp"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textColorHint="?attr/colorOnSurfaceVariant"
                                 android:fontFamily="@font/quicksand_medium" />
 
                         </LinearLayout>
@@ -474,13 +499,15 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_chevron_right"
-                            />
+                            app:tint="?attr/colorOnSurface" />
 
                     </LinearLayout>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Progress Bar -->
             <ProgressBar
                 android:id="@+id/progress_bar_add_note"
                 android:layout_width="64dp"
@@ -488,13 +515,14 @@
                 android:layout_gravity="center"
                 android:indeterminate="true"
                 style="@style/Widget.AppCompat.ProgressBar"
+                android:indeterminateTint="?attr/colorPrimary"
                 android:visibility="gone"
                 tools:visibility="visible"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                />
+                app:layout_constraintEnd_toEndOf="parent" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 

@@ -110,17 +110,19 @@ class NotesFragment : Fragment(), NavigationCallback {
                             handleNotesLoaded(state.notes)
                         }
                         is NoteUiState.Error -> {
-                            Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
+                            Snackbar.make(binding.layoutNotesFragment, state.message, Snackbar.LENGTH_LONG).show()
                         }
                         is NoteUiState.NotePinToggled -> {
                             val message = if (state.isPinned) getString(R.string.note_pinned) else getString(R.string.note_unpinned)
-                            Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+                            Snackbar.make(binding.layoutNotesFragment, message, Snackbar.LENGTH_SHORT).show()
                         }
                         is NoteUiState.NoteDeleted -> {
-                            Snackbar.make(binding.root, getString(R.string.note_deleted_success), Snackbar.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(),getString(R.string.note_deleted_success),
+                                Toast.LENGTH_SHORT).show()
+//                            Snackbar.make(binding.layoutNotesFragment, getString(R.string.note_deleted_success), Snackbar.LENGTH_SHORT).show()
                         }
                         is NoteUiState.NoteDuplicated -> {
-                            Snackbar.make(binding.root, getString(R.string.note_duplicated), Snackbar.LENGTH_SHORT).show()
+                            Snackbar.make(binding.layoutNotesFragment, getString(R.string.note_duplicated), Snackbar.LENGTH_SHORT).show()
                         }
                         is NoteUiState.NoteShared -> {
                             val shareContent = state.shareResult.shareContent
@@ -132,12 +134,12 @@ class NotesFragment : Fragment(), NavigationCallback {
                                 }
                                 startActivity(Intent.createChooser(shareIntent, "Share Note"))
                             } else {
-                                Snackbar.make(binding.root, state.message, Snackbar.LENGTH_SHORT).show()
+                                Snackbar.make(binding.layoutNotesFragment, state.message, Snackbar.LENGTH_SHORT).show()
                             }
                         }
                         is NoteUiState.ReminderUpdated -> {
                             val message = state.message ?: getString(R.string.updated_reminder)
-                            Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+                            Snackbar.make(binding.layoutNotesFragment, message, Snackbar.LENGTH_SHORT).show()
                         }
                         else -> {
                             // Handle other states if needed
@@ -316,7 +318,7 @@ class NotesFragment : Fragment(), NavigationCallback {
                     val reminderTime = calendar.timeInMillis
 
                     if (reminderTime <= System.currentTimeMillis()) {
-                        Snackbar.make(binding.root, getString(R.string.msg_select_future_time), Snackbar.LENGTH_SHORT).show()
+                        Snackbar.make(binding.layoutNotesFragment, getString(R.string.msg_select_future_time), Snackbar.LENGTH_SHORT).show()
                     } else {
                         noteViewModel.updateReminder(note.id, reminderTime)
                     }
@@ -344,7 +346,8 @@ class NotesFragment : Fragment(), NavigationCallback {
                 }
                 noteViewModel.deleteNote(note.id)
             } else {
-                Snackbar.make(binding.root, getString(R.string.msg_delete_failed), Snackbar.LENGTH_SHORT).show()
+//                Snackbar.make(binding.layoutNotesFragment, getString(R.string.msg_delete_failed), Snackbar.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(),getString(R.string.msg_delete_failed),Toast.LENGTH_SHORT).show()
             }
         }
 

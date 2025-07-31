@@ -780,7 +780,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
 
     // Hiển thị error
     private fun showError(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(),message,Toast.LENGTH_SHORT).show()
     }
 
     private fun showContactDialog(contactToEdit: Contact? = null) {
@@ -1213,7 +1213,7 @@ class ContactFragment : Fragment(), SolutionActivity.NavigationCallback {
         contactsAdapter.clearSelection()
 
         val snackbar = Snackbar.make(
-            binding.root,
+            binding.recyclerViewContacts,
             getString(R.string.msg_deleted_contacts,selectedContacts.size),
             Snackbar.LENGTH_LONG
         )
